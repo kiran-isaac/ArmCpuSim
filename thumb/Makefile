@@ -2,7 +2,7 @@ OBJCOPY := arm-none-eabi-objcopy
 C_FILES := $(wildcard *.c)
 
 %.dis : %.elf
-	arm-none-eabi-objdump -d $< > $@
+	arm-none-eabi-objdump -s $< > $@
 
 %.s : %.c
 	clang -S --target=armv6-none-eabi -mcpu=cortex-m0 -mthumb $< -o $@ -O0
