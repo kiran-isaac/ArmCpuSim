@@ -1,43 +1,36 @@
-32 GP registers
-32 FP registers
+16 GP registers
+16 FP registers
 
-PC : GP[31]
-LR : GP[30]
-SP : GP[29]
-FP : GP[28]
-Flags : GP[25]
-Zero : GP[27]
-One : GP[26]
+PC : GP[15]
+LR : GP[14]
+SP : GP[13]
+FP : GP[12]
+Flags : GP[11]
+Zero : GP[10]
+One : GP[9]
 
 Flags: https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/condition-codes-1-condition-flags-and-codes
 V : overflow (signed overflow)
 C : carry (unsigned overflow)
 N : negative (set to the sign bit of the result)
 Z : zero (set if the result is zero)
-Condition codes
-EQ (Z = 1)
-NE (Z = 0)
-CC (C = 0)
-CS (C = 1)
-MI (N = 1)
-PL (N = 0)
-LT (unsigned less than: C == 1)
-LE (unsigned less than or equal: C == 1 or Z == 1)
-GT (unsigned greater than: C == 0 and Z == 0)
-GE (unsigned greater than or equal: C == 0 or Z == 1)
-ST (signed less than: N != V) 
-SE (signed less than or equal: Z == 1 or N != V)
-SGT (signed greater than: N == V and Z == 0)
-SGE (signed greater than or equal: N == V)
-
 
 # Instruction Set:
-nop
+## Int arith 32 bit (12)
+| instr                | operation                              | comment | encoding |
+|----------------------|----------------------------------------|-----------------------------------------|-----|
+| and[s] ra rb rc         | GP[ra] = GP[rb] & GP[rc]                | | s <ra:4> <rb:4> <rc:4> |
+| or[s] ra rb rc          | GP[ra] = GP[rb] \| GP[rc]               | | s <ra:4> <rb:4> <rc:4> |
+| xor[s] ra rb rc         | GP[ra] = GP[rb] ^ GP[rc]                | | s <ra:4> <rb:4> <rc:4> |
+| not[s] ra rb            | GP[ra] = ~GP[rb]                        | | s <ra:4> <rb:4> |
+| add[s] ra rb rc         | GP[ra] = GP[rb] + GP[rc]                | | s <ra:4> <rb:4> <rc:4> |
+| sub[s]ra rb rc         | GP[ra] = GP[rb] - GP[rc]                 | | s <ra:4> <rb:4> <rc:4> |
+| mul[s]  ra rb rc         | GP[ra] = GP[rb] * GP[rc]               | | s <ra:4> <rb:4> <rc:4> |
+| div[s] ra rb rc         | GP[ra] = GP[rb] / GP[rc]                | | s <ra:4> <rb:4> <rc:4> |
 
-## Load store (20)
 | instr                | operation                              | comment | 
 |----------------------|----------------------------------------|------------------------------------------------|
-| ld ra rb             | GP[ra] = MEM[GP[rb]]                   | |
+| ld ra rb             | GP[ra] = MEM[GP[rb]]                   | | |
 | ldi ra imm           | GP[ra] = imm                           | (load immediate)                              |
 | ldo ra rb rc         | GP[ra] = MEM[GP[rb] + GP[rc]]          | (load from address + register offset)         |
 | ldio ra rb imm       | GP[ra] = MEM[GP[rb] + imm]             | (load from address + immediate offset)        |
@@ -57,22 +50,6 @@ nop
 | pop ra               | SP = SP + 4; GP[ra] = MEM[SP]          | |
 | pushf fa             | MEM[SP] = FP[fa]; SP = SP - 4          | |
 | popf fa              | SP = SP + 4; FP[fa] = MEM[SP]          | |
-
-## Int arith 32 bit (12)
-| instr                | operation                              | comment |
-|----------------------|----------------------------------------|------------------------------------------------|
-| and ra rb rc         | GP[ra] = GP[rb] & GP[rc]               | |
-| or ra rb rc          | GP[ra] = GP[rb] \| GP[rc]              | |
-| xor ra rb rc         | GP[ra] = GP[rb] ^ GP[rc]               | |
-| not ra rb            | GP[ra] = ~GP[rb]                       | |
-| add ra rb rc         | GP[ra] = GP[rb] + GP[rc]               | |
-| sub ra rb rc         | GP[ra] = GP[rb] - GP[rc]               | |
-| mul ra rb rc         | GP[ra] = GP[rb] * GP[rc]               | |
-| div ra rb rc         | GP[ra] = GP[rb] / GP[rc]               | |
-| adds ra rb rc        | GP[ra] = GP[rb] + GP[rc]               | Sets flags |
-| subs ra rb rc        | GP[ra] = GP[rb] - GP[rc]               | Sets flags |
-| muls ra rb rc        | GP[ra] = GP[rb] * GP[rc]               | Sets flags |
-| divs ra rb rc        | GP[ra] = GP[rb] / GP[rc]               | Sets flags |
 
 ##  Float arith 32 bit (8)
 | instr                | operation                              | comment |
@@ -105,7 +82,10 @@ push ra # Decrements SP by 4 and stores GP[ra] at the new SP
 pop ra # Loads the value at SP into GP[ra] and increments SP by 4
 
 # Encoding
-I have 32 instructions, so I need 5 bits for instruction encoding
+I have 48 instructions, so I need 6 bits for instruction encoding
+Each register takes 5 bits to encode
+Each immediate value takes 16 bits to encode
+Variable length encoding
 
 ## Memory
 push    : 000000

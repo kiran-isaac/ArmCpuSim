@@ -1,3 +1,7 @@
 debug/
 target/
 **/*.rs.bk
+
+# Added by cargo
+
+/target
