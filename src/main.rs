@@ -1,5 +1,6 @@
-mod myElf;
+mod program;
 
 fn main() {
-    let elf = myElf::Elf::load("/home/kiran/ACA/thumb/test.elf");
+    let elf = program::Program::load("thumb/test.o");
+    println!("{:02X?}", elf.get_text());
 }

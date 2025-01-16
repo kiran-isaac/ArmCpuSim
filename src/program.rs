@@ -6,20 +6,23 @@ use std::path::PathBuf;
 use std::fs;
 
 
-pub struct Elf{
+pub struct Program<'data>{
     sh_map : HashMap<String, SectionHeader>,
-
+    bytes : ElfBytes<'data, AnyEndian>,
+    _file_data: Vec<u8>,
 }
 
-impl Elf {
+impl<'a> Program<'a> {
     pub fn load(path: &str) -> Self {
         let path = PathBuf::from(path);
         let file_data = fs::read(path).expect("Could not read file.");
-        let slice = file_data.as_slice();
-        let file = ElfBytes::<AnyEndian>::minimal_parse(slice).expect("Failed to parse ELF file");
-        // let common = file.find_common_data().expect("shdrs should parse");
 
-        let (shdrs_opt, strtab_opt) = file
+        let file_data_static: &'a [u8] = Box::leak(file_data.clone().into_boxed_slice());
+        
+
+        let elf_file = ElfBytes::<'a, >::minimal_parse(file_data_static).expect("Failed to parse ELF file");
+
+        let (shdrs_opt, strtab_opt) = elf_file
             .section_headers_with_strtab()
             .expect("shdrs offsets should be valid");
         let (shdrs, strtab) = (
@@ -32,13 +35,21 @@ impl Elf {
             .map(|shdr| {
                 (
                     strtab.get(shdr.sh_name as usize).expect("Failed to get section name").to_string(),
-                    shdr,
+                    shdr.clone(),
                 )
             })
             .collect();
 
-        Elf {
-            sh_map : with_names
+        Program {
+            sh_map: with_names,
+            bytes: elf_file,
+            _file_data: file_data,
         }
+    }
+
+    pub fn get_text(&self) -> &'a [u8] {
+        let text_sh = self.sh_map.get(".text").expect("Failed to get .text section");
+
+        self.bytes.section_data(text_sh).expect("failed to get elf text section").0
     }
 }
