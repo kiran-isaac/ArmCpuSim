@@ -1,7 +1,7 @@
 OBJCOPY := arm-none-eabi-objcopy
-C_FILES := $(wildcard *.c)
+C_FILES := $(wildcard ./*/*.c)
 
-%.dis : %.o
+%.dis : %.out
 	arm-none-eabi-objdump -d $< > $@
 
 %.s : %.c
@@ -10,7 +10,10 @@ C_FILES := $(wildcard *.c)
 %.o : %.s
 	clang -c --target=armv6-none-eabi -mcpu=cortex-m0 -mthumb $< -o $@ -O0
 
-all: $(C_FILES:.c=.dis) $(C_FILES:.c=.s) $(C_FILES:.c=.o)
+%.out : %.o
+	arm-none-eabi-ld -e main -o $@ $<
+
+all: $(C_FILES:.c=.dis) $(C_FILES:.c=.s) $(C_FILES:.c=.out)
 
 .PHONY: clean
 clean:
