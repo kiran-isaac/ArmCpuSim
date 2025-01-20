@@ -1,4 +1,4 @@
-use crate::instructions::briz;
+use crate::instructions::{bit_as_bool, briz};
 
 enum IT {
     UNPREDICTABLE,
@@ -1015,9 +1015,78 @@ fn decode(i: u32) -> I {
         }
         // Instruction is 32 bit
         _ => {
-            panic!("Invalid instr: {i}")
+            if briz(0, 31, 29) != 0b111 {
+                panic!("Invalid instr: {i}")
+            }
+
+            let op1 = briz(i, 27, 28);
+            let op = briz(i, 15, 15);
+
+            match (op1, op) {
+                (0b01, _) | (0b11, _) | (0b10, 0) => panic!("Undefined instr: {i}"),
+                (0b10, 1) => {
+                    let op1 = briz(i, 20, 26);
+                    let op2 = briz(i, 12, 14);
+
+                    match (op2, op1) {
+                        // MSR
+                        (0b000, 0b0111000) | (0b000, 0b0111001) | (0b010, 0b0111000) | (0b010, 0b0111001) => {},
+                        // MRS
+                        (0b000, 0b0111110) | (0b000, 0b0111111) | (0b010, 0b0111110) | (0b010, 0b0111111) => {},
+                        // UDF
+                        (0b010, 0b1111111) => I::undefined(),
+                        // Misc control instructions
+                        (0b000, 0b0111011) | (0b010, 0b0111011) => {
+                            let option = briz(i, 0, 3);
+                            let it = match briz(i, 4, 7) {
+                                0b0100 => IT::DSB,
+                                0b0101 => IT::DMB,
+                                0b0110 => IT::ISB,
+                                _ => panic!("Invalid instr: {i}"),
+                            };
+
+                            I {
+                                it,
+                                rd: 0,
+                                rn: option as u8,
+                                rm: 0,
+                                rt: 0,
+                                rl: 0,
+                                imm1: 0,
+                                imm2: 0,
+                                setflags: false,
+                            }
+                        }
+                        // BL
+                        (0b101, _) | (0b111, _) => {
+                            let s = bit_as_bool(i, 26);
+                            let j1 = bit_as_bool(i, 13);
+                            let j2 = bit_as_bool(i, 11);
+
+                            let i1 = !(j1 ^ s) as u32;
+                            let i2 = !(j2 ^ s) as u32;
+                            let s = s as u32;
+                            
+                            let imm11 = briz(i, 0, 10);
+                            let imm10 = briz(i, 16, 25);
+                            let imm32 = (imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23) + (s << 31);
+
+                            I {
+                                it: IT::BL,
+                                imm1: imm32,
+                                rd: 0,
+                                rn: 0,
+                                rm: 0,
+                                rt: 0,
+                                rl: 0,
+                                imm2: 0,
+                                setflags: false,
+                            }
+                        }
+                    }
+                }
+                _ => panic!("Invalid instr: {i}"),
+            }
         }
     }
-
-    panic!("Invalid instr: {i}")
 }
