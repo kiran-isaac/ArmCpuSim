@@ -11,8 +11,8 @@ fn adc_test() {
             rm: 1,
             rt: 0,
             rl: 0,
-            imm1: 0,
-            imm2: 0,
+            immu: 0,
+            imms: 0,
             setflags: true
         }
     );
@@ -25,8 +25,8 @@ fn adc_test() {
             rm: 5,
             rt: 0,
             rl: 0,
-            imm1: 0,
-            imm2: 0,
+            immu: 0,
+            imms: 0,
             setflags: true
         }
     )
@@ -43,8 +43,8 @@ fn addimm_test() {
             rm: 0,
             rt: 0,
             rl: 0,
-            imm1: 7,
-            imm2: 0,
+            immu: 7,
+            imms: 0,
             setflags: true
         }
     );
@@ -57,8 +57,8 @@ fn addimm_test() {
             rm: 0,
             rt: 0,
             rl: 0,
-            imm1: 2,
-            imm2: 0,
+            immu: 2,
+            imms: 0,
             setflags: true
         }
     );
@@ -72,8 +72,8 @@ fn addimm_test() {
             rm: 0,
             rt: 0,
             rl: 0,
-            imm1: 0x64,
-            imm2: 0,
+            immu: 0x64,
+            imms: 0,
             setflags: true
         }
     );
@@ -87,8 +87,8 @@ fn addimm_test() {
             rm: 0,
             rt: 0,
             rl: 0,
-            imm1: 0x64,
-            imm2: 0,
+            immu: 0x64,
+            imms: 0,
             setflags: true
         }
     );
@@ -101,9 +101,119 @@ fn addimm_test() {
             rm: 0,
             rt: 0,
             rl: 0,
-            imm1: 1,
-            imm2: 0,
+            immu: 1,
+            imms: 0,
             setflags: true
         }
     )
+}
+
+// Only covers a couple of these but should be fine as the decode is the same
+// AND,
+// EOR,
+// LSLReg,
+// LSRReg,
+// ASRReg,
+// ADC,
+// SBC,
+// ROR,
+// TST,
+// RSB,
+// CMPReg, // T1
+// CMN,
+// ORR,
+// MUL,
+// BIC,
+// MVN,
+#[test]
+fn dp_test() {
+    assert_eq!(
+        decode(0x4001),
+        I {
+            it: AND,
+            rd: 1,
+            rn: 1,
+            rm: 0,
+            rt: 0,
+            rl: 0,
+            immu: 0,
+            imms: 0,
+            setflags: true
+        }
+    );
+    assert_eq!(
+        decode(0x42d2),
+        I {
+            it: CMN,
+            rd: 2,
+            rn: 2,
+            rm: 2,
+            rt: 0,
+            rl: 0,
+            immu: 0,
+            imms: 0,
+            setflags: true
+        }
+    );
+    assert_eq!(
+        decode(0x43f0),
+        I {
+            it: MVN,
+            rd: 0,
+            rn: 0,
+            rm: 6,
+            rt: 0,
+            rl: 0,
+            immu: 0,
+            imms: 0,
+            setflags: true
+        }
+    );
+    assert_eq!(
+        decode(0x434d),
+        I {
+            it: MUL,
+            rd: 5,
+            rn: 5,
+            rm: 1,
+            rt: 0,
+            rl: 0,
+            immu: 0,
+            imms: 0,
+            setflags: true
+        }
+    );
+}
+
+#[test]
+fn bl_test() {
+    assert_eq!(
+        decode(0xf01dff2c),
+        I {
+            it: BL,
+            rd: 0,
+            rn: 0,
+            rm: 0,
+            rt: 0,
+            rl: 0,
+            immu: 0,
+            imms: 122456,
+            setflags: false
+        }
+    );
+
+    assert_eq!(
+        decode(0xf7e7fcb0),
+        I {
+            it: BL,
+            rd: 0,
+            rn: 0,
+            rm: 0,
+            rt: 0,
+            rl: 0,
+            imms: -100000,
+            immu: 0,
+            setflags: false
+        }
+    );
 }

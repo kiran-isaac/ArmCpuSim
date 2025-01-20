@@ -14,7 +14,7 @@ fn n_ones(n: u32) -> u32 {
 #[inline(always)]
 pub fn briz(i: u32, low: u32, high: u32) -> u32 {
     #[cfg(debug_assertions)]
-    if low >= high {
+    if low > high {
         panic!("briz error: {i}, {low}, {high}")
     }
 
@@ -44,10 +44,11 @@ mod tests {
 
     #[test]
     fn test_get_bit_range() {
-        let instr = 0xb084;
-        assert_eq!(briz(instr, 12, 15), 0xb);
-        assert_eq!(briz(instr, 8, 11), 0);
-        assert_eq!(briz(instr, 4, 7), 8);
-        assert_eq!(briz(instr, 0, 3), 4);
+        assert_eq!(briz(0xb084, 12, 15), 0xb);
+        assert_eq!(briz(0xb084, 8, 11), 0);
+        assert_eq!(briz(0xb084, 4, 7), 8);
+        assert_eq!(briz(0xb084, 0, 3), 4);
+
+        assert_eq!(7, briz(0xf345fb3c, 29, 31)); 
     }
 }

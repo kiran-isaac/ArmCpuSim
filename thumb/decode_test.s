@@ -9,3 +9,11 @@
     // addimm t2
     adds r0, #100
     adds r4, #255
+
+    ands r1, r0
+    cmn r2, r2
+    mvns r0, r6
+    muls r5, r1
+
+    BL 122456
+    BL #-100000

@@ -267,8 +267,8 @@ pub struct I {
     pub rm: u8,
     pub rt: u8,
     pub rl: u16,
-    pub imm1: u32,
-    pub imm2: u32,
+    pub immu: u32,
+    pub imms: i32,
     pub setflags: bool,
 }
 
@@ -281,8 +281,8 @@ impl I {
             rm: 0,
             rt: 0,
             rl: 0,
-            imm1: 0,
-            imm2: 0,
+            immu: 0,
+            imms: 0,
             setflags: false,
         }
     }
@@ -295,8 +295,8 @@ impl I {
             rm: 0,
             rt: 0,
             rl: 0,
-            imm1: 0,
-            imm2: 0,
+            immu: 0,
+            imms: 0,
             setflags: false,
         }
     }
@@ -320,8 +320,8 @@ pub fn decode(i: u32) -> I {
                             return if imm5 == 0 {
                                 I {
                                     it: IT::MOVReg,
-                                    imm1: 0,
-                                    imm2: 0,
+                                    immu: 0,
+                                    imms: 0,
                                     rd,
                                     rm,
                                     rn: 0,
@@ -332,8 +332,8 @@ pub fn decode(i: u32) -> I {
                             } else {
                                 I {
                                     it: IT::LSLImm,
-                                    imm1: imm5,
-                                    imm2: 0,
+                                    immu: imm5,
+                                    imms: 0,
                                     rd,
                                     rm,
                                     rn: 0,
@@ -351,8 +351,8 @@ pub fn decode(i: u32) -> I {
 
                             return I {
                                 it: IT::LSRImm,
-                                imm1: imm5,
-                                imm2: 0,
+                                immu: imm5,
+                                imms: 0,
                                 rd,
                                 rm,
                                 rn: 0,
@@ -369,8 +369,8 @@ pub fn decode(i: u32) -> I {
 
                             return I {
                                 it: IT::ASRImm,
-                                imm1: imm5,
-                                imm2: 0,
+                                immu: imm5,
+                                imms: 0,
                                 rd,
                                 rm,
                                 rn: 0,
@@ -393,8 +393,8 @@ pub fn decode(i: u32) -> I {
                                     rm: rmorimm3,
                                     rn,
                                     rt: 0,
-                                    imm1: 0,
-                                    imm2: 0,
+                                    immu: 0,
+                                    imms: 0,
                                     rl: 0,
                                     setflags: true,
                                 },
@@ -404,8 +404,8 @@ pub fn decode(i: u32) -> I {
                                     rm: rmorimm3,
                                     rn,
                                     rt: 0,
-                                    imm1: 0,
-                                    imm2: 0,
+                                    immu: 0,
+                                    imms: 0,
                                     rl: 0,
                                     setflags: true,
                                 },
@@ -415,8 +415,8 @@ pub fn decode(i: u32) -> I {
                                     rn,
                                     rm: 0,
                                     rt: 0,
-                                    imm1: rmorimm3 as u32,
-                                    imm2: 0,
+                                    immu: rmorimm3 as u32,
+                                    imms: 0,
                                     rl: 0,
                                     setflags: true,
                                 },
@@ -426,8 +426,8 @@ pub fn decode(i: u32) -> I {
                                     rn,
                                     rm: 0,
                                     rt: 0,
-                                    imm1: rmorimm3 as u32,
-                                    imm2: 0,
+                                    immu: rmorimm3 as u32,
+                                    imms: 0,
                                     rl: 0,
                                     setflags: true,
                                 },
@@ -441,14 +441,14 @@ pub fn decode(i: u32) -> I {
 
                             return I {
                                 it: IT::MOVImm,
-                                imm1: imm8,
+                                immu: imm8,
                                 rd,
                                 setflags: true,
                                 rm: 0,
                                 rn: 0,
                                 rl: 0,
                                 rt: 0,
-                                imm2: 0,
+                                imms: 0,
                             };
                         }
                         0b101 => {
@@ -458,13 +458,13 @@ pub fn decode(i: u32) -> I {
                             return I {
                                 it: IT::CMPImm,
                                 rn,
-                                imm1: imm8,
+                                immu: imm8,
                                 setflags: true,
                                 rd: 0,
                                 rm: 0,
                                 rt: 0,
                                 rl: 0,
-                                imm2: 0,
+                                imms: 0,
                             };
                         }
                         // ADDImm (T2)
@@ -476,9 +476,9 @@ pub fn decode(i: u32) -> I {
                                 it: IT::ADDImm,
                                 rd: rdn,
                                 rn: rdn,
-                                imm1: imm8,
+                                immu: imm8,
                                 setflags: true,
-                                imm2: 0,
+                                imms: 0,
                                 rm: 0,
                                 rt: 0,
                                 rl: 0,
@@ -493,9 +493,9 @@ pub fn decode(i: u32) -> I {
                                 it: IT::SUBImm,
                                 rd: rdn,
                                 rn: rdn,
-                                imm1: imm8,
+                                immu: imm8,
                                 setflags: true,
-                                imm2: 0,
+                                imms: 0,
                                 rm: 0,
                                 rt: 0,
                                 rl: 0,
@@ -541,8 +541,8 @@ pub fn decode(i: u32) -> I {
                             rd: rdn,
                             rn: rdn,
                             rm,
-                            imm1: 0,
-                            imm2: 0,
+                            immu: 0,
+                            imms: 0,
                             rt: 0,
                             rl: 0,
                             setflags: true,
@@ -557,13 +557,13 @@ pub fn decode(i: u32) -> I {
                             let rn = briz(i, 0, 2) + n << 4;
 
                             return I {
-                                it: IT::CMPReg,
+                                it: IT::ADDReg,
                                 rn: rn as u8,
                                 rm: rm as u8,
                                 setflags: true,
                                 rd: 0,
-                                imm1: 0,
-                                imm2: 0,
+                                immu: 0,
+                                imms: 0,
                                 rt: 0,
                                 rl: 0,
                             };
@@ -583,8 +583,8 @@ pub fn decode(i: u32) -> I {
                                 rd: 0,
                                 rt: 0,
                                 rl: 0,
-                                imm1: 0,
-                                imm2: 0,
+                                immu: 0,
+                                imms: 0,
                             };
                         }
                         // MOVReg (T1)
@@ -601,8 +601,8 @@ pub fn decode(i: u32) -> I {
                                 rd: 0,
                                 rt: 0,
                                 rl: 0,
-                                imm1: 0,
-                                imm2: 0,
+                                immu: 0,
+                                imms: 0,
                             };
                         }
                         // BX
@@ -620,8 +620,8 @@ pub fn decode(i: u32) -> I {
                                 rt: 0,
                                 rn: 0,
                                 rl: 0,
-                                imm1: 0,
-                                imm2: 0,
+                                immu: 0,
+                                imms: 0,
                             };
                         }
                         0b1110 | 0b1111 => {
@@ -636,8 +636,8 @@ pub fn decode(i: u32) -> I {
                                 setflags: false,
                                 rd: 0,
                                 rn: 0,
-                                imm1: 0,
-                                imm2: 0,
+                                immu: 0,
+                                imms: 0,
                                 rt: 0,
                                 rl: 0,
                             };
@@ -652,8 +652,8 @@ pub fn decode(i: u32) -> I {
                         return I {
                             it: IT::LDRLit,
                             rt,
-                            imm1: imm8,
-                            imm2: 0,
+                            immu: imm8,
+                            imms: 0,
                             rd: 0,
                             rn: 0,
                             rm: 0,
@@ -686,8 +686,8 @@ pub fn decode(i: u32) -> I {
                             rm,
                             rd: 0,
                             rl: 0,
-                            imm1: 0,
-                            imm2: 0,
+                            immu: 0,
+                            imms: 0,
                             setflags: false,
                         };
                     }
@@ -713,8 +713,8 @@ pub fn decode(i: u32) -> I {
                             rm: 0,
                             rd: 0,
                             rl: 0,
-                            imm1: imm5,
-                            imm2: 0,
+                            immu: imm5,
+                            imms: 0,
                             setflags: false,
                         };
                     }
@@ -743,11 +743,11 @@ pub fn decode(i: u32) -> I {
                             it,
                             rn,
                             rt,
-                            imm1: imm5,
+                            immu: imm5,
                             rm: 0,
                             rd: 0,
                             rl: 0,
-                            imm2: 0,
+                            imms: 0,
                             setflags: false,
                         };
                     }
@@ -759,8 +759,8 @@ pub fn decode(i: u32) -> I {
                         return I {
                             it: IT::ADR,
                             rd,
-                            imm1: imm8,
-                            imm2: 0,
+                            immu: imm8,
+                            imms: 0,
                             rm: 0,
                             rn: 0,
                             rt: 0,
@@ -776,8 +776,8 @@ pub fn decode(i: u32) -> I {
                         return I {
                             it: IT::ADDSpImm,
                             rd,
-                            imm1: imm8,
-                            imm2: 0,
+                            immu: imm8,
+                            imms: 0,
                             rm: 0,
                             rn: 0,
                             rt: 0,
@@ -795,8 +795,8 @@ pub fn decode(i: u32) -> I {
                                 return I {
                                     it: IT::ADDSpImm,
                                     rd: 13,
-                                    imm1: imm7,
-                                    imm2: 0,
+                                    immu: imm7,
+                                    imms: 0,
                                     rm: 0,
                                     rn: 0,
                                     rt: 0,
@@ -811,8 +811,8 @@ pub fn decode(i: u32) -> I {
                                 return I {
                                     it: IT::SUBSP,
                                     rd: 13,
-                                    imm1: imm7,
-                                    imm2: 0,
+                                    immu: imm7,
+                                    imms: 0,
                                     rm: 0,
                                     rn: 0,
                                     rt: 0,
@@ -841,8 +841,8 @@ pub fn decode(i: u32) -> I {
                                     rt: 0,
                                     rl: 0,
                                     setflags: false,
-                                    imm1: 0,
-                                    imm2: 0,
+                                    immu: 0,
+                                    imms: 0,
                                 };
                             }
                             // Push multiple registers
@@ -857,8 +857,8 @@ pub fn decode(i: u32) -> I {
                                     rd: 0,
                                     rt: 0,
                                     rm: 0,
-                                    imm1: 0,
-                                    imm2: 0,
+                                    immu: 0,
+                                    imms: 0,
                                     setflags: false,
                                 };
                             }
@@ -882,8 +882,8 @@ pub fn decode(i: u32) -> I {
                                     rn: 0,
                                     rt: 0,
                                     rl: 0,
-                                    imm1: 0,
-                                    imm2: 0,
+                                    immu: 0,
+                                    imms: 0,
                                     setflags: false,
                                 };
                             }
@@ -899,8 +899,8 @@ pub fn decode(i: u32) -> I {
                                     rd: 0,
                                     rt: 0,
                                     rm: 0,
-                                    imm1: 0,
-                                    imm2: 0,
+                                    immu: 0,
+                                    imms: 0,
                                     setflags: false,
                                 };
                             }
@@ -910,13 +910,13 @@ pub fn decode(i: u32) -> I {
 
                                 return I {
                                     it: IT::BKPT,
-                                    imm1: imm8,
+                                    immu: imm8,
                                     rd: 0,
                                     rn: 0,
                                     rm: 0,
                                     rt: 0,
                                     rl: 0,
-                                    imm2: 0,
+                                    imms: 0,
                                     setflags: false,
                                 };
                             }
@@ -943,8 +943,8 @@ pub fn decode(i: u32) -> I {
                             rd: 0,
                             rm: 0,
                             rt: 0,
-                            imm1: 0,
-                            imm2: 0,
+                            immu: 0,
+                            imms: 0,
                             setflags: false,
                         };
                     }
@@ -960,8 +960,8 @@ pub fn decode(i: u32) -> I {
                             rd: 0,
                             rm: 0,
                             rt: 0,
-                            imm1: 0,
-                            imm2: 0,
+                            immu: 0,
+                            imms: 0,
                             setflags: false,
                         };
                     }
@@ -982,13 +982,13 @@ pub fn decode(i: u32) -> I {
 
                                 return I {
                                     it,
-                                    imm1: imm8,
+                                    immu: imm8,
                                     rn: cond as u8,
                                     rd: 0,
                                     rt: 0,
                                     rl: 0,
                                     rm: 0,
-                                    imm2: 0,
+                                    imms: 0,
                                     setflags: false,
                                 };
                             }
@@ -1000,13 +1000,13 @@ pub fn decode(i: u32) -> I {
 
                         return I {
                             it: IT::B,
-                            imm1: imm11,
+                            immu: imm11,
                             rn: 0,
                             rd: 0,
                             rt: 0,
                             rl: 0,
                             rm: 0,
-                            imm2: 0,
+                            imms: 0,
                             setflags: false,
                         };
                     }
@@ -1017,7 +1017,7 @@ pub fn decode(i: u32) -> I {
         }
         // Instruction is 32 bit
         _ => {
-            if briz(0, 31, 29) != 0b111 {
+            if briz(i, 29, 31) != 0b111 { 
                 panic!("Invalid instr: {i}")
             }
 
@@ -1064,8 +1064,8 @@ pub fn decode(i: u32) -> I {
                                 rm: 0,
                                 rt: 0,
                                 rl: 0,
-                                imm1: 0,
-                                imm2: 0,
+                                immu: 0,
+                                imms: 0,
                                 setflags: false,
                             }
                         }
@@ -1077,22 +1077,28 @@ pub fn decode(i: u32) -> I {
 
                             let i1 = !(j1 ^ s) as u32;
                             let i2 = !(j2 ^ s) as u32;
-                            let s = s as u32;
 
                             let imm11 = briz(i, 0, 10);
                             let imm10 = briz(i, 16, 25);
                             let imm32 =
-                                (imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23) + (s << 31);
+                                (imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23);
+
+                            // case imm32 into i32 and set sign bit
+                            let imm32 = if s {
+                                -(imm32 as i32)
+                            } else {
+                                imm32 as i32
+                            };
 
                             I {
                                 it: IT::BL,
-                                imm1: imm32,
+                                imms: imm32,
                                 rd: 0,
                                 rn: 0,
                                 rm: 0,
                                 rt: 0,
                                 rl: 0,
-                                imm2: 0,
+                                immu: 0,
                                 setflags: false,
                             }
                         }
