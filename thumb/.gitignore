@@ -4,3 +4,4 @@
 *.bin
 *.s
 *.out
+!decode_test.s

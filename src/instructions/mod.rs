@@ -13,6 +13,11 @@ fn n_ones(n: u32) -> u32 {
 /// Bit range inclusive zero extend
 #[inline(always)]
 pub fn briz(i: u32, low: u32, high: u32) -> u32 {
+    #[cfg(debug_assertions)]
+    if low >= high {
+        panic!("briz error: {i}, {low}, {high}")
+    }
+
     (i >> low) & n_ones(high - low + 1)
 }
 

@@ -4,6 +4,9 @@ mod execute;
 mod instructions;
 mod model;
 
+#[cfg(test)]
+mod test;
+
 use model::Memory;
 use model::Registers;
 

@@ -26,7 +26,7 @@ impl Registers {
 
     pub fn set_register(&mut self, index: u32, value: u32) {
         match index {
-            0...12 => self.gp[index] = value,
+            0..=12 => self.gp[index as usize] = value,
             13 => self.sp = value,
             14 => self.lr = value,
             15 => self.pc = value,
@@ -36,7 +36,7 @@ impl Registers {
 
     pub fn get_register(&mut self, index: u32) -> u32 {
         match index {
-            0...12 => self.gp[index],
+            0..=12 => self.gp[index as usize],
             13 => self.sp,
             14 => self.lr,
             15 => self.pc,

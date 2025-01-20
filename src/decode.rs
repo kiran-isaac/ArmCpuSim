@@ -1,6 +1,7 @@
 use crate::instructions::{bit_as_bool, briz};
 
-enum IT {
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum IT {
     UNPREDICTABLE,
     UNDEFINED,
 
@@ -257,17 +258,18 @@ enum IT {
     YIELD,
 }
 
-struct I {
-    it: IT,
-    rd: u8,
-    /// rn or cond
-    rn: u8,
-    rm: u8,
-    rt: u8,
-    rl: u16,
-    imm1: u32,
-    imm2: u32,
-    setflags: bool,
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct I {
+    pub it: IT,
+    pub rd: u8,
+    /// rn or cond or option depending on instr
+    pub rn: u8,
+    pub rm: u8,
+    pub rt: u8,
+    pub rl: u16,
+    pub imm1: u32,
+    pub imm2: u32,
+    pub setflags: bool,
 }
 
 impl I {
@@ -300,8 +302,8 @@ impl I {
     }
 }
 
-fn decode(i: u32) -> I {
-    match briz(i, 31, 16) {
+pub fn decode(i: u32) -> I {
+    match briz(i, 16, 31) {
         // Instruction is 16 bit
         0 => {
             match briz(i, 14, 15) {
@@ -1030,9 +1032,19 @@ fn decode(i: u32) -> I {
 
                     match (op2, op1) {
                         // MSR
-                        (0b000, 0b0111000) | (0b000, 0b0111001) | (0b010, 0b0111000) | (0b010, 0b0111001) => {},
+                        (0b000, 0b0111000)
+                        | (0b000, 0b0111001)
+                        | (0b010, 0b0111000)
+                        | (0b010, 0b0111001) => {
+                            unimplemented!()
+                        }
                         // MRS
-                        (0b000, 0b0111110) | (0b000, 0b0111111) | (0b010, 0b0111110) | (0b010, 0b0111111) => {},
+                        (0b000, 0b0111110)
+                        | (0b000, 0b0111111)
+                        | (0b010, 0b0111110)
+                        | (0b010, 0b0111111) => {
+                            unimplemented!()
+                        }
                         // UDF
                         (0b010, 0b1111111) => I::undefined(),
                         // Misc control instructions
@@ -1066,10 +1078,11 @@ fn decode(i: u32) -> I {
                             let i1 = !(j1 ^ s) as u32;
                             let i2 = !(j2 ^ s) as u32;
                             let s = s as u32;
-                            
+
                             let imm11 = briz(i, 0, 10);
                             let imm10 = briz(i, 16, 25);
-                            let imm32 = (imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23) + (s << 31);
+                            let imm32 =
+                                (imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23) + (s << 31);
 
                             I {
                                 it: IT::BL,
@@ -1083,6 +1096,7 @@ fn decode(i: u32) -> I {
                                 setflags: false,
                             }
                         }
+                        _ => panic!("Invalid instr: {i}"),
                     }
                 }
                 _ => panic!("Invalid instr: {i}"),
