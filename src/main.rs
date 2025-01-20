@@ -1,7 +1,8 @@
-mod model;
-mod instructions;
-mod execute;
+mod decode;
 mod dispatch;
+mod execute;
+mod instructions;
+mod model;
 
 use model::Memory;
 use model::Registers;
