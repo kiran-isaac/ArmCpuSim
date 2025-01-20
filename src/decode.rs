@@ -131,7 +131,7 @@ enum IT {
     /// Load Register Halfword (immediate) calculates an address from a base register value and an immediate offset, loads
     /// a halfword from memory, zero-extends it to form a 32-bit word, and writes it to a register. Offset addressing is used,
     /// see Memory accesses on page A6-97 for more information.
-    LDRHImmediate,
+    LDRHImm,
     /// Load Register Halfword (register) calculates an address from a base register value and an offset register value, loads
     /// a halfword from memory, zero-extends it to form a 32-bit word, and writes it to a register. Offset addressing is used,
     /// see Memory accesses on page A6-97 for more information.
@@ -286,9 +286,11 @@ enum IT {
 struct I {
     it: IT,
     rd: u8,
+    /// rn or register list
     rn: u8,
     rm: u8,
     rt: u8,
+    rl: u16,
     imm1: u32,
     imm2: u32,
     setflags: bool,
@@ -302,6 +304,7 @@ impl I {
             rn: 0,
             rm: 0,
             rt: 0,
+            rl: 0,
             imm1: 0,
             imm2: 0,
             setflags: false,
@@ -315,6 +318,7 @@ impl I {
             rn: 0,
             rm: 0,
             rt: 0,
+            rl: 0,
             imm1: 0,
             imm2: 0,
             setflags: false,
@@ -346,6 +350,7 @@ fn decode(i: u32) -> I {
                                     rm,
                                     rn: 0,
                                     rt: 0,
+                                    rl: 0,
                                     setflags: true,
                                 }
                             } else {
@@ -357,6 +362,7 @@ fn decode(i: u32) -> I {
                                     rm,
                                     rn: 0,
                                     rt: 0,
+                                    rl: 0,
                                     setflags: true,
                                 }
                             };
@@ -375,6 +381,7 @@ fn decode(i: u32) -> I {
                                 rm,
                                 rn: 0,
                                 rt: 0,
+                                rl: 0,
                                 setflags: true,
                             };
                         }
@@ -392,6 +399,7 @@ fn decode(i: u32) -> I {
                                 rm,
                                 rn: 0,
                                 rt: 0,
+                                rl: 0,
                                 setflags: true,
                             };
                         }
@@ -411,6 +419,7 @@ fn decode(i: u32) -> I {
                                     rt: 0,
                                     imm1: 0,
                                     imm2: 0,
+                                    rl: 0,
                                     setflags: true,
                                 },
                                 0b01 => I {
@@ -421,6 +430,7 @@ fn decode(i: u32) -> I {
                                     rt: 0,
                                     imm1: 0,
                                     imm2: 0,
+                                    rl: 0,
                                     setflags: true,
                                 },
                                 0b10 => I {
@@ -431,6 +441,7 @@ fn decode(i: u32) -> I {
                                     rt: 0,
                                     imm1: rmorimm3 as u32,
                                     imm2: 0,
+                                    rl: 0,
                                     setflags: true,
                                 },
                                 0b11 => I {
@@ -441,6 +452,7 @@ fn decode(i: u32) -> I {
                                     rt: 0,
                                     imm1: rmorimm3 as u32,
                                     imm2: 0,
+                                    rl: 0,
                                     setflags: true,
                                 },
                                 _ => unreachable!("BRI issue: Invalid instr: {i}"),
@@ -458,7 +470,7 @@ fn decode(i: u32) -> I {
                                 setflags: true,
                                 rm: 0,
                                 rn: 0,
-
+                                rl: 0,
                                 rt: 0,
                                 imm2: 0,
                             };
@@ -475,6 +487,7 @@ fn decode(i: u32) -> I {
                                 rd: 0,
                                 rm: 0,
                                 rt: 0,
+                                rl: 0,
                                 imm2: 0,
                             };
                         }
@@ -492,6 +505,7 @@ fn decode(i: u32) -> I {
                                 imm2: 0,
                                 rm: 0,
                                 rt: 0,
+                                rl: 0,
                             };
                         }
                         // SUBImm (T2)
@@ -508,6 +522,7 @@ fn decode(i: u32) -> I {
                                 imm2: 0,
                                 rm: 0,
                                 rt: 0,
+                                rl: 0,
                             };
                         }
                         _ => unreachable!("BRI issue: Invalid instr: {i}"),
@@ -553,6 +568,7 @@ fn decode(i: u32) -> I {
                             imm1: 0,
                             imm2: 0,
                             rt: 0,
+                            rl: 0,
                             setflags: true,
                         };
                     }
@@ -573,6 +589,7 @@ fn decode(i: u32) -> I {
                                 imm1: 0,
                                 imm2: 0,
                                 rt: 0,
+                                rl: 0,
                             };
                         }
                         0b0100 => return I::unpredictable(),
@@ -588,6 +605,8 @@ fn decode(i: u32) -> I {
                                 rm: rm as u8,
                                 setflags: true,
                                 rd: 0,
+                                rt: 0,
+                                rl: 0,
                                 imm1: 0,
                                 imm2: 0,
                             };
@@ -604,6 +623,8 @@ fn decode(i: u32) -> I {
                                 rm: rm as u8,
                                 setflags: true,
                                 rd: 0,
+                                rt: 0,
+                                rl: 0,
                                 imm1: 0,
                                 imm2: 0,
                             };
@@ -620,7 +641,9 @@ fn decode(i: u32) -> I {
                                 rm,
                                 setflags: false,
                                 rd: 0,
+                                rt: 0,
                                 rn: 0,
+                                rl: 0,
                                 imm1: 0,
                                 imm2: 0,
                             };
@@ -640,6 +663,7 @@ fn decode(i: u32) -> I {
                                 imm1: 0,
                                 imm2: 0,
                                 rt: 0,
+                                rl: 0,
                             };
                         }
                         _ => unreachable!("BRI issue: Invalid instr: {i}"),
@@ -657,6 +681,7 @@ fn decode(i: u32) -> I {
                             rd: 0,
                             rn: 0,
                             rm: 0,
+                            rl: 0,
                             setflags: false,
                         };
                     }
@@ -684,6 +709,7 @@ fn decode(i: u32) -> I {
                             rn,
                             rm,
                             rd: 0,
+                            rl: 0,
                             imm1: 0,
                             imm2: 0,
                             setflags: false,
@@ -701,6 +727,7 @@ fn decode(i: u32) -> I {
                             0b01 => IT::LDRImm,
                             0b10 => IT::STRBImm,
                             0b11 => IT::LDRBImm,
+                            _ => unreachable!("BRI issue: Invalid instr: {i}"),
                         };
 
                         return I {
@@ -709,6 +736,7 @@ fn decode(i: u32) -> I {
                             rt,
                             rm: 0,
                             rd: 0,
+                            rl: 0,
                             imm1: imm5,
                             imm2: 0,
                             setflags: false,
@@ -717,10 +745,152 @@ fn decode(i: u32) -> I {
                     _ => unreachable!("BRI issue: Invalid instr: {i}"),
                 },
                 // Load/store single data item pt2
-                // PC Relative
-                // SP Relative
+                // ADR: PC Relative
+                // ADDSpImm: SP Relative
                 // Misc
-                0b10 => {}
+                0b10 => match briz(i, 10, 13) {
+                    // Load/store single data item pt2
+                    0b0000..=0b0111 => {
+                        let imm5 = briz(i, 6, 10);
+                        let rn = briz(i, 3, 5) as u8;
+                        let rt = briz(i, 0, 2) as u8;
+
+                        let it = match briz(i, 11, 12) {
+                            0b00 => IT::STRHImm,
+                            0b01 => IT::LDRHImm,
+                            0b10 => IT::STRImm,
+                            0b11 => IT::LDRImm,
+                            _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                        };
+
+                        return I {
+                            it,
+                            rn,
+                            rt,
+                            imm1: imm5,
+                            rm: 0,
+                            rd: 0,
+                            rl: 0,
+                            imm2: 0,
+                            setflags: false,
+                        };
+                    }
+                    // ADR
+                    0b1000 | 0b1001 => {
+                        let rd = briz(i, 8, 10) as u8;
+                        let imm8 = briz(i, 0, 7);
+
+                        return I {
+                            it: IT::ADR,
+                            rd,
+                            imm1: imm8,
+                            imm2: 0,
+                            rm: 0,
+                            rn: 0,
+                            rt: 0,
+                            rl: 0,
+                            setflags: false,
+                        };
+                    }
+                    // ADDSpImm (T1)
+                    0b1010 | 0b1011 => {
+                        let rd = briz(i, 8, 10) as u8;
+                        let imm8 = briz(i, 0, 7);
+
+                        return I {
+                            it: IT::ADDSpImm,
+                            rd,
+                            imm1: imm8,
+                            imm2: 0,
+                            rm: 0,
+                            rn: 0,
+                            rt: 0,
+                            rl: 0,
+                            setflags: false,
+                        };
+                    }
+                    // Misc
+                    0b1100..=0b1111 => {
+                        match briz(i, 5, 11) {
+                            // ADDSpImm (T2)
+                            0b0000000..=0b0000011 => {
+                                let imm7 = briz(i, 0, 6);
+
+                                return I {
+                                    it: IT::ADDSpImm,
+                                    rd: 13,
+                                    imm1: imm7,
+                                    imm2: 0,
+                                    rm: 0,
+                                    rn: 0,
+                                    rt: 0,
+                                    rl: 0,
+                                    setflags: false,
+                                };
+                            }
+                            // SUBSP
+                            0b0000100..=0b0000111 => {
+                                let imm7 = briz(i, 0, 6);
+
+                                return I {
+                                    it: IT::SUBSP,
+                                    rd: 13,
+                                    imm1: imm7,
+                                    imm2: 0,
+                                    rm: 0,
+                                    rn: 0,
+                                    rt: 0,
+                                    rl: 0,
+                                    setflags: false,
+                                };
+                            }
+                            // SXTH, SXTB, UXTH, UXTB
+                            0b0010000..=0b0010111 => {
+                                let rd = briz(i, 0, 2) as u8;
+                                let rm = briz(i, 3, 5) as u8;
+
+                                let it = match briz(i, 6, 7) {
+                                    0b00 => IT::SXTH,
+                                    0b01 => IT::SXTB,
+                                    0b10 => IT::UXTH,
+                                    0b11 => IT::UXTB,
+                                    _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                                };
+
+                                return I {
+                                    it,
+                                    rd,
+                                    rm,
+                                    rn: 0,
+                                    rt: 0,
+                                    rl: 0,
+                                    setflags: false,
+                                    imm1: 0,
+                                    imm2: 0,
+                                };
+                            }
+                            // Push multiple registers
+                            0b0100000..=0b0101111 => {
+                                let m = briz(i, 8, 8);
+                                let rl = briz(i, 0, 8) + m << 14;
+
+                                return I {
+                                    it: IT::PUSH,
+                                    rl: rl as u16,
+                                    rn: 0,
+                                    rd: 0,
+                                    rt: 0,
+                                    rm: 0,
+                                    imm1: 0,
+                                    imm2: 0,
+                                    setflags: false
+                                }
+                            }
+                            _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                        }
+                    }
+                    _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                },
                 // Store Multiple
                 // Load Multiple
                 // Conditional Branch
