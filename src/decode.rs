@@ -1,36 +1,39 @@
+// enum InstrType {
+//     /// Shift, add, subtract, move and compare
+//     SASMC,
+//     /// Data Processing
+//     DP,
+//     /// Special data instructions and branch and exchange
+//     BX,
+//     /// LDR register or immediate
+//     LDR,
+//     /// Load store
+//     LS,
+//     /// Address to Register: PC relative
+//     ADRPC,
+//     /// Address to Register: SP relative
+//     ADDSP,
+
+//     MISC,
+//     /// Store Multiple
+//     STM,
+//     /// Load Multiple
+//     LDM,
+//     /// Conditional Branch
+//     CB,
+//     /// B
+//     B,
+// }
+
+use crate::instructions::bri;
+
 enum InstrType {
-    /// Shift, add, subtract, move and compare
-    SASMC,
-    /// Data Processing
-    DP,
-    /// Special data instructions and branch and exchange
-    BX,
-    /// LDR register or immediate
-    LDR,
-    /// Load store
-    LS,
-    /// Address to Register: PC relative
-    ADRPC,
-    /// Address to Register: SP relative
-    ADDSP,
-
-    MISC,
-    /// Store Multiple
-    STM,
-    /// Load Multiple
-    LDM,
-    /// Conditional Branch
-    CB,
-    /// B
-    B,
-}
-
-enum InstrType2 {
+    INVALID,
     /// Add with Carry (register) adds a register value, the carry flag value, and another register value, and writes the result
     /// to the destination register. It updates the condition flags based on the result
     ADC,
     /// This instruction adds an immediate to a register, and writes the result to the destination register, and updates condition flags
-    ADDIm,
+    ADDImm,
     /// This instruction adds two register values, and writes the result to the destination register, and perhaps updates condition flags
     ADDReg,
     /// This instruction adds an immediate value to the SP value, and writes the result to the destination register.
@@ -96,7 +99,7 @@ enum InstrType2 {
     /// operations, such as those resulting from read or write accesses to the system control space (SCS), that completed
     /// before the ISB instruction are visible to the instructions fetched after the ISB. See Barrier support for system
     /// correctness on page B2-221 for more details.
-    /// 
+    ///
     /// In addition, the ISB instruction ensures that any branches that appear in program order after it are always written into
     /// any branch prediction logic with the context that is visible after the ISB instruction. This is required to ensure correct
     /// execution of the instruction stream.
@@ -237,7 +240,7 @@ enum InstrType2 {
     SUBImm,
     /// This instruction subtracts an optionally-shifted register value from a register value, and writes the result to the
     /// destination register. It updates the condition flags based on the result.
-    SUBReg, 
+    SUBReg,
     /// This instruction subtracts an immediate value from the SP value, and writes the result to the destination register.
     SUBSP,
     /// The Supervisor Call instruction generates a call to a system supervisor, see Exceptions on page B1-183 for more
@@ -278,12 +281,228 @@ enum InstrType2 {
 
 struct Instruction {
     it: InstrType,
-    opcode: u8,
     rd: u8,
     rn: u8,
     rm: u8,
     imm1: u32,
     imm2: u32,
+    setflags: bool,
 }
 
-fn decode(i: u32) -> Instruction {}
+impl Instruction {
+    fn invalid() -> Self {
+        Instruction {
+            it: InstrType::INVALID,
+            rd: 0,
+            rn: 0,
+            rm: 0,
+            imm1: 0,
+            imm2: 0,
+        }
+    }
+}
+
+fn decode(i: u32) -> Instruction {
+    match bri(i, 31, 16) {
+        // Instruction is 16 bit
+        0 => {
+            match bri(i, 14, 15) {
+                // Shift (immediate), add, subtract, move, and compare
+                0b00 => {
+                    // let opcode = bit_range_inclusive(i, 9, 13);
+                    match bri(i, 11, 13) {
+                        // LSL or MOV encoding 2
+                        0b000 => {
+                            let imm5 = bri(i, 6, 10);
+                            let rd = bri(i, 0, 2) as u8;
+                            let rm = bri(i, 3, 5) as u8;
+
+                            return if imm5 == 0 {
+                                Instruction {
+                                    it: InstrType::MOVReg,
+                                    imm1: 0,
+                                    imm2: 0,
+                                    rd,
+                                    rm,
+                                    rn: 0,
+                                    setflags: true,
+                                }
+                            } else {
+                                Instruction {
+                                    it: InstrType::LSLImm,
+                                    imm1: imm5,
+                                    imm2: 0,
+                                    rd,
+                                    rm,
+                                    rn: 0,
+                                    setflags: true,
+                                }
+                            };
+                        }
+                        // LSR
+                        0b001 => {
+                            let imm5 = bri(i, 6, 10);
+                            let rd = bri(i, 0, 2) as u8;
+                            let rm = bri(i, 3, 5) as u8;
+
+                            return Instruction {
+                                it: InstrType::LSRImm,
+                                imm1: imm5,
+                                imm2: 0,
+                                rd,
+                                rm,
+                                rn: 0,
+                                setflags: true,
+                            };
+                        }
+                        // ASR
+                        0b010 => {
+                            let imm5 = bri(i, 6, 10);
+                            let rd = bri(i, 0, 2) as u8;
+                            let rm = bri(i, 3, 5) as u8;
+
+                            return Instruction {
+                                it: InstrType::ASRImm,
+                                imm1: imm5,
+                                imm2: 0,
+                                rd,
+                                rm,
+                                rn: 0,
+                                setflags: true,
+                            };
+                        }
+                        // ADDReg, SUBReg, ADDImm (T1), SUBImm (T1)
+                        0b011 => {
+                            let rmorimm3 = bri(i, 6, 8) as u8;
+                            let rn = bri(i, 3, 5) as u8;
+                            let rd = bri(i, 0, 2) as u8;
+
+                            return match bri(i, 9, 10) {
+                                // ADDReg
+                                0b00 => Instruction {
+                                    it: InstrType::ADDReg,
+                                    rd,
+                                    rm: rmorimm3,
+                                    rn,
+                                    imm1: 0,
+                                    imm2: 0,
+                                    setflags: true,
+                                },
+                                0b01 => Instruction {
+                                    it: InstrType::SUBReg,
+                                    rd,
+                                    rm: rmorimm3,
+                                    rn,
+                                    imm1: 0,
+                                    imm2: 0,
+                                    setflags: true,
+                                },
+                                0b10 => Instruction {
+                                    it: InstrType::ADDImm,
+                                    rd,
+                                    rm: 0,
+                                    rn,
+                                    imm1: rmorimm3 as u32,
+                                    imm2: 0,
+                                    setflags: true,
+                                },
+                                0b11 => Instruction {
+                                    it: InstrType::SUBImm,
+                                    rd,
+                                    rm: 0,
+                                    rn,
+                                    imm1: rmorimm3 as u32,
+                                    imm2: 0,
+                                    setflags: true,
+                                },
+                                _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                            };
+                        }
+                        // MOVImm
+                        0b100 => {
+                            let rd = bri(i, 8, 10) as u8;
+                            let imm8 = bri(i, 0, 7);
+
+                            return Instruction {
+                                it: InstrType::MOVImm,
+                                imm1: imm8,
+                                rd,
+                                setflags: true,
+                                rm: 0,
+                                rn: 0,
+                                imm2: 0,
+                            };
+                        }
+                        0b101 => {
+                            let rn = bri(i, 8, 10) as u8;
+                            let imm8 = bri(i, 0, 7);
+
+                            return Instruction {
+                                it: InstrType::CMPImm,
+                                rn,
+                                imm1: imm8,
+                                setflags: true,
+                                rd: 0,
+                                rm: 0,
+                                imm2: 0,
+                            };
+                        }
+                        // ADDImm (T2)
+                        0b110 => {
+                            let rdn = bri(i, 8, 10) as u8;
+                            let imm8 = bri(i, 0, 7);
+
+                            return Instruction {
+                                it: InstrType::ADDImm,
+                                rd: rdn,
+                                rn: rdn,
+                                imm1: imm8,
+                                setflags: true,
+                                imm2: 0,
+                                rm: 0,
+                            };
+                        }
+                        // SUBImm (T2)
+                        0b111 => {
+                            let rdn = bri(i, 8, 10) as u8;
+                            let imm8 = bri(i, 0, 7);
+
+                            return Instruction {
+                                it: InstrType::SUBImm,
+                                rd: rdn,
+                                rn: rdn,
+                                imm1: imm8,
+                                setflags: true,
+                                imm2: 0,
+                                rm: 0,
+                            };
+                        }
+                        _ => unreachable!("Invalid instr: {i}"),
+                    }
+                }
+                // Data Processing
+                // Special data instructions, branch and exchange
+                // Load from literal pool
+                // Loa/store single data item pt1
+                0b01 => {}
+                // Load/store single data item pt2
+                // PC Relative
+                // SP Relative
+                // Misc
+                0b10 => {}
+                // Store Multiple
+                // Load Multiple
+                // Conditional Branch
+                // Unconditional Branch
+                0b11 => {}
+                _ => panic!("Invalid instr: {i}"),
+            }
+        }
+        // Instruction is 32 bit
+        _ => {
+            panic!("Invalid instr: {i}")
+        }
+    }
+
+    panic!("Invalid instr: {i}")
+}
