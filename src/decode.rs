@@ -25,9 +25,9 @@
 //     B,
 // }
 
-use crate::instructions::bri;
+use crate::instructions::briz;
 
-enum InstrType {
+enum IT {
     INVALID,
     UNPREDICTABLE,
     /// Add with Carry (register) adds a register value, the carry flag value, and another register value, and writes the result
@@ -135,7 +135,7 @@ enum InstrType {
     /// Load Register Halfword (register) calculates an address from a base register value and an offset register value, loads
     /// a halfword from memory, zero-extends it to form a 32-bit word, and writes it to a register. Offset addressing is used,
     /// see Memory accesses on page A6-97 for more information.
-    LDRHRegister,
+    LDRHReg,
     /// Load Register Signed Byte (register) calculates an address from a base register value and an offset register value,
     /// loads a byte from memory, sign-extends it to form a 32-bit word, and writes it to a register. Offset addressing is used,
     /// see Memory accesses on page A6-97 for more information.
@@ -283,23 +283,25 @@ enum InstrType {
     YIELD,
 }
 
-struct Instruction {
-    it: InstrType,
+struct I {
+    it: IT,
     rd: u8,
     rn: u8,
     rm: u8,
+    rt: u8,
     imm1: u32,
     imm2: u32,
     setflags: bool,
 }
 
-impl Instruction {
+impl I {
     fn invalid() -> Self {
-        Instruction {
-            it: InstrType::INVALID,
+        I {
+            it: IT::INVALID,
             rd: 0,
             rn: 0,
             rm: 0,
+            rt: 0,
             imm1: 0,
             imm2: 0,
             setflags: false,
@@ -307,11 +309,12 @@ impl Instruction {
     }
 
     fn unpredictable() -> Self {
-        Instruction {
-            it: InstrType::UNPREDICTABLE,
+        I {
+            it: IT::UNPREDICTABLE,
             rd: 0,
             rn: 0,
             rm: 0,
+            rt: 0,
             imm1: 0,
             imm2: 0,
             setflags: false,
@@ -319,115 +322,123 @@ impl Instruction {
     }
 }
 
-fn decode(i: u32) -> Instruction {
-    match bri(i, 31, 16) {
+fn decode(i: u32) -> I {
+    match briz(i, 31, 16) {
         // Instruction is 16 bit
         0 => {
-            match bri(i, 14, 15) {
+            match briz(i, 14, 15) {
                 // Shift (immediate), add, subtract, move, and compare
                 0b00 => {
                     // let opcode = bit_range_inclusive(i, 9, 13);
-                    match bri(i, 11, 13) {
+                    match briz(i, 11, 13) {
                         // LSL or MOV encoding 2
                         0b000 => {
-                            let imm5 = bri(i, 6, 10);
-                            let rd = bri(i, 0, 2) as u8;
-                            let rm = bri(i, 3, 5) as u8;
+                            let imm5 = briz(i, 6, 10);
+                            let rd = briz(i, 0, 2) as u8;
+                            let rm = briz(i, 3, 5) as u8;
 
                             return if imm5 == 0 {
-                                Instruction {
-                                    it: InstrType::MOVReg,
+                                I {
+                                    it: IT::MOVReg,
                                     imm1: 0,
                                     imm2: 0,
                                     rd,
                                     rm,
                                     rn: 0,
+                                    rt: 0,
                                     setflags: true,
                                 }
                             } else {
-                                Instruction {
-                                    it: InstrType::LSLImm,
+                                I {
+                                    it: IT::LSLImm,
                                     imm1: imm5,
                                     imm2: 0,
                                     rd,
                                     rm,
                                     rn: 0,
+                                    rt: 0,
                                     setflags: true,
                                 }
                             };
                         }
                         // LSR
                         0b001 => {
-                            let imm5 = bri(i, 6, 10);
-                            let rd = bri(i, 0, 2) as u8;
-                            let rm = bri(i, 3, 5) as u8;
+                            let imm5 = briz(i, 6, 10);
+                            let rd = briz(i, 0, 2) as u8;
+                            let rm = briz(i, 3, 5) as u8;
 
-                            return Instruction {
-                                it: InstrType::LSRImm,
+                            return I {
+                                it: IT::LSRImm,
                                 imm1: imm5,
                                 imm2: 0,
                                 rd,
                                 rm,
                                 rn: 0,
+                                rt: 0,
                                 setflags: true,
                             };
                         }
                         // ASR
                         0b010 => {
-                            let imm5 = bri(i, 6, 10);
-                            let rd = bri(i, 0, 2) as u8;
-                            let rm = bri(i, 3, 5) as u8;
+                            let imm5 = briz(i, 6, 10);
+                            let rd = briz(i, 0, 2) as u8;
+                            let rm = briz(i, 3, 5) as u8;
 
-                            return Instruction {
-                                it: InstrType::ASRImm,
+                            return I {
+                                it: IT::ASRImm,
                                 imm1: imm5,
                                 imm2: 0,
                                 rd,
                                 rm,
                                 rn: 0,
+                                rt: 0,
                                 setflags: true,
                             };
                         }
                         // ADDReg (T1), SUBReg (T1), ADDImm (T1), SUBImm (T1)
                         0b011 => {
-                            let rmorimm3 = bri(i, 6, 8) as u8;
-                            let rn = bri(i, 3, 5) as u8;
-                            let rd = bri(i, 0, 2) as u8;
+                            let rmorimm3 = briz(i, 6, 8) as u8;
+                            let rn = briz(i, 3, 5) as u8;
+                            let rd = briz(i, 0, 2) as u8;
 
-                            return match bri(i, 9, 10) {
+                            return match briz(i, 9, 10) {
                                 // ADDReg
-                                0b00 => Instruction {
-                                    it: InstrType::ADDReg,
+                                0b00 => I {
+                                    it: IT::ADDReg,
                                     rd,
                                     rm: rmorimm3,
                                     rn,
+                                    rt: 0,
                                     imm1: 0,
                                     imm2: 0,
                                     setflags: true,
                                 },
-                                0b01 => Instruction {
-                                    it: InstrType::SUBReg,
+                                0b01 => I {
+                                    it: IT::SUBReg,
                                     rd,
                                     rm: rmorimm3,
                                     rn,
+                                    rt: 0,
                                     imm1: 0,
                                     imm2: 0,
                                     setflags: true,
                                 },
-                                0b10 => Instruction {
-                                    it: InstrType::ADDImm,
+                                0b10 => I {
+                                    it: IT::ADDImm,
                                     rd,
+                                    rn,
                                     rm: 0,
-                                    rn,
+                                    rt: 0,
                                     imm1: rmorimm3 as u32,
                                     imm2: 0,
                                     setflags: true,
                                 },
-                                0b11 => Instruction {
-                                    it: InstrType::SUBImm,
+                                0b11 => I {
+                                    it: IT::SUBImm,
                                     rd,
-                                    rm: 0,
                                     rn,
+                                    rm: 0,
+                                    rt: 0,
                                     imm1: rmorimm3 as u32,
                                     imm2: 0,
                                     setflags: true,
@@ -437,61 +448,66 @@ fn decode(i: u32) -> Instruction {
                         }
                         // MOVImm
                         0b100 => {
-                            let rd = bri(i, 8, 10) as u8;
-                            let imm8 = bri(i, 0, 7);
+                            let rd = briz(i, 8, 10) as u8;
+                            let imm8 = briz(i, 0, 7);
 
-                            return Instruction {
-                                it: InstrType::MOVImm,
+                            return I {
+                                it: IT::MOVImm,
                                 imm1: imm8,
                                 rd,
                                 setflags: true,
                                 rm: 0,
                                 rn: 0,
+
+                                rt: 0,
                                 imm2: 0,
                             };
                         }
                         0b101 => {
-                            let rn = bri(i, 8, 10) as u8;
-                            let imm8 = bri(i, 0, 7);
+                            let rn = briz(i, 8, 10) as u8;
+                            let imm8 = briz(i, 0, 7);
 
-                            return Instruction {
-                                it: InstrType::CMPImm,
+                            return I {
+                                it: IT::CMPImm,
                                 rn,
                                 imm1: imm8,
                                 setflags: true,
                                 rd: 0,
                                 rm: 0,
+                                rt: 0,
                                 imm2: 0,
                             };
                         }
                         // ADDImm (T2)
                         0b110 => {
-                            let rdn = bri(i, 8, 10) as u8;
-                            let imm8 = bri(i, 0, 7);
+                            let rdn = briz(i, 8, 10) as u8;
+                            let imm8 = briz(i, 0, 7);
 
-                            return Instruction {
-                                it: InstrType::ADDImm,
+                            return I {
+                                it: IT::ADDImm,
                                 rd: rdn,
                                 rn: rdn,
                                 imm1: imm8,
                                 setflags: true,
                                 imm2: 0,
                                 rm: 0,
+                                rt: 0,
                             };
                         }
                         // SUBImm (T2)
                         0b111 => {
-                            let rdn = bri(i, 8, 10) as u8;
-                            let imm8 = bri(i, 0, 7);
+                            let rdn = briz(i, 8, 10) as u8;
+                            let imm8 = briz(i, 0, 7);
 
-                            return Instruction {
-                                it: InstrType::SUBImm,
+                            return I {
+                                it: IT::SUBImm,
                                 rd: rdn,
                                 rn: rdn,
                                 imm1: imm8,
                                 setflags: true,
                                 imm2: 0,
                                 rm: 0,
+                                rt: 0,
                             };
                         }
                         _ => unreachable!("BRI issue: Invalid instr: {i}"),
@@ -500,54 +516,74 @@ fn decode(i: u32) -> Instruction {
                 // Data Processing
                 // Special data instructions, branch and exchange
                 // Load from literal pool
-                // Loa/store single data item pt1
-                0b01 => match bri(i, 10, 13) {
+                // Load/store single data item register
+                // Load/store single data item immediate
+                0b01 => match briz(i, 10, 13) {
                     // Data Processing
                     0b0000 => {
-                        let opcode = bri(i, 6, 9);
-                        let rdn = bri(i, 0, 2) as u8;
-                        let rm = bri(i, 3, 5) as u8;
+                        let opcode = briz(i, 6, 9);
+                        let rdn = briz(i, 0, 2) as u8;
+                        let rm = briz(i, 3, 5) as u8;
 
                         let it = match opcode {
-                            0b0000 => InstrType::AND,
-                            0b0001 => InstrType::EOR,
-                            0b0010 => InstrType::LSLReg,
-                            0b0011 => InstrType::LSRReg,
-                            0b0100 => InstrType::ASRReg,
-                            0b0101 => InstrType::ADC,
-                            0b0110 => InstrType::SBC,
-                            0b0111 => InstrType::ROR,
-                            0b1000 => InstrType::TST,
-                            0b1001 => InstrType::RSB,
-                            0b1010 => InstrType::CMPReg, // T1
-                            0b1011 => InstrType::CMN,
-                            0b1100 => InstrType::ORR,
-                            0b1101 => InstrType::MUL,
-                            0b1110 => InstrType::BIC,
-                            0b1111 => InstrType::MVN,
+                            0b0000 => IT::AND,
+                            0b0001 => IT::EOR,
+                            0b0010 => IT::LSLReg,
+                            0b0011 => IT::LSRReg,
+                            0b0100 => IT::ASRReg,
+                            0b0101 => IT::ADC,
+                            0b0110 => IT::SBC,
+                            0b0111 => IT::ROR,
+                            0b1000 => IT::TST,
+                            0b1001 => IT::RSB,
+                            0b1010 => IT::CMPReg, // T1
+                            0b1011 => IT::CMN,
+                            0b1100 => IT::ORR,
+                            0b1101 => IT::MUL,
+                            0b1110 => IT::BIC,
+                            0b1111 => IT::MVN,
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
                         };
 
-                        return Instruction {
+                        return I {
                             it,
                             rd: rdn,
                             rn: rdn,
                             rm,
                             imm1: 0,
                             imm2: 0,
+                            rt: 0,
                             setflags: true,
                         };
                     }
                     // Special data instructions, branch and exchange
-                    0b0001 => match bri(i, 6, 9) {
+                    0b0001 => match briz(i, 6, 9) {
                         // ADDReg (T2)
                         0b0000 | 0b0001 | 0b0010 | 0b0011 => {
-                            let n = bri(i, 7, 7);
-                            let rm = bri(i, 3, 6);
-                            let rn = bri(i, 0, 2) + n << 4;
+                            let n = briz(i, 7, 7);
+                            let rm = briz(i, 3, 6);
+                            let rn = briz(i, 0, 2) + n << 4;
 
-                            return Instruction {
-                                it: InstrType::CMPReg,
+                            return I {
+                                it: IT::CMPReg,
+                                rn: rn as u8,
+                                rm: rm as u8,
+                                setflags: true,
+                                rd: 0,
+                                imm1: 0,
+                                imm2: 0,
+                                rt: 0,
+                            };
+                        }
+                        0b0100 => return I::unpredictable(),
+                        // CMPReg (T2)
+                        0b0101 | 0b0110 | 0b0111 => {
+                            let n = briz(i, 7, 7);
+                            let rm = briz(i, 3, 6);
+                            let rn = briz(i, 0, 2) + n << 4;
+
+                            return I {
+                                it: IT::CMPReg,
                                 rn: rn as u8,
                                 rm: rm as u8,
                                 setflags: true,
@@ -556,31 +592,14 @@ fn decode(i: u32) -> Instruction {
                                 imm2: 0,
                             };
                         }
-                        0b0100 => return Instruction::unpredictable(),
-                        // CMPReg (T2)
-                        0b0101 | 0b0110 | 0b0111 => {
-                            let n = bri(i, 7, 7);
-                            let rm = bri(i, 3, 6);
-                            let rn = bri(i, 0, 2) + n << 4;
-
-                            return Instruction {
-                                it: InstrType::CMPReg,
-                                rn: rn as u8,
-                                rm: rm as u8,
-                                setflags: true,
-                                rd: 0,
-                                imm1: 0,
-                                imm2: 0,
-                            };
-                        },
                         // MOVReg (T1)
                         0b1000 | 0b1001 | 0b1010 | 0b1011 => {
-                            let n = bri(i, 7, 7);
-                            let rm = bri(i, 3, 6);
-                            let rn = bri(i, 0, 2) + n << 4;
+                            let n = briz(i, 7, 7);
+                            let rm = briz(i, 3, 6);
+                            let rn = briz(i, 0, 2) + n << 4;
 
-                            return Instruction {
-                                it: InstrType::MOVReg,
+                            return I {
+                                it: IT::MOVReg,
                                 rn: rn as u8,
                                 rm: rm as u8,
                                 setflags: true,
@@ -591,39 +610,110 @@ fn decode(i: u32) -> Instruction {
                         }
                         // BX
                         0b1100 | 0b1101 => {
-                            let rm = bri(i, 3, 6) as u8;
-                            if  bri(i, 0, 2) != 0 {
-                                return Instruction::unpredictable()
+                            let rm = briz(i, 3, 6) as u8;
+                            if briz(i, 0, 2) != 0 {
+                                return I::unpredictable();
                             }
 
-                            return Instruction {
-                                it: InstrType::BX,
+                            return I {
+                                it: IT::BX,
                                 rm,
                                 setflags: false,
                                 rd: 0,
                                 rn: 0,
                                 imm1: 0,
                                 imm2: 0,
-                            } 
+                            };
                         }
                         0b1110 | 0b1111 => {
-                            let rm = bri(i, 3, 6) as u8;
-                            if  bri(i, 0, 2) != 0 {
-                                return Instruction::unpredictable()
+                            let rm = briz(i, 3, 6) as u8;
+                            if briz(i, 0, 2) != 0 {
+                                return I::unpredictable();
                             }
 
-                            return Instruction {
-                                it: InstrType::BLX,
+                            return I {
+                                it: IT::BLX,
                                 rm,
                                 setflags: false,
                                 rd: 0,
                                 rn: 0,
                                 imm1: 0,
                                 imm2: 0,
-                            } 
+                                rt: 0,
+                            };
                         }
                         _ => unreachable!("BRI issue: Invalid instr: {i}"),
                     },
+                    // Load from literal pool
+                    0b0010 | 0b0011 => {
+                        let rt = briz(i, 8, 10) as u8;
+                        let imm8 = briz(i, 0, 7);
+
+                        return I {
+                            it: IT::LDRLit,
+                            rt,
+                            imm1: imm8,
+                            imm2: 0,
+                            rd: 0,
+                            rn: 0,
+                            rm: 0,
+                            setflags: false,
+                        };
+                    }
+                    // Load/store single data item register
+                    0b0100 | 0b0101 | 0b0110 | 0b0111 => {
+                        let rt = briz(i, 0, 2) as u8;
+                        let rn = briz(i, 3, 5) as u8;
+                        let rm = briz(i, 6, 8) as u8;
+
+                        let it = match briz(i, 9, 11) {
+                            0b000 => IT::STRReg,
+                            0b001 => IT::STRHReg,
+                            0b010 => IT::STRBReg,
+                            0b011 => IT::LDRSB,
+                            0b100 => IT::LDRReg,
+                            0b101 => IT::LDRHReg,
+                            0b110 => IT::LDRBReg,
+                            0b111 => IT::LDRBReg,
+                            _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                        };
+
+                        return I {
+                            it,
+                            rt,
+                            rn,
+                            rm,
+                            rd: 0,
+                            imm1: 0,
+                            imm2: 0,
+                            setflags: false,
+                        };
+                    }
+                    // Load/store single data item immediate
+                    0b1000..=0b1111 => {
+                        let imm5 = briz(i, 6, 10);
+                        let rn = briz(i, 3, 5) as u8;
+                        let rt = briz(i, 0, 2) as u8;
+
+                        let it = match briz(i, 11, 12) {
+                            // STRImm (T1)
+                            0b00 => IT::STRImm,
+                            0b01 => IT::LDRImm,
+                            0b10 => IT::STRBImm,
+                            0b11 => IT::LDRBImm,
+                        };
+
+                        return I {
+                            it,
+                            rn,
+                            rt,
+                            rm: 0,
+                            rd: 0,
+                            imm1: imm5,
+                            imm2: 0,
+                            setflags: false,
+                        };
+                    }
                     _ => unreachable!("BRI issue: Invalid instr: {i}"),
                 },
                 // Load/store single data item pt2

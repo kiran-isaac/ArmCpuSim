@@ -10,7 +10,7 @@ fn n_ones(n: u32) -> u32 {
     (1 << n) - 1
 }
 #[inline(always)]
-pub fn bri(i: u32, low: u32, high: u32) -> u32 {
+pub fn briz(i: u32, low: u32, high: u32) -> u32 {
     (i >> low) & n_ones(high - low + 1)
 }
 
@@ -38,9 +38,9 @@ mod tests {
     #[test]
     fn test_get_bit_range() {
         let instr = 0xb084;
-        assert_eq!(bri(instr, 12, 15), 0xb);
-        assert_eq!(bri(instr, 8, 11), 0);
-        assert_eq!(bri(instr, 4, 7), 8);
-        assert_eq!(bri(instr, 0, 3), 4);
+        assert_eq!(briz(instr, 12, 15), 0xb);
+        assert_eq!(briz(instr, 8, 11), 0);
+        assert_eq!(briz(instr, 4, 7), 8);
+        assert_eq!(briz(instr, 0, 3), 4);
     }
 }
