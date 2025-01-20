@@ -1,35 +1,9 @@
-// enum InstrType {
-//     /// Shift, add, subtract, move and compare
-//     SASMC,
-//     /// Data Processing
-//     DP,
-//     /// Special data instructions and branch and exchange
-//     BX,
-//     /// LDR register or immediate
-//     LDR,
-//     /// Load store
-//     LS,
-//     /// Address to Register: PC relative
-//     ADRPC,
-//     /// Address to Register: SP relative
-//     ADDSP,
-
-//     MISC,
-//     /// Store Multiple
-//     STM,
-//     /// Load Multiple
-//     LDM,
-//     /// Conditional Branch
-//     CB,
-//     /// B
-//     B,
-// }
-
 use crate::instructions::briz;
 
 enum IT {
-    INVALID,
     UNPREDICTABLE,
+    UNDEFINED,
+
     /// Add with Carry (register) adds a register value, the carry flag value, and another register value, and writes the result
     /// to the destination register. It updates the condition flags based on the result
     ADC,
@@ -286,7 +260,7 @@ enum IT {
 struct I {
     it: IT,
     rd: u8,
-    /// rn or register list
+    /// rn or cond
     rn: u8,
     rm: u8,
     rt: u8,
@@ -297,9 +271,9 @@ struct I {
 }
 
 impl I {
-    fn invalid() -> Self {
+    fn unpredictable() -> Self {
         I {
-            it: IT::INVALID,
+            it: IT::UNPREDICTABLE,
             rd: 0,
             rn: 0,
             rm: 0,
@@ -311,9 +285,9 @@ impl I {
         }
     }
 
-    fn unpredictable() -> Self {
+    fn undefined() -> Self {
         I {
-            it: IT::UNPREDICTABLE,
+            it: IT::UNDEFINED,
             rd: 0,
             rn: 0,
             rm: 0,
@@ -872,7 +846,7 @@ fn decode(i: u32) -> I {
                             // Push multiple registers
                             0b0100000..=0b0101111 => {
                                 let m = briz(i, 8, 8);
-                                let rl = briz(i, 0, 8) + m << 14;
+                                let rl = briz(i, 0, 7) + m << 14;
 
                                 return I {
                                     it: IT::PUSH,
@@ -914,7 +888,7 @@ fn decode(i: u32) -> I {
                             // Pop
                             0b1100000..=0b1101111 => {
                                 let p = briz(i, 8, 8);
-                                let rl = briz(i, 0, 8) + p << 15;
+                                let rl = briz(i, 0, 7) + p << 15;
 
                                 return I {
                                     it: IT::POP,
@@ -942,7 +916,7 @@ fn decode(i: u32) -> I {
                                     rl: 0,
                                     imm2: 0,
                                     setflags: false,
-                                }
+                                };
                             }
                             0b1111000..=0b1111111 => unimplemented!("Hints not implemented"),
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
@@ -954,7 +928,88 @@ fn decode(i: u32) -> I {
                 // Load Multiple
                 // Conditional Branch
                 // Unconditional Branch
-                0b11 => {}
+                0b11 => match briz(i, 10, 13) {
+                    // STM
+                    0b0000 | 0b0001 => {
+                        let rn = briz(i, 8, 10) as u8;
+                        let rl = briz(i, 0, 7) as u16;
+
+                        return I {
+                            it: IT::STMIA,
+                            rl,
+                            rn,
+                            rd: 0,
+                            rm: 0,
+                            rt: 0,
+                            imm1: 0,
+                            imm2: 0,
+                            setflags: false,
+                        };
+                    }
+                    // LDM
+                    0b0010 | 0b0011 => {
+                        let rn = briz(i, 8, 10) as u8;
+                        let rl = briz(i, 0, 7) as u16;
+
+                        return I {
+                            it: IT::LDMIA,
+                            rl,
+                            rn,
+                            rd: 0,
+                            rm: 0,
+                            rt: 0,
+                            imm1: 0,
+                            imm2: 0,
+                            setflags: false,
+                        };
+                    }
+                    // Conditional Branch, UDF and SVC
+                    0b0100..=0b0111 => {
+                        match briz(i, 8, 11) {
+                            0b1110 => return I::undefined(),
+                            // SVC and B (T1)
+                            _ => {
+                                let cond = briz(i, 8, 11);
+                                let imm8 = briz(i, 0, 7);
+
+                                let it = match cond {
+                                    0b0000..=0b1110 => IT::B,
+                                    0b1111 => IT::SVC,
+                                    _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                                };
+
+                                return I {
+                                    it,
+                                    imm1: imm8,
+                                    rn: cond as u8,
+                                    rd: 0,
+                                    rt: 0,
+                                    rl: 0,
+                                    rm: 0,
+                                    imm2: 0,
+                                    setflags: false,
+                                };
+                            }
+                        }
+                    }
+                    // B (T2)
+                    0b1000 | 0b1001 => {
+                        let imm11 = briz(i, 0, 10);
+
+                        return I {
+                            it: IT::B,
+                            imm1: imm11,
+                            rn: 0,
+                            rd: 0,
+                            rt: 0,
+                            rl: 0,
+                            rm: 0,
+                            imm2: 0,
+                            setflags: false,
+                        };
+                    }
+                    _ => panic!("Invalid instr: {i}"),
+                },
                 _ => panic!("Invalid instr: {i}"),
             }
         }
