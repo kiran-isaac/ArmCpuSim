@@ -1,0 +1,13 @@
+
+os/os.out:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+21000000 <main>:
+21000000:	4780      	blx	r0
+
+21000002 <__text_end>:
+21000002:	d4d4      	bmi.n	20ffffae <__tls_align+0x20ffffad>
+21000004:	d4d4      	bmi.n	20ffffb0 <__tls_align+0x20ffffaf>
+21000006:	d4d4      	bmi.n	20ffffb2 <__tls_align+0x20ffffb1>

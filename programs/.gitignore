@@ -5,3 +5,4 @@
 *.s
 *.out
 !decode_test.s
+!os/*

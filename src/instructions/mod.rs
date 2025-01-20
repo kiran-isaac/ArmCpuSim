@@ -26,6 +26,11 @@ pub fn bit_as_bool(i: u32, bit_index: u32) -> bool {
     (i >> bit_index) & 1 == 1
 }
 
+#[inline(always)]
+pub fn bit(i: u32, bit_index: u32) -> u32 {
+    (i >> bit_index) & 1
+}
+
 pub fn is_32_bit(i: u32) -> bool {
     (i >> 16) != 0
 }

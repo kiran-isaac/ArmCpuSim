@@ -1,4 +1,6 @@
+.global main
 .text
+main:
     adcs r7, r1
     adcs r3, r5
 
