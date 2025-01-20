@@ -29,6 +29,7 @@ use crate::instructions::bri;
 
 enum InstrType {
     INVALID,
+    UNPREDICTABLE,
     /// Add with Carry (register) adds a register value, the carry flag value, and another register value, and writes the result
     /// to the destination register. It updates the condition flags based on the result
     ADC,
@@ -210,6 +211,9 @@ enum InstrType {
     RSB,
     /// Subtract with Carry (register) subtracts a register value and the value of NOT(Carry flag) from a register value, and
     /// writes the result to the destination register. The condition flags are updated based on the result.
+    SBC,
+    /// Send Event is a hint instruction. It causes an event to be signaled to all CPUs within a multiprocessor system.
+    /// This is a NOP-compatible hint, see Hint Instructions on page A6-98.
     SEV,
     /// The Store Multiple Increment After and the Store Multiple Empty Ascending instructions store multiple registers
     /// to consecutive memory locations using an address from a base register. The sequential memory locations start at
@@ -298,6 +302,19 @@ impl Instruction {
             rm: 0,
             imm1: 0,
             imm2: 0,
+            setflags: false,
+        }
+    }
+
+    fn unpredictable() -> Self {
+        Instruction {
+            it: InstrType::UNPREDICTABLE,
+            rd: 0,
+            rn: 0,
+            rm: 0,
+            imm1: 0,
+            imm2: 0,
+            setflags: false,
         }
     }
 }
@@ -371,7 +388,7 @@ fn decode(i: u32) -> Instruction {
                                 setflags: true,
                             };
                         }
-                        // ADDReg, SUBReg, ADDImm (T1), SUBImm (T1)
+                        // ADDReg (T1), SUBReg (T1), ADDImm (T1), SUBImm (T1)
                         0b011 => {
                             let rmorimm3 = bri(i, 6, 8) as u8;
                             let rn = bri(i, 3, 5) as u8;
@@ -477,14 +494,138 @@ fn decode(i: u32) -> Instruction {
                                 rm: 0,
                             };
                         }
-                        _ => unreachable!("Invalid instr: {i}"),
+                        _ => unreachable!("BRI issue: Invalid instr: {i}"),
                     }
                 }
                 // Data Processing
                 // Special data instructions, branch and exchange
                 // Load from literal pool
                 // Loa/store single data item pt1
-                0b01 => {}
+                0b01 => match bri(i, 10, 13) {
+                    // Data Processing
+                    0b0000 => {
+                        let opcode = bri(i, 6, 9);
+                        let rdn = bri(i, 0, 2) as u8;
+                        let rm = bri(i, 3, 5) as u8;
+
+                        let it = match opcode {
+                            0b0000 => InstrType::AND,
+                            0b0001 => InstrType::EOR,
+                            0b0010 => InstrType::LSLReg,
+                            0b0011 => InstrType::LSRReg,
+                            0b0100 => InstrType::ASRReg,
+                            0b0101 => InstrType::ADC,
+                            0b0110 => InstrType::SBC,
+                            0b0111 => InstrType::ROR,
+                            0b1000 => InstrType::TST,
+                            0b1001 => InstrType::RSB,
+                            0b1010 => InstrType::CMPReg, // T1
+                            0b1011 => InstrType::CMN,
+                            0b1100 => InstrType::ORR,
+                            0b1101 => InstrType::MUL,
+                            0b1110 => InstrType::BIC,
+                            0b1111 => InstrType::MVN,
+                            _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                        };
+
+                        return Instruction {
+                            it,
+                            rd: rdn,
+                            rn: rdn,
+                            rm,
+                            imm1: 0,
+                            imm2: 0,
+                            setflags: true,
+                        };
+                    }
+                    // Special data instructions, branch and exchange
+                    0b0001 => match bri(i, 6, 9) {
+                        // ADDReg (T2)
+                        0b0000 | 0b0001 | 0b0010 | 0b0011 => {
+                            let n = bri(i, 7, 7);
+                            let rm = bri(i, 3, 6);
+                            let rn = bri(i, 0, 2) + n << 4;
+
+                            return Instruction {
+                                it: InstrType::CMPReg,
+                                rn: rn as u8,
+                                rm: rm as u8,
+                                setflags: true,
+                                rd: 0,
+                                imm1: 0,
+                                imm2: 0,
+                            };
+                        }
+                        0b0100 => return Instruction::unpredictable(),
+                        // CMPReg (T2)
+                        0b0101 | 0b0110 | 0b0111 => {
+                            let n = bri(i, 7, 7);
+                            let rm = bri(i, 3, 6);
+                            let rn = bri(i, 0, 2) + n << 4;
+
+                            return Instruction {
+                                it: InstrType::CMPReg,
+                                rn: rn as u8,
+                                rm: rm as u8,
+                                setflags: true,
+                                rd: 0,
+                                imm1: 0,
+                                imm2: 0,
+                            };
+                        },
+                        // MOVReg (T1)
+                        0b1000 | 0b1001 | 0b1010 | 0b1011 => {
+                            let n = bri(i, 7, 7);
+                            let rm = bri(i, 3, 6);
+                            let rn = bri(i, 0, 2) + n << 4;
+
+                            return Instruction {
+                                it: InstrType::MOVReg,
+                                rn: rn as u8,
+                                rm: rm as u8,
+                                setflags: true,
+                                rd: 0,
+                                imm1: 0,
+                                imm2: 0,
+                            };
+                        }
+                        // BX
+                        0b1100 | 0b1101 => {
+                            let rm = bri(i, 3, 6) as u8;
+                            if  bri(i, 0, 2) != 0 {
+                                return Instruction::unpredictable()
+                            }
+
+                            return Instruction {
+                                it: InstrType::BX,
+                                rm,
+                                setflags: false,
+                                rd: 0,
+                                rn: 0,
+                                imm1: 0,
+                                imm2: 0,
+                            } 
+                        }
+                        0b1110 | 0b1111 => {
+                            let rm = bri(i, 3, 6) as u8;
+                            if  bri(i, 0, 2) != 0 {
+                                return Instruction::unpredictable()
+                            }
+
+                            return Instruction {
+                                it: InstrType::BLX,
+                                rm,
+                                setflags: false,
+                                rd: 0,
+                                rn: 0,
+                                imm1: 0,
+                                imm2: 0,
+                            } 
+                        }
+                        _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                    },
+                    _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                },
                 // Load/store single data item pt2
                 // PC Relative
                 // SP Relative
