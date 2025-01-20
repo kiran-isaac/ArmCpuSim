@@ -883,9 +883,68 @@ fn decode(i: u32) -> I {
                                     rm: 0,
                                     imm1: 0,
                                     imm2: 0,
-                                    setflags: false
+                                    setflags: false,
+                                };
+                            }
+                            0b0110011 => unimplemented!("CPS"),
+                            0b1010000..=0b1010111 => {
+                                let rm = briz(i, 3, 5) as u8;
+                                let rd = briz(i, 0, 2) as u8;
+
+                                let it = match briz(i, 6, 7) {
+                                    0b00 => IT::REV,
+                                    0b01 => IT::REV16,
+                                    0b10 => panic!("Invalid Instruction: {i}"),
+                                    0b11 => IT::REVSH,
+                                    _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                                };
+
+                                return I {
+                                    it,
+                                    rm,
+                                    rd,
+                                    rn: 0,
+                                    rt: 0,
+                                    rl: 0,
+                                    imm1: 0,
+                                    imm2: 0,
+                                    setflags: false,
+                                };
+                            }
+                            // Pop
+                            0b1100000..=0b1101111 => {
+                                let p = briz(i, 8, 8);
+                                let rl = briz(i, 0, 8) + p << 15;
+
+                                return I {
+                                    it: IT::POP,
+                                    rl: rl as u16,
+                                    rn: 0,
+                                    rd: 0,
+                                    rt: 0,
+                                    rm: 0,
+                                    imm1: 0,
+                                    imm2: 0,
+                                    setflags: false,
+                                };
+                            }
+                            // BKPT
+                            0b1110000..=0b1110111 => {
+                                let imm8 = briz(i, 0, 7);
+
+                                return I {
+                                    it: IT::BKPT,
+                                    imm1: imm8,
+                                    rd: 0,
+                                    rn: 0,
+                                    rm: 0,
+                                    rt: 0,
+                                    rl: 0,
+                                    imm2: 0,
+                                    setflags: false,
                                 }
                             }
+                            0b1111000..=0b1111111 => unimplemented!("Hints not implemented"),
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
                         }
                     }
