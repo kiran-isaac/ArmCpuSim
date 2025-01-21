@@ -1,13 +1,13 @@
 mod decode;
 mod dispatch;
 mod execute;
-mod instructions;
+mod binary;
 mod model;
 
 #[cfg(test)]
 mod test;
 
-use instructions::is_32_bit;
+use binary::is_32_bit;
 use model::Memory;
 use model::Registers;
 use decode::*;

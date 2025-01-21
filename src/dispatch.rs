@@ -1,4 +1,4 @@
-use crate::instructions::{bit_as_bool, briz};
+use crate::binary::{bit_as_bool, briz};
 use crate::{Memory, ProcessorState, Registers};
 
 pub fn dispatch(i: u32, state: &mut ProcessorState) {

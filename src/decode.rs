@@ -1,4 +1,4 @@
-use crate::instructions::{bit_as_bool, briz};
+use crate::binary::{bit_as_bool, briz};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum IT {
@@ -346,6 +346,7 @@ pub fn decode(i: u32) -> I {
                         // LSR
                         0b001 => {
                             let imm5 = briz(i, 6, 10);
+                            let imm5 = if imm5 == 0 { 32 } else { imm5 };
                             let rd = briz(i, 0, 2) as u8;
                             let rm = briz(i, 3, 5) as u8;
 
@@ -364,6 +365,7 @@ pub fn decode(i: u32) -> I {
                         // ASR
                         0b010 => {
                             let imm5 = briz(i, 6, 10);
+                            let imm5 = if imm5 == 0 { 32 } else { imm5 };
                             let rd = briz(i, 0, 2) as u8;
                             let rm = briz(i, 3, 5) as u8;
 

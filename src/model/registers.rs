@@ -10,7 +10,52 @@ pub struct Registers {
     pub lr: u32,
     pub pc: u32,
 
-    pub apsr: u32,
+    pub apsr: ASPR,
+}
+
+pub struct ASPR {
+    pub n: bool,
+    pub z: bool,
+    pub c: bool,
+    pub v: bool,
+}
+
+impl ASPR {
+    pub fn cond(&self, cond: u8) -> bool {
+        match cond {
+            // EQ
+            0b0000 => self.z == true,
+            // NE
+            0b0001 => self.z == false,
+            // CS
+            0b0010 => self.c == true,
+            // CC
+            0b0011 => self.c == false,
+            // MI
+            0b0100 => self.n == true,
+            // PL
+            0b0101 => self.n == false,
+            // VS
+            0b0110 => self.v == true,
+            // VC
+            0b0111 => self.v == false,
+            // HI
+            0b1000 => self.c == true && self.z == false,
+            // LS
+            0b1001 => self.c == false || self.z == true,
+            // GE
+            0b1010 => self.n == self.v,
+            // LT
+            0b1011 => self.n != self.v,
+            // GT
+            0b1100 => self.z == false && self.n == self.v,
+            // LE
+            0b1101 => self.z == true || self.n != self.v,
+            // AL
+            0b1110 => true,
+            _ => panic!("Invalid condition code"),
+        }
+    }
 }
 
 impl Registers {
@@ -20,11 +65,16 @@ impl Registers {
             sp: 0,
             lr: 0,
             pc: 0,
-            apsr: 0,
+            apsr: ASPR {
+                n: false,
+                z: false,
+                c: false,
+                v: false,
+            },
         }
     }
 
-    pub fn set_register(&mut self, index: u32, value: u32) {
+    pub fn set(&mut self, index: u8, value: u32) {
         match index {
             0..=12 => self.gp[index as usize] = value,
             13 => self.sp = value,
@@ -34,7 +84,7 @@ impl Registers {
         }
     }
 
-    pub fn get_register(&mut self, index: u32) -> u32 {
+    pub fn get(&mut self, index: u8) -> u32 {
         match index {
             0..=12 => self.gp[index as usize],
             13 => self.sp,

@@ -1,5 +1,5 @@
 use super::Registers;
-use crate::instructions::*;
+use crate::binary::*;
 use elf::endian::{AnyEndian, EndianParse};
 use elf::section::SectionHeader;
 use elf::ElfBytes;
@@ -85,6 +85,14 @@ impl Memory {
             hw1 as u32
         }
     }
+    pub fn get_byte(&self, addr: u32) -> u8 {
+        let addr = addr as usize;
+        if self.is_little_endian {
+            self._memory[addr] as u8
+        } else {
+            unimplemented!("Big endian not supported yet");
+        }
+    }
 
     pub fn get_halfword(&self, addr: u32) -> u16 {
         let addr = addr as usize;
@@ -106,6 +114,38 @@ impl Memory {
                 self._memory[addr],
                 self._memory[addr + 1],
             ])
+        } else {
+            unimplemented!("Big endian not supported yet");
+        }
+    }
+
+    pub fn set_word(&mut self, addr: u32, value: u32) {
+        let addr = addr as usize;
+        if self.is_little_endian {
+            let bytes = value.to_le_bytes();
+            self._memory[addr] = bytes[2];
+            self._memory[addr + 1] = bytes[3];
+            self._memory[addr + 2] = bytes[0];
+            self._memory[addr + 3] = bytes[1];
+        } else {
+            unimplemented!("Big endian not supported yet");
+        }
+    }
+
+    pub fn set_halfword(&mut self, addr: u32, value: u16) {
+        let addr = addr as usize;
+        if self.is_little_endian {
+            self._memory[addr] = (value & 0xff) as u8;
+            self._memory[addr + 1] = (value >> 8) as u8;
+        } else {
+            unimplemented!("Big endian not supported yet");
+        }
+    }
+
+    pub fn set_byte(&mut self, addr: u32, value: u8) {
+        let addr = addr as usize;
+        if self.is_little_endian {
+            self._memory[addr] = value;
         } else {
             unimplemented!("Big endian not supported yet");
         }
