@@ -1,44 +1,4 @@
-/*
- * SPDX-License-Identifier: BSD-3-Clause
- *
- * Copyright © 2019 Keith Packard
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 ENTRY(main)
-
-/*
- * These values should be provided by the application. We'll include
- * some phony values here to make things link for testing
- */
 
 /*
 	1MB flash
@@ -54,15 +14,12 @@ __stack_size 	= 0x00080000;
 
 MEMORY
 {
-	/* boot_flash (rx!w) :
-		ORIGIN = DEFINED(__boot_flash) ? __boot_flash : 0x00000000,
-		LENGTH = DEFINED(__boot_flash_size) ? __boot_flash_size : 0x1000 */
 	flash (rx!w) :
-		ORIGIN = DEFINED(__flash) ? __flash : 0x21000000,
-		LENGTH = DEFINED(__flash_size) ? __flash_size : 0x600000
+		ORIGIN = __flash,
+		LENGTH = __flash_size
 	ram (rwx) :
-		ORIGIN = DEFINED(__ram) ? __ram : 0x21600000,
-		LENGTH = DEFINED(__ram_size) ? __ram_size : 0xa00000
+		ORIGIN = __ram,
+		LENGTH = __ram_size
 }
 
 PHDRS
@@ -75,12 +32,6 @@ PHDRS
 
 SECTIONS
 {
-	/* .boot_flash : {
-		KEEP (*(.text.init.enter))
-		KEEP (*(.data.init.enter))
-		KEEP (*(SORT_BY_NAME(.init) SORT_BY_NAME(.init.*)))
-	} >boot_flash AT>boot_flash :text_boot_flash */
-
 	.text : {
 
 		/* code */
@@ -153,32 +104,6 @@ SECTIONS
 	.toc : {
 		*(.toc .toc.*)
 	} >flash AT>flash :text
-
-	/* additional sections when compiling with C++ exception support */
-	/*
-	.except_ordered : {
-		*(.gcc_except_table *.gcc_except_table.*)
-		*(.ARM.extab* .gnu.linkonce.armextab.*)
-	} >flash AT>flash :text
-	.eh_frame_hdr : {
-		PROVIDE_HIDDEN ( __eh_frame_hdr_start = . );
-		*(.eh_frame_hdr) *(.eh_frame_entry .eh_frame_entry.*)
-		PROVIDE_HIDDEN ( __eh_frame_hdr_end = . );
-	} >flash AT>flash :text
-	.eh_frame : {
-		PROVIDE_HIDDEN ( __eh_frame_start = . );
-		KEEP (*(.eh_frame .eh_frame.*))
-		PROVIDE_HIDDEN ( __eh_frame_end = . );
-	} >flash AT>flash :text
-
-	.except_unordered : {
-		. = ALIGN(8);
-
-		PROVIDE(__exidx_start = .);
-		*(.ARM.exidx*)
-		PROVIDE(__exidx_end = .);
-	} >flash AT>flash :text
-	*/
 
 	/*
 	 * Data values which are preserved across reset

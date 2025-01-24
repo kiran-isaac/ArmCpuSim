@@ -1,7 +1,7 @@
 C_FILES := $(wildcard ./*.c)
 ARMET := ~/LLVM-ET-Arm-19.1.5-Linux-x86_64
 CLANG_TARGET_OPTIONS := --target=armv6m-none-eabi -mfloat-abi=soft -mthumb
-LINKER_SCRIPT := picolibc.ld
+LINKER_SCRIPT := script.ld
 
 %.dis : %.out
 	$(ARMET)/bin/llvm-objdump -d $< > $@
