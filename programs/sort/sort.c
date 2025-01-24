@@ -1,3 +1,5 @@
+#include "../syscalls/syscalls.h"
+
 void swap(int* arr, int i, int j) {
     int temp = arr[i];
     arr[i] = arr[j];
@@ -20,4 +22,5 @@ int main() {
     int arr[] = {10, 2, 17, 19, 7, 5};
     unsigned len = 6;
     bubble_sort(arr, len);
+    svc_exit(0);
 }
