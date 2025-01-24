@@ -149,18 +149,18 @@ impl Executor {
             }
             BL | BLX | BX => {
                 let target = match i.it {
-                    BL => state.regs.pc.wrapping_add(i.immu),
+                    BL => (state.regs.pc as i64).wrapping_add(i.imms as i64) as u32,
                     BLX => state.regs.get(i.rm),
                     _ => unreachable!(),
                 };
                 match i.it {
                     BL | BLX => {
-                        state.regs.lr = briz(state.regs.pc, 1, 31) << 2 + 1;
+                        state.regs.lr = (briz(state.regs.pc, 1, 31) << 2) + 1;
                     }
                     BX => {}
                     _ => unreachable!(),
                 }
-                state.regs.pc = state.regs.pc.wrapping_add(target);
+                state.regs.pc = target;
             }
             LDMIA => {
                 let mut wback = true;

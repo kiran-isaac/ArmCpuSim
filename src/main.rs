@@ -18,7 +18,7 @@ use model::Registers;
 struct ProcessorState {
     pub regs: Registers,
     pub mem: Memory,
-    pub halt: bool,
+    pub halt: i32,
 }
 
 impl ProcessorState {
@@ -42,7 +42,7 @@ fn main() {
     let mut state = ProcessorState {
         regs: registers,
         mem: memory,
-        halt: false,
+        halt: -1,
     };
 
     // Fetch is modeled by reading the instruction at the PC
@@ -73,14 +73,13 @@ fn main() {
         // state.regs.pc += if is_32_bit { 4 } else { 2 };
         executor0.assign(decoded);
         executor0.execute(&mut state);
+
+        if state.halt >= 0 {
+            std::process::exit(state.halt)
+        }
         
         println!("{:?}", state.regs);
 
-        match decoded.it {
-            BX | B | BLX | BL => {},
-            _ => state.regs.pc += if is_32_bit { 4 } else { 2 }
-        }
-
-        // println!("{}", state.mem.dump_stack(state.regs.sp))
+        state.regs.pc = state.regs.pc.wrapping_add(if is_32_bit {4} else {2});
     }
 }
