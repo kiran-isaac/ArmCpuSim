@@ -1,3 +1,5 @@
+use std::mem;
+
 use crate::binary::{bit_as_bool, briz};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -1099,10 +1101,14 @@ pub fn decode(i: u32) -> I {
 
                             let imm11 = briz(i, 0, 10);
                             let imm10 = briz(i, 16, 25);
-                            let imm32 = (imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23);
 
-                            // case imm32 into i32 and set sign bit
-                            let imm32 = if s { -(imm32 as i32) } else { imm32 as i32 };
+                            let s = if s {
+                                0b1111_1111
+                            } else {
+                                0
+                            };
+
+                            let imm32 = i32::from_ne_bytes(((imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23) + (s << 24)).to_ne_bytes());
 
                             I {
                                 it: IT::BL,
