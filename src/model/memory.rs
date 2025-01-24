@@ -84,11 +84,11 @@ impl Memory {
             let segment_bytes = elf_file.segment_data(&phdr).unwrap();
             let mut mem_addr = phdr.p_vaddr as usize;
 
-            #[cfg(debug_assertions)]
-            {
-                println!("{:X?}", phdr);
-                println!("{:08X?}, : {:02X?}\n\n", mem_addr, segment_bytes);
-            }
+            // #[cfg(debug_assertions)]
+            // {
+            //     println!("{:X?}", phdr);
+            //     println!("{:08X?}, : {:02X?}\n\n", mem_addr, segment_bytes);
+            // }
             for byte in segment_bytes {
                 memory[mem_addr] = *byte;
                 mem_addr += 1;
@@ -102,22 +102,45 @@ impl Memory {
         }
     }
 
-    pub fn get_instruction(&self, addr: u32) -> u32 {
-        let hw1 = self.get_halfword(addr);
+    /// Dump from vaddr to mem end
+    pub fn dump_stack(&self, vsp: u32) -> String {
+        let mut s = "STACK DUMP: ".to_string();
+        let mut vsp  = vsp;
+        while self.mm(vsp) < self.memory.len() as u32 {
+            s.push_str(format!("{:02X?}", self.get_byte(vsp)).as_str());
+            vsp += 1
+        }
+        s
+    }
+
+    /// Memory Map: Virtual -> Physical
+    #[inline(always)]
+    pub fn mm(&self, addr: u32) -> u32 {
+        if addr >= 0x20000000 {
+            addr - 0x20000000 + 0x100000
+        } else {
+            addr
+        }
+    }
+
+    pub fn get_instruction(&self, vaddr: u32) -> u32 {
+        let hw1 = self.get_halfword(vaddr);
 
         if matches_mask(hw1, 0b11101 << 11)
             || matches_mask(hw1, 0b11110 << 11)
             || matches_mask(hw1, 0b11111 << 11)
         {
             let hw1 = (hw1 as u32) << 16;
-            let hw2 = self.get_halfword(addr + 2) as u32;
+            let hw2 = self.get_halfword(vaddr + 2) as u32;
             hw1 + hw2
         } else {
             hw1 as u32
         }
     }
-    pub fn get_byte(&self, addr: u32) -> u8 {
-        let addr = addr as usize;
+
+
+    pub fn get_byte(&self, vaddr: u32) -> u8 {
+        let addr = self.mm(vaddr) as usize;
         if self.is_little_endian {
             self.memory[addr] as u8
         } else {
@@ -125,8 +148,8 @@ impl Memory {
         }
     }
 
-    pub fn get_halfword(&self, addr: u32) -> u16 {
-        let addr = addr as usize;
+    pub fn get_halfword(&self, vaddr: u32) -> u16 {
+        let addr = self.mm(vaddr) as usize;
         if self.is_little_endian {
             let lower = self.memory[addr] as u16;
             let upper = self.memory[addr + 1] as u16;
@@ -136,8 +159,8 @@ impl Memory {
         }
     }
 
-    pub fn get_word(&self, addr: u32) -> u32 {
-        let addr = addr as usize;
+    pub fn get_word(&self, vaddr: u32) -> u32 {
+        let addr = self.mm(vaddr) as usize;
         if self.is_little_endian {
             u32::from_le_bytes([
                 self.memory[addr + 2],
@@ -150,8 +173,8 @@ impl Memory {
         }
     }
 
-    pub fn set_word(&mut self, addr: u32, value: u32) {
-        let addr = addr as usize;
+    pub fn set_word(&mut self, vaddr: u32, value: u32) {
+        let addr = self.mm(vaddr) as usize;
         if self.is_little_endian {
             let bytes = value.to_le_bytes();
             self.memory[addr] = bytes[2];
@@ -163,8 +186,8 @@ impl Memory {
         }
     }
 
-    pub fn set_halfword(&mut self, addr: u32, value: u16) {
-        let addr = addr as usize;
+    pub fn set_halfword(&mut self, vaddr: u32, value: u16) {
+        let addr = self.mm(vaddr) as usize;
         if self.is_little_endian {
             self.memory[addr] = (value & 0xff) as u8;
             self.memory[addr + 1] = (value >> 8) as u8;
@@ -173,8 +196,8 @@ impl Memory {
         }
     }
 
-    pub fn set_byte(&mut self, addr: u32, value: u8) {
-        let addr = addr as usize;
+    pub fn set_byte(&mut self, vaddr: u32, value: u8) {
+        let addr = self.mm(vaddr) as usize;
         if self.is_little_endian {
             self.memory[addr] = value;
         } else {

@@ -41,6 +41,7 @@ ENTRY(main)
  */
 
 /*
+	1MB flash
 	512MB RAM
 	512KB stack
 */

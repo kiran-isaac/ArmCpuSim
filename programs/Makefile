@@ -13,7 +13,7 @@ LINKER_SCRIPT := picolibc.ld
 	$(ARMET)/bin/clang -c $(CLANG_TARGET_OPTIONS) $< -o $@
 
 %.s : %.c
-	$(ARMET)/bin/clang -O0 -S $(CLANG_TARGET_OPTIONS) $< -o $@
+	$(ARMET)/bin/clang -Os -S $(CLANG_TARGET_OPTIONS) $< -o $@
 
 %.out : %.o
 	$(ARMET)/bin/clang $(CLANG_TARGET_OPTIONS) syscalls/syscalls.o $< -o $@ -T $(LINKER_SCRIPT)

@@ -37,23 +37,24 @@ impl Executor {
             SVC => syscall(&i, state),
 
             // ADD
-            ADC | SBC | ADDReg | ADDImm | ADDSpImm | ADDSpReg | CMN | CMPReg | CMPImm | RSB => {
+            ADC | SBC | ADDReg | ADDImm | ADDSpImm | ADDSpReg | CMN | CMPReg | CMPImm | RSB | SUBImm | SUBReg | SUBSP => {
                 let n = match i.it {
                     ADR => state.regs.pc,
                     ADDSpImm | ADDSpReg => state.regs.sp,
+                    RSB => !state.regs.get(i.rn),
                     _ => state.regs.get(i.rn),
                 };
                 let m = match i.it {
                     ADC | ADDReg | ADDSpReg => state.regs.get(i.rm),
                     ADDImm | ADDSpImm | ADR => i.immu,
                     CMPImm => !i.immu,
-                    CMPReg | SBC => !state.regs.get(i.rm),
+                    CMPReg | SBC | SUBImm | SUBReg | SUBSP => !state.regs.get(i.rm),
                     RSB => 0,
                     _ => unreachable!(),
                 };
                 let carry = match i.it {
                     ADC | SBC => state.regs.apsr.c as u8,
-                    RSB => 1,
+                    CMPReg | RSB | SUBImm | SUBReg | SUBSP => 1,
                     _ => 0,
                 };
 
@@ -61,7 +62,7 @@ impl Executor {
 
                 match i.it {
                     CMN | CMPImm | CMPReg => {}
-                    ADC | ADDImm | ADDReg | ADDSpImm => state.regs.set(i.rd, result),
+                    ADC | ADDImm | ADDReg | ADDSpImm | SBC | RSB | SUBImm | SUBReg | SUBSP => state.regs.set(i.rd, result),
                     _ => unreachable!(),
                 }
 
@@ -80,8 +81,6 @@ impl Executor {
                 state.regs.set(i.rd, result);
                 state.regs.apsr.n = bit_as_bool(result, 31);
                 state.regs.apsr.z = hamming_weight(result) == 0;
-                // state.regs.apsr.c = false;
-                // state.regs.apsr.v = false;
             }
             AND | BIC | EOR | ORR => {
                 let n = state.regs.get(i.rn);
@@ -178,21 +177,14 @@ impl Executor {
                 }
             }
             STMIA => {
-                let mut wback = true;
                 let mut addr = state.regs.get(i.rn);
                 for b in 0..15 {
                     if bit_as_bool(i.rl as u32, b) {
-                        if briz(i.rl as u32, b, b) == (i.rn as u32) {
-                            wback = false;
-                        }
-                        // TODO: Check if this is correct
                         state.mem.set_word(addr, state.regs.get(b as u8));
                         addr += 4;
                     }
                 }
-                if wback {
-                    state.regs.set(i.rn, 4 * hamming_weight(i.rl as u32));
-                }
+                state.regs.set(i.rn, 4 * hamming_weight(i.rl as u32));
             }
             LDRImm | LDRReg | LDRLit | LDRBImm | LDRBReg | LDRHReg | LDRHImm | LDRSB | LDRSH => {
                 let addr = match i.it {
@@ -211,6 +203,20 @@ impl Executor {
                 };
                 state.regs.set(i.rt, value);
             }
+            STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => {
+                let addr = match i.it {
+                    STRImm | STRBImm | STRHImm => state.regs.get(i.rn) + i.immu,
+                    LDRReg | STRBReg | STRHReg => state.regs.get(i.rn) + state.regs.get(i.rm),
+                    _ => unreachable!()
+                };
+                let value = state.regs.get(i.rt);
+                match i.it {
+                    STRImm | STRReg  => state.mem.set_word(addr, value),
+                    STRHImm | STRHReg => state.mem.set_halfword(addr, value as u16),
+                    STRBImm | STRBReg => state.mem.set_byte(addr, value as u8),
+                    _ => unreachable!(),
+                };
+            }
             POP => {
                 let mut addr = state.regs.sp;
                 for b in 0..8 {
@@ -225,14 +231,14 @@ impl Executor {
                 state.regs.sp = state.regs.sp + 4 * hamming_weight(i.rl as u32)
             }
             PUSH => {
-                let mut addr = state.regs.sp - 4 * hamming_weight(i.rl as u32) - 4;
+                let mut addr = state.regs.sp - 4 * hamming_weight(i.rl as u32);
                 for b in 0..15 {
-                    if bit_as_bool(i.rl as u32, b) {
+                    if bit_as_bool( i.rl as u32, b) {
                         state.mem.set_word(addr, state.regs.get(b as u8));
                         addr += 4;
                     }
                 }
-                state.regs.sp = state.regs.sp - 4 * hamming_weight(i.rl as u32);
+                state.regs.sp -= 4 * hamming_weight(i.rl as u32); 
             }
             REV => {
                 let value = state.regs.get(i.rm);
@@ -256,7 +262,7 @@ impl Executor {
                 state.regs.set(i.rd, result);
             }
             NOP => {}
-            _ => unimplemented!("Instruction execute not implemented"),
+            _ => unimplemented!("Instruction execute not implemented: {:?}", i.it),
         }
     }
 }

@@ -850,7 +850,7 @@ pub fn decode(i: u32) -> I {
                             // Push multiple registers
                             0b0100000..=0b0101111 => {
                                 let m = briz(i, 8, 8);
-                                let rl = briz(i, 0, 7) + m << 14;
+                                let rl = briz(i, 0, 7) + (m << 14);
 
                                 return I {
                                     it: IT::PUSH,
@@ -892,7 +892,7 @@ pub fn decode(i: u32) -> I {
                             // Pop
                             0b1100000..=0b1101111 => {
                                 let p = briz(i, 8, 8);
-                                let rl = briz(i, 0, 7) + p << 15;
+                                let rl = briz(i, 0, 7) + (p << 15);
 
                                 return I {
                                     it: IT::POP,

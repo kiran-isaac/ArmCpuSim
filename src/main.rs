@@ -9,6 +9,7 @@ mod system;
 mod test;
 
 use binary::is_32_bit;
+use decode::IT::*;
 use decode::*;
 use execute::Executor;
 use model::Memory;
@@ -21,6 +22,7 @@ struct ProcessorState {
 }
 
 impl ProcessorState {
+    #[cfg(test)]
     pub fn new() -> Self {
         ProcessorState {
             regs: Registers::new(),
@@ -47,9 +49,11 @@ fn main() {
     // decode is modeled by matching the instruction against a set of masks
     // execute is modeled by performing the operation on the registers
 
-    // let _entry_point = state.mem.entrypoint;
-    // state.regs.pc = _entry_point as u32;
+    let _entry_point = state.mem.entrypoint;
+    state.regs.pc = _entry_point as u32;
     let mut executor0 = Executor::new();
+
+    println!("{:?}", state.regs);
 
     loop {
         let instruction = state.mem.get_instruction(state.regs.pc);
@@ -60,13 +64,23 @@ fn main() {
             let _x = 1;
         }
 
+        println!("0x{:04X?} : 0x{:08X?}", state.regs.pc, instruction);
+
         let decoded = decode(instruction);
-        println!(
-            "0x{:04X?} : 0x{:08X?} : {:?}",
-            state.regs.pc, instruction, decoded.it
-        );
-        state.regs.pc += if is_32_bit { 4 } else { 2 };
-        // executor0.assign(decoded);
-        // executor0.execute(&mut state);
+
+        println!("{:?}", decoded);
+
+        // state.regs.pc += if is_32_bit { 4 } else { 2 };
+        executor0.assign(decoded);
+        executor0.execute(&mut state);
+        
+        println!("{:?}", state.regs);
+
+        match decoded.it {
+            BX | B | BLX | BL => {},
+            _ => state.regs.pc += if is_32_bit { 4 } else { 2 }
+        }
+
+        // println!("{}", state.mem.dump_stack(state.regs.sp))
     }
 }

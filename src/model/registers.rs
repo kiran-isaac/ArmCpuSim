@@ -94,3 +94,9 @@ impl Registers {
         }
     }
 }
+
+impl std::fmt::Debug for Registers {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "R[r0: {:08X?}, r1: {:08X?}, r2: {:08X?}, r3: {:08X?}, r4: {:08X?}, r5: {:08X?}, r6: {:08X?}, r7: {:08X?}, r8: {:08X?}, r9: {:08X?}, r10: {:08X?}, r11: {:08X?}, r12: {:08X?}, sp: {:08X?}, lr: {:08X?}, pc: {:08X?}]", self.gp[0], self.gp[1], self.gp[2], self.gp[3], self.gp[4], self.gp[5], self.gp[6], self.gp[7], self.gp[8], self.gp[9], self.gp[10], self.gp[11], self.gp[12], self.sp, self.lr, self.pc)
+    }
+}
