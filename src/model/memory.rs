@@ -105,9 +105,9 @@ impl Memory {
     pub fn get_instruction(&self, addr: u32) -> u32 {
         let hw1 = self.get_halfword(addr);
 
-        if matches_mask(hw1, 0b11101 << 10)
-            || matches_mask(hw1, 0b11110 << 10)
-            || matches_mask(hw1, 0b11111 << 10)
+        if matches_mask(hw1, 0b11101 << 11)
+            || matches_mask(hw1, 0b11110 << 11)
+            || matches_mask(hw1, 0b11111 << 11)
         {
             let hw1 = (hw1 as u32) << 16;
             let hw2 = self.get_halfword(addr + 2) as u32;

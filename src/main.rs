@@ -54,6 +54,12 @@ fn main() {
     loop {
         let instruction = state.mem.get_instruction(state.regs.pc);
         let is_32_bit = is_32_bit(instruction);
+
+        #[cfg(debug_assertions)]
+        if state.regs.pc >= 0x40 {
+            let _x = 1;
+        }
+
         let decoded = decode(instruction);
         println!(
             "0x{:04X?} : 0x{:08X?} : {:?}",

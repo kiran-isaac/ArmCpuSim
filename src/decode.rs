@@ -922,7 +922,24 @@ pub fn decode(i: u32) -> I {
                                     setflags: false,
                                 };
                             }
-                            0b1111000..=0b1111111 => unimplemented!("Hints not implemented"),
+                            0b1111000..=0b1111111 => {
+                                let opa = briz(i, 4, 7);
+                                let opb = briz(i, 0, 3);
+                                match (opa, opb) {
+                                    (0, 0) => I {
+                                        it: IT::NOP,
+                                        imms: 0,
+                                        immu: 0,
+                                        rd: 0,
+                                        rl: 0,
+                                        rm: 0,
+                                        rt: 0,
+                                        rn: 0,
+                                        setflags: false,
+                                    },
+                                    _ => unimplemented!("Hints other than NOP")
+                                }
+                            }
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
                         }
                     }
@@ -1019,7 +1036,7 @@ pub fn decode(i: u32) -> I {
         }
         // Instruction is 32 bit
         _ => {
-            if briz(i, 29, 31) != 0b111 { 
+            if briz(i, 29, 31) != 0b111 {
                 panic!("Invalid instr: {i}")
             }
 
@@ -1082,15 +1099,10 @@ pub fn decode(i: u32) -> I {
 
                             let imm11 = briz(i, 0, 10);
                             let imm10 = briz(i, 16, 25);
-                            let imm32 =
-                                (imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23);
+                            let imm32 = (imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23);
 
                             // case imm32 into i32 and set sign bit
-                            let imm32 = if s {
-                                -(imm32 as i32)
-                            } else {
-                                imm32 as i32
-                            };
+                            let imm32 = if s { -(imm32 as i32) } else { imm32 as i32 };
 
                             I {
                                 it: IT::BL,
