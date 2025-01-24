@@ -74,8 +74,6 @@ PHDRS
 
 SECTIONS
 {
-	PROVIDE(__stack = ORIGIN(ram) + LENGTH(ram));
-
 	/* .boot_flash : {
 		KEEP (*(.text.init.enter))
 		KEEP (*(.data.init.enter))
@@ -280,6 +278,8 @@ SECTIONS
 	_end = __bss_end;
 	PROVIDE( end = __bss_end );
 	PROVIDE( __bss_size = __bss_end - __bss_start );
+
+	PROVIDE(__stack_start = ORIGIN(ram) + LENGTH(ram));
 
 	/* Make the rest of memory available for heap storage */
 	PROVIDE (__heap_start = __end);

@@ -31,10 +31,12 @@ impl ProcessorState {
 }
 
 fn main() {
+    let mut registers = Registers::new();
     let app_path = std::env::args().nth(1).unwrap();
-    let memory: Memory = Memory::from_elf(&app_path);
 
-    let registers = Registers::new();
+    // Load ELF and initialise register values
+    let memory: Memory = Memory::from_elf(&app_path, &mut registers);
+
     let mut state = ProcessorState {
         regs: registers,
         mem: memory,
@@ -45,20 +47,20 @@ fn main() {
     // decode is modeled by matching the instruction against a set of masks
     // execute is modeled by performing the operation on the registers
 
-    let _entry_point = state.mem.entrypoint;
-    state.regs.pc = _entry_point as u32;
+    // let _entry_point = state.mem.entrypoint;
+    // state.regs.pc = _entry_point as u32;
     let mut executor0 = Executor::new();
 
-    // loop {
-    //     let instruction = state.mem.get_instruction(state.regs.pc);
-    //     let is_32_bit = is_32_bit(instruction);
-    //     let decoded = decode(instruction);
-    //     println!(
-    //         "{:04X?}:{:08X?}:{:?}",
-    //         state.regs.pc, instruction, decoded.it
-    //     );
-    //     // state.regs.pc += if is_32_bit { 4 } else { 2 };
-    //     executor0.assign(decoded);
-    //     executor0.execute(&mut state);
-    // }
+    loop {
+        let instruction = state.mem.get_instruction(state.regs.pc);
+        let is_32_bit = is_32_bit(instruction);
+        let decoded = decode(instruction);
+        println!(
+            "0x{:04X?} : 0x{:08X?} : {:?}",
+            state.regs.pc, instruction, decoded.it
+        );
+        state.regs.pc += if is_32_bit { 4 } else { 2 };
+        // executor0.assign(decoded);
+        // executor0.execute(&mut state);
+    }
 }

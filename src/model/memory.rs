@@ -1,9 +1,12 @@
 use crate::binary::*;
+use elf::abi::PT_LOAD;
 use elf::endian::{AnyEndian, EndianParse};
-use elf::{file, symbol, ElfBytes};
+use elf::ElfBytes;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+
+use super::Registers;
 
 pub struct Memory {
     pub entrypoint: usize,
@@ -13,10 +16,14 @@ pub struct Memory {
 
 impl Memory {
     pub fn empty() -> Self {
-        Memory {entrypoint: 0, memory: vec![], is_little_endian: true}
+        Memory {
+            entrypoint: 0,
+            memory: vec![],
+            is_little_endian: true,
+        }
     }
-    
-    pub fn from_elf(path: &str) -> Self {
+
+    pub fn from_elf(path: &str, regs: &mut Registers) -> Self {
         let path = PathBuf::from(path);
         let file_data = fs::read(path).expect("Could not read file");
 
@@ -26,15 +33,9 @@ impl Memory {
         magic_number.push(file_data[2]);
         magic_number.push(file_data[3]);
 
-        let file_data_static= Box::leak(file_data.clone().into_boxed_slice());
+        let file_data_static = Box::leak(file_data.clone().into_boxed_slice());
 
-        let elf_file =
-            ElfBytes::minimal_parse(file_data_static).expect("Failed to parse ELF file");
-
-        let segment_parse_table = elf_file.segments().unwrap();
-        for phdr in segment_parse_table.into_iter() {
-            println!("{:08X?}", phdr);
-        }
+        let elf_file = ElfBytes::minimal_parse(file_data_static).expect("Failed to parse ELF file");
 
         let pt = elf_file.symbol_table().unwrap().unwrap();
         let symtab = pt.0;
@@ -46,14 +47,53 @@ impl Memory {
             symtab_map.insert(strtab.get(sym.st_name as usize).unwrap(), sym.st_value);
         }
 
-        println!("{:08X?}", symtab_map);
-
         let header: elf::file::FileHeader<AnyEndian> = elf_file.ehdr;
         assert_eq!(header.e_machine, 0x28, "Only ARM architecture is supported");
 
-        let mut memory = file_data;
-        // Add 4kb to memory
-        memory.resize(memory.len() + 0x4000, 0);
+
+        let mandatory_sections = vec![
+            "__flash",
+            "__ram",
+            "__flash_size",
+            "__ram_size",
+            "__stack_size",
+        ];
+        for section in mandatory_sections {
+            if !symtab_map.contains_key(section) {
+                panic!("Invalid ELF: Missing symbol: {}", section)
+            }
+        }
+
+        // Set reg values
+        regs.pc = *symtab_map.get("__flash").unwrap() as u32;
+        regs.sp =
+            (*symtab_map.get("__ram").unwrap() + *symtab_map.get("__ram_size").unwrap()) as u32;
+
+        // Layout memory
+        let flash_size = *symtab_map.get("__flash_size").unwrap() as usize;
+        let ram_size = *symtab_map.get("__ram_size").unwrap() as usize;
+        let mem_size = flash_size + ram_size;
+        let mut memory: Vec<u8> = Vec::new();
+        memory.resize(mem_size, 0);
+
+        let segment_parse_table = elf_file.segments().unwrap();
+        for phdr in segment_parse_table.into_iter() {
+            if phdr.p_type != PT_LOAD {
+                continue;
+            }
+            let segment_bytes = elf_file.segment_data(&phdr).unwrap();
+            let mut mem_addr = phdr.p_vaddr as usize;
+
+            #[cfg(debug_assertions)]
+            {
+                println!("{:X?}", phdr);
+                println!("{:08X?}, : {:02X?}\n\n", mem_addr, segment_bytes);
+            }
+            for byte in segment_bytes {
+                memory[mem_addr] = *byte;
+                mem_addr += 1;
+            }
+        }
 
         Memory {
             entrypoint: elf_file.ehdr.e_entry as usize - 1,
