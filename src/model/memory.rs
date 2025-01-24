@@ -1,48 +1,22 @@
-use super::Registers;
 use crate::binary::*;
 use elf::endian::{AnyEndian, EndianParse};
-use elf::section::SectionHeader;
-use elf::ElfBytes;
+use elf::{file, symbol, ElfBytes};
 use std::collections::HashMap;
-use std::{fs, os};
+use std::fs;
 use std::path::PathBuf;
 
 pub struct Memory {
-    pub os_entrypoint: usize,
-    _memory: Vec<u8>,
+    pub entrypoint: usize,
+    memory: Vec<u8>,
     pub is_little_endian: bool,
 }
 
 impl Memory {
-    pub fn from_os_elf(path: &str) -> Self {
-        let path = PathBuf::from(path);
-        let mut file_data = fs::read(path).expect("Could not read file");
-
-        let mut magic_number = Vec::new();
-        magic_number.push(file_data[0]);
-        magic_number.push(file_data[1]);
-        magic_number.push(file_data[2]);
-        magic_number.push(file_data[3]);
-
-        let file_data_static= Box::leak(file_data.clone().into_boxed_slice());
-
-        let elf_file =
-            ElfBytes::minimal_parse(file_data_static).expect("Failed to parse ELF file");
-
-        let header: elf::file::FileHeader<AnyEndian> = elf_file.ehdr;
-        assert_eq!(header.e_machine, 0x28, "Only ARM architecture is supported");
-
-        let file_data_length = file_data.len();
-        file_data.resize(file_data_length + 0x4000, 0);
-
-        Memory {
-            os_entrypoint: elf_file.ehdr.e_entry as usize - 1,
-            _memory: file_data,
-            is_little_endian: header.endianness.is_little(),
-        }
+    pub fn empty() -> Self {
+        Memory {entrypoint: 0, memory: vec![], is_little_endian: true}
     }
-
-    pub fn load_additional_elf(&mut self, path: &str) -> usize {
+    
+    pub fn from_elf(path: &str) -> Self {
         let path = PathBuf::from(path);
         let file_data = fs::read(path).expect("Could not read file");
 
@@ -57,18 +31,35 @@ impl Memory {
         let elf_file =
             ElfBytes::minimal_parse(file_data_static).expect("Failed to parse ELF file");
 
+        let segment_parse_table = elf_file.segments().unwrap();
+        for phdr in segment_parse_table.into_iter() {
+            println!("{:08X?}", phdr);
+        }
+
+        let pt = elf_file.symbol_table().unwrap().unwrap();
+        let symtab = pt.0;
+        let strtab = pt.1;
+
+        let mut symtab_map = HashMap::new();
+
+        for sym in symtab.iter() {
+            symtab_map.insert(strtab.get(sym.st_name as usize).unwrap(), sym.st_value);
+        }
+
+        println!("{:08X?}", symtab_map);
+
         let header: elf::file::FileHeader<AnyEndian> = elf_file.ehdr;
         assert_eq!(header.e_machine, 0x28, "Only ARM architecture is supported");
 
-        let file_data_length = file_data.len();
-        let offset = self._memory.len();
-        self._memory.resize(offset + file_data_length, 0);
+        let mut memory = file_data;
+        // Add 4kb to memory
+        memory.resize(memory.len() + 0x4000, 0);
 
-        for i in 0..file_data_length {
-            self._memory[offset + i] = file_data[i];
+        Memory {
+            entrypoint: elf_file.ehdr.e_entry as usize - 1,
+            memory,
+            is_little_endian: header.endianness.is_little(),
         }
-
-        elf_file.ehdr.e_entry as usize - 1
     }
 
     pub fn get_instruction(&self, addr: u32) -> u32 {
@@ -88,7 +79,7 @@ impl Memory {
     pub fn get_byte(&self, addr: u32) -> u8 {
         let addr = addr as usize;
         if self.is_little_endian {
-            self._memory[addr] as u8
+            self.memory[addr] as u8
         } else {
             unimplemented!("Big endian not supported yet");
         }
@@ -97,8 +88,8 @@ impl Memory {
     pub fn get_halfword(&self, addr: u32) -> u16 {
         let addr = addr as usize;
         if self.is_little_endian {
-            let lower = self._memory[addr] as u16;
-            let upper = self._memory[addr + 1] as u16;
+            let lower = self.memory[addr] as u16;
+            let upper = self.memory[addr + 1] as u16;
             (upper << 8) + lower
         } else {
             unimplemented!("Big endian not supported yet");
@@ -109,10 +100,10 @@ impl Memory {
         let addr = addr as usize;
         if self.is_little_endian {
             u32::from_le_bytes([
-                self._memory[addr + 2],
-                self._memory[addr + 3],
-                self._memory[addr],
-                self._memory[addr + 1],
+                self.memory[addr + 2],
+                self.memory[addr + 3],
+                self.memory[addr],
+                self.memory[addr + 1],
             ])
         } else {
             unimplemented!("Big endian not supported yet");
@@ -123,10 +114,10 @@ impl Memory {
         let addr = addr as usize;
         if self.is_little_endian {
             let bytes = value.to_le_bytes();
-            self._memory[addr] = bytes[2];
-            self._memory[addr + 1] = bytes[3];
-            self._memory[addr + 2] = bytes[0];
-            self._memory[addr + 3] = bytes[1];
+            self.memory[addr] = bytes[2];
+            self.memory[addr + 1] = bytes[3];
+            self.memory[addr + 2] = bytes[0];
+            self.memory[addr + 3] = bytes[1];
         } else {
             unimplemented!("Big endian not supported yet");
         }
@@ -135,8 +126,8 @@ impl Memory {
     pub fn set_halfword(&mut self, addr: u32, value: u16) {
         let addr = addr as usize;
         if self.is_little_endian {
-            self._memory[addr] = (value & 0xff) as u8;
-            self._memory[addr + 1] = (value >> 8) as u8;
+            self.memory[addr] = (value & 0xff) as u8;
+            self.memory[addr + 1] = (value >> 8) as u8;
         } else {
             unimplemented!("Big endian not supported yet");
         }
@@ -145,7 +136,7 @@ impl Memory {
     pub fn set_byte(&mut self, addr: u32, value: u8) {
         let addr = addr as usize;
         if self.is_little_endian {
-            self._memory[addr] = value;
+            self.memory[addr] = value;
         } else {
             unimplemented!("Big endian not supported yet");
         }

@@ -1,20 +1,40 @@
-use crate::{binary::*, ProcessorState, I, IT::*};
+use crate::{binary::*, system::syscall, ProcessorState, I, IT::*};
 
-struct Executor {
+pub struct Executor {
     i: Option<I>,
     cycles_remaining: usize,
 }
 
+#[allow(unused)]
 struct ExecutorPool {
     pool: [Executor; 8],
     scoreboard: [bool; 16],
 }
 
 impl Executor {
-    pub fn execute(i: I, state: &mut ProcessorState) {
+    pub fn new() -> Self {
+        Executor {i: None, cycles_remaining: 0}
+    }
+
+    pub fn assign(&mut self, i: I) -> usize {
+        self.i = Some(i);
+        // Lookup how long an instruction should take
+        self.cycles_remaining = 1;
+
+        self.cycles_remaining
+    }
+
+    pub fn execute(&self, state: &mut ProcessorState) {
+        let i = match self.i {
+            None => panic!("Cannot execute: No instruction assigned"),
+            Some(i) => i
+        };
+        
         match i.it {
             UNPREDICTABLE => panic!("Cannot execute unpredictable"),
             UNDEFINED => panic!("Cannot execute undefined"),
+
+            SVC => syscall(&i, state),
 
             // ADD
             ADC | SBC | ADDReg | ADDImm | ADDSpImm | ADDSpReg | CMN | CMPReg | CMPImm | RSB => {

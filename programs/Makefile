@@ -1,24 +1,22 @@
 C_FILES := $(wildcard ./*.c)
-ARMBIN := ~/arm-et-bin
-CLANG_TARGET_OPTIONS := --target=armv6-none-eabi -mfloat-abi=soft -mcpu=cortex-m0 -mthumb
+ARMET := ~/LLVM-ET-Arm-19.1.5-Linux-x86_64
+CLANG_TARGET_OPTIONS := --target=armv6m-none-eabi -mfloat-abi=soft -mthumb
+LINKER_SCRIPT := picolibc.ld
 
 %.dis : %.out
-	$(ARMBIN)/llvm-objdump -d $< > $@
+	$(ARMET)/bin/llvm-objdump -d $< > $@
 
 %.dis : %.o
-	$(ARMBIN)/llvm-objdump -d $< > $@
-
-%.s : %.c
-	$(ARMBIN)/clang -S $(CLANG_TARGET_OPTIONS) $< -o $@
+	$(ARMET)/bin/llvm-objdump -d $< > $@
 
 %.o : %.s
-	$(ARMBIN)/clang -c $(CLANG_TARGET_OPTIONS) $< -o $@
+	$(ARMET)/bin/clang -c $(CLANG_TARGET_OPTIONS) $< -o $@
 
-%.a : %.o
-	$(ARMBIN)/clang $(CLANG_TARGET_OPTIONS) $< -o $@ -T /home/kiran/LLVM-ET-Arm-19.1.5-Linux-x86_64/lib/clang-runtimes/arm-none-eabi/armv6m_soft_nofp/lib/picolibc.ld
+%.s : %.c
+	$(ARMET)/bin/clang -O0 -S $(CLANG_TARGET_OPTIONS) $< -o $@
 
-%.out : %.o syscalls/syscalls.o
-	$(ARMBIN)/clang -e main $(CLANG_TARGET_OPTIONS) syscalls/syscalls.o $< -o $@ -T /home/kiran/LLVM-ET-Arm-19.1.5-Linux-x86_64/lib/clang-runtimes/arm-none-eabi/armv6m_soft_nofp/lib/picolibc.ld
+%.out : %.o
+	$(ARMET)/bin/clang $(CLANG_TARGET_OPTIONS) syscalls/syscalls.o $< -o $@ -T $(LINKER_SCRIPT)
 
 all: $(C_FILES:.c=.dis) $(C_FILES:.c=.s) $(C_FILES:.c=.out)
 
