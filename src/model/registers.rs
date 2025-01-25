@@ -86,7 +86,7 @@ impl Registers {
         }
     }
 
-    pub fn get(&mut self, index: u8) -> u32 {
+    pub fn get(&self, index: u8) -> u32 {
         match index {
             0..=12 => self.gp[index as usize],
             13 => self.sp,
