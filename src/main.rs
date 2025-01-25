@@ -24,17 +24,6 @@ struct ProcessorState {
     pub halt: i32,
 }
 
-impl ProcessorState {
-    #[cfg(test)]
-    pub fn new() -> Self {
-        ProcessorState {
-            regs: Registers::new(),
-            mem: Memory::empty(),
-            halt: -1,
-        }
-    }
-}
-
 fn main() {
     let mut registers = Registers::new();
     let app_path = std::env::args().nth(1).unwrap();
@@ -63,7 +52,7 @@ fn main() {
         let instruction = state.mem.get_instruction(state.regs.pc);
         let is_32_bit = is_32_bit(instruction);
 
-        if state.regs.pc == 0xb0 {
+        if state.regs.pc == 0xae {
             print!("")
         }
 
@@ -74,9 +63,9 @@ fn main() {
         executor0.assign(decoded);
         executor0.execute(&mut state);
 
-        logger.log(decoded, &state.regs);
-
         state.regs.pc = state.regs.pc.wrapping_add(if is_32_bit { 4 } else { 2 });
+
+        logger.log(decoded, &state.regs);
 
         if state.halt >= 0 {
             println!("Exiting with code: {}", state.halt);

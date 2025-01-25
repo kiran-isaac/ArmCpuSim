@@ -12,17 +12,13 @@ pub struct Memory {
     pub entrypoint: usize,
     memory: Vec<u8>,
     pub is_little_endian: bool,
+    flash_start: u32,
+    flash_size: u32,
+    ram_start: u32,
+    ram_size: u32,
 }
 
 impl Memory {
-    pub fn empty() -> Self {
-        Memory {
-            entrypoint: 0,
-            memory: vec![],
-            is_little_endian: true,
-        }
-    }
-
     pub fn from_elf(path: &str, regs: &mut Registers) -> Self {
         let path = PathBuf::from(path);
         let file_data = fs::read(path).expect("Could not read file");
@@ -50,7 +46,6 @@ impl Memory {
         let header: elf::file::FileHeader<AnyEndian> = elf_file.ehdr;
         assert_eq!(header.e_machine, 0x28, "Only ARM architecture is supported");
 
-
         let mandatory_sections = vec![
             "__flash",
             "__ram",
@@ -70,10 +65,13 @@ impl Memory {
             (*symtab_map.get("__ram").unwrap() + *symtab_map.get("__ram_size").unwrap()) as u32;
 
         // Layout memory
-        let flash_size = *symtab_map.get("__flash_size").unwrap() as usize;
-        let ram_size = *symtab_map.get("__ram_size").unwrap() as usize;
-        let mem_size = flash_size + ram_size;
+        let flash_start = *symtab_map.get("__flash").unwrap() as u32;
+        let flash_size = *symtab_map.get("__flash_size").unwrap() as u32;
+        let ram_start = *symtab_map.get("__ram").unwrap() as u32;
+        let ram_size = *symtab_map.get("__ram_size").unwrap() as u32;
+        let mem_size = (flash_size + ram_size) as usize;
         let mut memory: Vec<u8> = Vec::new();
+
         memory.resize(mem_size, 0);
 
         let segment_parse_table = elf_file.segments().unwrap();
@@ -99,13 +97,17 @@ impl Memory {
             entrypoint: elf_file.ehdr.e_entry as usize - 1,
             memory,
             is_little_endian: header.endianness.is_little(),
+            flash_start,
+            flash_size,
+            ram_start,
+            ram_size,
         }
     }
 
     /// Dump from vaddr to mem end
     pub fn dump_stack(&self, vsp: u32) -> String {
         let mut s = "STACK DUMP: ".to_string();
-        let mut vsp  = vsp;
+        let mut vsp = vsp;
         while self.mm(vsp) < self.memory.len() as u32 {
             s.push_str(format!("{:02X?}", self.get_byte(vsp)).as_str());
             vsp += 1
@@ -116,8 +118,8 @@ impl Memory {
     /// Memory Map: Virtual -> Physical
     #[inline(always)]
     pub fn mm(&self, addr: u32) -> u32 {
-        if addr >= 0x20000000 {
-            addr - 0x20000000 + 0x100000
+        if addr >= self.ram_start {
+            addr - self.ram_start + self.flash_size
         } else {
             addr
         }
@@ -137,7 +139,6 @@ impl Memory {
             hw1 as u32
         }
     }
-
 
     pub fn get_byte(&self, vaddr: u32) -> u8 {
         let addr = self.mm(vaddr) as usize;
@@ -173,8 +174,13 @@ impl Memory {
         }
     }
 
-    pub fn set_word(&mut self, vaddr: u32, value: u32) {
+    pub fn set_word(&mut self, vaddr: u32, value: u32, info: String) {
         let addr = self.mm(vaddr) as usize;
+        if (addr as u32) < (self.flash_start + self.flash_size) {
+            panic!("Attempt to write to RO flash memory: {}", info)
+        } else if (addr as u32) > (self.ram_size + self.flash_size) {
+            panic!("Out of bounds attempt to write: {}", info)
+        }
         if self.is_little_endian {
             let bytes = value.to_le_bytes();
             self.memory[addr] = bytes[2];
@@ -184,24 +190,37 @@ impl Memory {
         } else {
             unimplemented!("Big endian not supported yet");
         }
+        println!("{}: Set word at Mem[{:#X}] to {}", info, vaddr, value)
     }
 
-    pub fn set_halfword(&mut self, vaddr: u32, value: u16) {
+    pub fn set_halfword(&mut self, vaddr: u32, value: u16, info: String) {
         let addr = self.mm(vaddr) as usize;
+        if (addr as u32) < (self.flash_start + self.flash_size) {
+            panic!("Attempt to write to RO flash memory: {}", info)
+        } else if (addr as u32) > (self.ram_size + self.flash_size) {
+            panic!("Out of bounds attempt to write: {}", info)
+        }
         if self.is_little_endian {
             self.memory[addr] = (value & 0xff) as u8;
             self.memory[addr + 1] = (value >> 8) as u8;
         } else {
             unimplemented!("Big endian not supported yet");
         }
+        println!("{}: Set halfword at Mem[{:#X}] to {}", info, vaddr, value)
     }
 
-    pub fn set_byte(&mut self, vaddr: u32, value: u8) {
+    pub fn set_byte(&mut self, vaddr: u32, value: u8, info: String) {
         let addr = self.mm(vaddr) as usize;
+        if (addr as u32) < (self.flash_start + self.flash_size) {
+            panic!("Attempt to write to RO flash memory: {}", info)
+        } else if (addr as u32) > (self.ram_size + self.flash_size) {
+            panic!("Out of bounds attempt to write: {}", info)
+        }
         if self.is_little_endian {
             self.memory[addr] = value;
         } else {
             unimplemented!("Big endian not supported yet");
         }
+        println!("{}: Set byte at Mem[{:#X}] to {}", info, vaddr, value)
     }
 }

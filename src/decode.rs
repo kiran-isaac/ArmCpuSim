@@ -313,7 +313,7 @@ pub fn decode(i: u32) -> I {
                 0b00 => {
                     // let opcode = bit_range_inclusive(i, 9, 13);
                     match briz(i, 11, 13) {
-                        // LSL or MOV encoding 2
+                        // LSL or MOVReg (T2)
                         0b000 => {
                             let imm5 = briz(i, 6, 10);
                             let rd = briz(i, 0, 2) as u8;
@@ -577,7 +577,7 @@ pub fn decode(i: u32) -> I {
                         0b0101 | 0b0110 | 0b0111 => {
                             let n = briz(i, 7, 7);
                             let rm = briz(i, 3, 6);
-                            let rn = briz(i, 0, 2) + n << 3;
+                            let rn = briz(i, 0, 2) + (n << 3);
 
                             return I {
                                 it: IT::CMPReg,
@@ -595,7 +595,8 @@ pub fn decode(i: u32) -> I {
                         0b1000..=0b1011 => {
                             let d = briz(i, 7, 7);
                             let rm = briz(i, 3, 6);
-                            let rd = briz(i, 0, 2) + d << 3;
+                            let rd = briz(i, 0, 2);
+                            let rd = rd + (d << 3);
 
                             return I {
                                 it: IT::MOVReg,
@@ -810,7 +811,7 @@ pub fn decode(i: u32) -> I {
                             }
                             // SUBSP
                             0b0000100..=0b0000111 => {
-                                let imm7 = briz(i, 0, 6);
+                                let imm7 = briz(i, 0, 6) << 2;
 
                                 return I {
                                     it: IT::SUBSP,
