@@ -577,7 +577,7 @@ pub fn decode(i: u32) -> I {
                         0b0101 | 0b0110 | 0b0111 => {
                             let n = briz(i, 7, 7);
                             let rm = briz(i, 3, 6);
-                            let rn = briz(i, 0, 2) + n << 4;
+                            let rn = briz(i, 0, 2) + n << 3;
 
                             return I {
                                 it: IT::CMPReg,
@@ -592,17 +592,17 @@ pub fn decode(i: u32) -> I {
                             };
                         }
                         // MOVReg (T1)
-                        0b1000 | 0b1001 | 0b1010 | 0b1011 => {
-                            let n = briz(i, 7, 7);
+                        0b1000..=0b1011 => {
+                            let d = briz(i, 7, 7);
                             let rm = briz(i, 3, 6);
-                            let rn = briz(i, 0, 2) + n << 4;
+                            let rd = briz(i, 0, 2) + d << 3;
 
                             return I {
                                 it: IT::MOVReg,
-                                rn: rn as u8,
+                                rd: rd as u8,
                                 rm: rm as u8,
                                 setflags: true,
-                                rd: 0,
+                                rn: 0,
                                 rt: 0,
                                 rl: 0,
                                 immu: 0,
@@ -651,7 +651,7 @@ pub fn decode(i: u32) -> I {
                     // Load from literal pool
                     0b0010 | 0b0011 => {
                         let rt = briz(i, 8, 10) as u8;
-                        let imm8 = briz(i, 0, 7);
+                        let imm8 = briz(i, 0, 7) << 2;
 
                         return I {
                             it: IT::LDRLit,
@@ -939,7 +939,7 @@ pub fn decode(i: u32) -> I {
                                         rn: 0,
                                         setflags: false,
                                     },
-                                    _ => unimplemented!("Hints other than NOP")
+                                    _ => unimplemented!("Hints other than NOP"),
                                 }
                             }
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
@@ -993,41 +993,74 @@ pub fn decode(i: u32) -> I {
                             // SVC and B (T1)
                             _ => {
                                 let cond = briz(i, 8, 11);
-                                let imm8 = briz(i, 0, 7);
 
-                                let it = match cond {
-                                    0b0000..=0b1110 => IT::B,
-                                    0b1111 => IT::SVC,
+                                match cond {
+                                    0b0000..=0b1110 => {
+                                        let imm7 = briz(i, 0, 6) << 0;
+                                        let sign = bit_as_bool(i, 7);
+
+                                        let imm8 = i32::from_ne_bytes(
+                                            (imm7
+                                                + if sign {
+                                                    0b1111_1111_1111_1111_1111_1111 << 8
+                                                } else {
+                                                    0
+                                                })
+                                            .to_ne_bytes(),
+                                        );
+
+                                        I {
+                                            it: IT::B,
+                                            imms: imm8,
+                                            rn: cond as u8,
+                                            rd: 0,
+                                            rt: 0,
+                                            rl: 0,
+                                            rm: 0,
+                                            immu: 0,
+                                            setflags: false,
+                                        }
+                                    }
+                                    0b1111 => I {
+                                        it: IT::SVC,
+                                        immu: briz(i, 0, 7),
+                                        rn: 0,
+                                        rd: 0,
+                                        rt: 0,
+                                        rl: 0,
+                                        rm: 0,
+                                        imms: 0,
+                                        setflags: false,
+                                    },
                                     _ => unreachable!("BRI issue: Invalid instr: {i}"),
-                                };
-
-                                return I {
-                                    it,
-                                    immu: imm8,
-                                    rn: cond as u8,
-                                    rd: 0,
-                                    rt: 0,
-                                    rl: 0,
-                                    rm: 0,
-                                    imms: 0,
-                                    setflags: false,
-                                };
+                                }
                             }
                         }
                     }
                     // B (T2)
                     0b1000 | 0b1001 => {
-                        let imm11 = briz(i, 0, 10);
+                        let imm10 = briz(i, 0, 9) << 1;
+                        let sign = bit_as_bool(i, 10);
+
+                        let imm11 = i32::from_ne_bytes(
+                            (imm10
+                                + if sign {
+                                    0b1111_1111_1111_1111_1111_11 << 11
+                                } else {
+                                    0
+                                })
+                            .to_ne_bytes(),
+                        );
 
                         return I {
                             it: IT::B,
-                            immu: imm11,
+                            imms: imm11,
                             rn: 0,
                             rd: 0,
                             rt: 0,
                             rl: 0,
                             rm: 0,
-                            imms: 0,
+                            immu: 0,
                             setflags: false,
                         };
                     }
@@ -1102,13 +1135,16 @@ pub fn decode(i: u32) -> I {
                             let imm11 = briz(i, 0, 10);
                             let imm10 = briz(i, 16, 25);
 
-                            let s = if s {
-                                0b1111_1111
-                            } else {
-                                0
-                            };
+                            let s = if s { 0b1111_1111 } else { 0 };
 
-                            let imm32 = i32::from_ne_bytes(((imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23) + (s << 24)).to_ne_bytes());
+                            let imm32 = i32::from_ne_bytes(
+                                ((imm11 << 1)
+                                    + (imm10 << 12)
+                                    + (i2 << 22)
+                                    + (i1 << 23)
+                                    + (s << 24))
+                                    .to_ne_bytes(),
+                            );
 
                             I {
                                 it: IT::BL,

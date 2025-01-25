@@ -40,6 +40,8 @@ pub fn hamming_weight(i: u32) -> u32 {
     i.count_ones()
 }
 
+// pub fn sign_extend(i: u32) -> u32 {}
+
 pub fn add_with_carry(a: u32, b: u32, c: u8) -> (u32, bool) {
     let (sum1, carry1) = a.overflowing_add(b);
     let (sum2, carry2) = sum1.overflowing_add(c as u32);

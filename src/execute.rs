@@ -40,15 +40,15 @@ impl Executor {
             ADC | SBC | ADDReg | ADDImm | ADDSpImm | CMN | CMPReg | CMPImm | RSB | SUBImm | SUBReg | SUBSP => {
                 let n = match i.it {
                     ADR => state.regs.pc,
-                    ADDSpImm => state.regs.sp,
+                    ADDSpImm | SUBSP => state.regs.sp,
                     RSB => !state.regs.get(i.rn),
                     _ => state.regs.get(i.rn),
                 };
                 let m = match i.it {
                     ADC | ADDReg => state.regs.get(i.rm),
                     ADDImm | ADDSpImm | ADR => i.immu,
-                    CMPImm => !i.immu,
-                    CMPReg | SBC | SUBImm | SUBReg | SUBSP => !state.regs.get(i.rm),
+                    CMPImm | SUBSP => !i.immu,
+                    CMPReg | SBC | SUBImm | SUBReg => !state.regs.get(i.rm),
                     RSB => 0,
                     _ => unreachable!(),
                 };
@@ -141,18 +141,21 @@ impl Executor {
                     0b1110 | 0b1111 => unimplemented!(),
                     _ => {}
                 }
-                let offset = i.immu;
                 let cond = state.regs.apsr.cond(i.rn);
+                let pc_value = ((state.regs.pc >> 2) << 2) + 4; 
                 if cond {
-                    state.regs.pc = state.regs.pc.wrapping_add(offset);
+                    state.regs.pc = (pc_value as i64).wrapping_add(i.imms as i64 + 4) as u32;
                 }
             }
             BL | BLX | BX => {
+                let pc_value = ((state.regs.pc >> 2) << 2) + 4; 
+
                 let target = match i.it {
-                    BL => (state.regs.pc as i64).wrapping_add(i.imms as i64) as u32,
+                    BL => (pc_value as i64).wrapping_add(i.imms as i64) as u32,
                     BLX => state.regs.get(i.rm),
                     _ => unreachable!(),
                 };
+
                 match i.it {
                     BL | BLX => {
                         state.regs.lr = (briz(state.regs.pc, 1, 31) << 2) + 1;
@@ -166,11 +169,13 @@ impl Executor {
                 let mut wback = true;
                 let mut addr = state.regs.get(i.rn);
                 for b in 0..7 {
-                    if briz(i.rl as u32, b, b) == (i.rn as u32) {
-                        wback = false;
+                    if bit_as_bool(i.rl as u32, b) {
+                        if b as u8 == i.rn {
+                            wback = false;
+                        }
+                        state.regs.set(b as u8, state.mem.get_word(addr));
+                        addr += 4;
                     }
-                    state.regs.set(b as u8, state.mem.get_word(addr));
-                    addr += 4;
                 }
                 if wback {
                     state.regs.set(i.rn, 4 * hamming_weight(i.rl as u32));
@@ -189,7 +194,7 @@ impl Executor {
             LDRImm | LDRReg | LDRLit | LDRBImm | LDRBReg | LDRHReg | LDRHImm | LDRSB | LDRSH => {
                 let addr = match i.it {
                     LDRImm | LDRBImm | LDRHImm => state.regs.get(i.rn) + i.immu,
-                    LDRLit => state.regs.pc + i.immu,
+                    LDRLit => (((state.regs.pc >> 2) << 2)) + i.immu + 4,
                     LDRReg | LDRBReg | LDRHReg => state.regs.get(i.rn) + state.regs.get(i.rm),
                     _ => unreachable!(),
                 };
@@ -206,7 +211,7 @@ impl Executor {
             STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => {
                 let addr = match i.it {
                     STRImm | STRBImm | STRHImm => state.regs.get(i.rn) + i.immu,
-                    LDRReg | STRBReg | STRHReg => state.regs.get(i.rn) + state.regs.get(i.rm),
+                    STRReg | STRBReg | STRHReg => state.regs.get(i.rn) + state.regs.get(i.rm),
                     _ => unreachable!()
                 };
                 let value = state.regs.get(i.rt);

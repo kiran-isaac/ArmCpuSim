@@ -2,9 +2,9 @@ mod binary;
 mod decode;
 mod dispatch;
 mod execute;
+mod log;
 mod model;
 mod system;
-mod log;
 
 #[cfg(test)]
 mod test;
@@ -14,9 +14,9 @@ use std::clone;
 use binary::is_32_bit;
 use decode::*;
 use execute::Executor;
+use log::Logger;
 use model::Memory;
 use model::Registers;
-use log::Logger;
 
 struct ProcessorState {
     pub regs: Registers,
@@ -52,7 +52,7 @@ fn main() {
     state.regs.pc = _entry_point as u32;
     let mut executor0 = Executor::new();
 
-    let current_utc_time = chrono::Utc::now();
+    // let current_utc_time = chrono::Utc::now();
 
     // create trace dir if it doesn't exist
     std::fs::create_dir_all("traces").unwrap();
@@ -63,21 +63,22 @@ fn main() {
         let instruction = state.mem.get_instruction(state.regs.pc);
         let is_32_bit = is_32_bit(instruction);
 
-        #[cfg(debug_assertions)]
-        if state.regs.pc >= 0x40 {
-            let _x = 1;
+        if state.regs.pc == 0xb0 {
+            print!("")
         }
 
         let decoded = decode(instruction);
 
+        let _old_pc = state.regs.pc;
+
         executor0.assign(decoded);
         executor0.execute(&mut state);
-        
-        state.regs.pc = state.regs.pc.wrapping_add(if is_32_bit {4} else {2});
 
         logger.log(decoded, &state.regs);
 
-                if state.halt >= 0 {
+        state.regs.pc = state.regs.pc.wrapping_add(if is_32_bit { 4 } else { 2 });
+
+        if state.halt >= 0 {
             println!("Exiting with code: {}", state.halt);
             std::process::exit(state.halt)
         }

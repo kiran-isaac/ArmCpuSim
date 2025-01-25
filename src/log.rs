@@ -5,16 +5,18 @@ use crate::{model::Registers, I, IT::*};
 pub struct Logger {
     file: std::fs::File,
     previous_regs: Registers,
+    i_count: usize
 }
 
 impl Logger {
     pub fn new(filename: &str, initialstate: &Registers) -> Logger {
         let mut file = std::fs::File::create(filename).unwrap();
-        file.write(b"PC                 ,Instruction   ,Rd   ,Rn   ,Rm   ,Rt   ,Rl                 ,Immu     ,Imms\n")
+        file.write(b"I, PC                ,Instruction, LR, SP  ,Rd   ,Rn   ,Rm   ,Rt   ,Rl                 ,Immu     ,Imms\n")
             .unwrap();
         Logger {
             file,
             previous_regs: initialstate.clone(),
+            i_count: 0
         }
     }
 
@@ -28,18 +30,18 @@ impl Logger {
 
     fn reg_id_to_str(id: u8) -> String {
         match id {
-            0..=12 => format!("{:0>2}", id),
+            0..=12 => format!("{}", id),
             13 => "SP".to_string(),
             14 => "LR".to_string(),
             15 => "PC".to_string(),
-            _ => panic!("Invalid register index"),
+            _ => panic!("Invalid register index: {}", id),
         }
     }
 
     // Will log in order: IT, Rd, Rn, Rm, Rt, Rl, Immu, Imms
     fn instr_args_log(&self, i: I, new_regs: &Registers) -> String {
         format!(
-            "{:<2} {:<17}   ,{:<2} {:<17}   ,{:<2} {:<17}   ,{:<2} {:<17}   ,{} ,{:#08X} ,{:#08X}",
+            "{} {},{} {}   ,{} {},{} {},{} ,{} ,{}",
             Self::reg_id_to_str(i.rd),
             self.reg_change_log(i.rd, new_regs),
             Self::reg_id_to_str(i.rn),
@@ -58,7 +60,7 @@ impl Logger {
         let previous = self.previous_regs.get(reg);
         let current = new_regs.get(reg);
         if previous == current {
-            "".to_string()
+            format!("{:X}", previous)
         } else {
             format!("{:X}>{:X}", previous, current)
         }
@@ -78,15 +80,19 @@ impl Logger {
         self.file
             .write(
                 format!(
-                    "{:<17} ,{:<11}   ,{}\n",
+                    "{},{},{},{},{}   ,{}\n",
+                    self.i_count,
                     self.reg_change_log(15, new_regs),
                     format!("{:?}", i.it),
+                    self.reg_change_log(14, new_regs),
+                    self.reg_change_log(13, new_regs),
                     self.instr_args_log(i, new_regs),
                     // self.reg_change_logs(i, new_regs)
                 )
                 .as_bytes(),
             )
             .unwrap();
+        self.i_count += 1;
 
         self.previous_regs = new_regs.clone()
     }
