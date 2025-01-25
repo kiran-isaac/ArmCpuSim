@@ -1,5 +1,6 @@
 use std::ops::Index;
 
+#[derive(Clone, Copy)]
 pub struct Registers {
     // R0-R12
     // Main Stack Pointer (theres also psp but probably not needed), R13
@@ -13,6 +14,7 @@ pub struct Registers {
     pub apsr: ASPR,
 }
 
+#[derive(Clone, Copy)]
 pub struct ASPR {
     pub n: bool,
     pub z: bool,

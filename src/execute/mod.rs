@@ -37,15 +37,15 @@ impl Executor {
             SVC => syscall(&i, state),
 
             // ADD
-            ADC | SBC | ADDReg | ADDImm | ADDSpImm | ADDSpReg | CMN | CMPReg | CMPImm | RSB | SUBImm | SUBReg | SUBSP => {
+            ADC | SBC | ADDReg | ADDImm | ADDSpImm | CMN | CMPReg | CMPImm | RSB | SUBImm | SUBReg | SUBSP => {
                 let n = match i.it {
                     ADR => state.regs.pc,
-                    ADDSpImm | ADDSpReg => state.regs.sp,
+                    ADDSpImm => state.regs.sp,
                     RSB => !state.regs.get(i.rn),
                     _ => state.regs.get(i.rn),
                 };
                 let m = match i.it {
-                    ADC | ADDReg | ADDSpReg => state.regs.get(i.rm),
+                    ADC | ADDReg => state.regs.get(i.rm),
                     ADDImm | ADDSpImm | ADR => i.immu,
                     CMPImm => !i.immu,
                     CMPReg | SBC | SUBImm | SUBReg | SUBSP => !state.regs.get(i.rm),

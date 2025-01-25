@@ -4,16 +4,19 @@ mod dispatch;
 mod execute;
 mod model;
 mod system;
+mod log;
 
 #[cfg(test)]
 mod test;
 
+use std::clone;
+
 use binary::is_32_bit;
-use decode::IT::*;
 use decode::*;
 use execute::Executor;
 use model::Memory;
 use model::Registers;
+use log::Logger;
 
 struct ProcessorState {
     pub regs: Registers,
@@ -27,7 +30,7 @@ impl ProcessorState {
         ProcessorState {
             regs: Registers::new(),
             mem: Memory::empty(),
-            halt: false,
+            halt: -1,
         }
     }
 }
@@ -53,6 +56,8 @@ fn main() {
     state.regs.pc = _entry_point as u32;
     let mut executor0 = Executor::new();
 
+    let mut logger = Logger::new("log.csv", &state.regs);
+
     println!("{:?}", state.regs);
 
     loop {
@@ -70,11 +75,13 @@ fn main() {
 
         println!("{:?}", decoded);
 
-        // state.regs.pc += if is_32_bit { 4 } else { 2 };
         executor0.assign(decoded);
         executor0.execute(&mut state);
 
+        logger.log(decoded, &state.regs);
+
         if state.halt >= 0 {
+            println!("Exiting with code: {}", state.halt);
             std::process::exit(state.halt)
         }
         
