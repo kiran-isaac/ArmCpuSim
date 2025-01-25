@@ -56,7 +56,10 @@ fn main() {
     state.regs.pc = _entry_point as u32;
     let mut executor0 = Executor::new();
 
-    let mut logger = Logger::new("log.csv", &state.regs);
+    let current_utc_time = chrono::Utc::now();
+    // create trace dir if it doesn't exist
+    std::fs::create_dir_all("traces").unwrap();
+    let mut logger = Logger::new(format!("traces/trace{}.csv", current_utc_time.timestamp_micros() / 1000).as_str(), &state.regs);
 
     println!("{:?}", state.regs);
 
