@@ -53,7 +53,11 @@ impl Executor {
                     ADDImm | ADDSpImm | ADR => i.immu,
                     CMPImm | SUBSP => !i.immu,
                     CMPReg | SBC | SUBImm | SUBReg => !state.regs.get(i.rm),
-                    RSB => 0,
+                    RSB => {
+                        #[cfg(debug_assertions)]
+                        assert_eq!(i.immu, 0);
+                        i.immu
+                    },
                     _ => unreachable!(),
                 };
                 let carry = match i.it {
@@ -77,37 +81,12 @@ impl Executor {
                     state.regs.apsr.n = bit_as_bool(result, 31);
                     state.regs.apsr.z = hamming_weight(result) == 0;
                     state.regs.apsr.c = carry;
-                    state.regs.apsr.v = carry;
-                }
-            }
-            MUL => {
-                let n = state.regs.get(i.rn);
-                let m = state.regs.get(i.rm);
-                let result = n.wrapping_mul(m);
-                state.regs.set(i.rd, result);
-                state.regs.apsr.n = bit_as_bool(result, 31);
-                state.regs.apsr.z = hamming_weight(result) == 0;
-            }
-            AND | BIC | EOR | ORR => {
-                let n = state.regs.get(i.rn);
-                let m = match i.it {
-                    BIC => !state.regs.get(i.rm),
-                    AND | EOR | ORR => state.regs.get(i.rm),
-                    _ => unreachable!(),
-                };
-                let result = match i.it {
-                    AND | BIC => n & m,
-                    EOR => n ^ m,
-                    ORR => n | m,
-                    _ => unreachable!(),
-                };
-                state.regs.set(i.rd, result);
-
-                if i.setflags {
-                    state.regs.apsr.n = bit_as_bool(result, 31);
-                    state.regs.apsr.z = hamming_weight(result) == 0;
-                    state.regs.apsr.c = false;
-                    // state.regs.apsr.v = false;
+                    match i.it {
+                        ADC | SBC | RSB | CMPReg | CMN => {
+                            state.regs.apsr.v = carry;
+                        }
+                        _ => {}
+                    }
                 }
             }
             ASRImm | ASRReg | LSLImm | LSLReg | LSRImm | LSRReg | MOVImm | MOVReg | MVN | ROR => {
@@ -142,6 +121,36 @@ impl Executor {
                     // state.regs.apsr.v = false;
                 }
             }
+            MUL => {
+                let n = state.regs.get(i.rn);
+                let m = state.regs.get(i.rm);
+                let result = n.wrapping_mul(m);
+                state.regs.set(i.rd, result);
+                state.regs.apsr.n = bit_as_bool(result, 31);
+                state.regs.apsr.z = hamming_weight(result) == 0;
+            }
+            AND | BIC | EOR | ORR => {
+                let n = state.regs.get(i.rn);
+                let m = match i.it {
+                    BIC => !state.regs.get(i.rm),
+                    AND | EOR | ORR => state.regs.get(i.rm),
+                    _ => unreachable!(),
+                };
+                let result = match i.it {
+                    AND | BIC => n & m,
+                    EOR => n ^ m,
+                    ORR => n | m,
+                    _ => unreachable!(),
+                };
+                state.regs.set(i.rd, result);
+
+                if i.setflags {
+                    state.regs.apsr.n = bit_as_bool(result, 31);
+                    state.regs.apsr.z = hamming_weight(result) == 0;
+                    state.regs.apsr.c = false;
+                    // state.regs.apsr.v = false;
+                }
+            }
             B | BL | BLX | BX => {
                 let pc_value = state.regs.pc + 4;
 
@@ -160,12 +169,12 @@ impl Executor {
 
                 match i.it {
                     BL | BLX | B => {
-                        state.regs.lr = (briz(state.regs.pc, 1, 31) << 1) + 1;
+                        state.regs.lr = (pc_value & 0xfffffffe) + 1;
                     }
                     BX => {}
                     _ => unreachable!(),
                 }
-                state.regs.pc = target;
+                state.regs.pc = target & 0xfffffffe;
             }
             LDMIA => {
                 let mut wback = true;

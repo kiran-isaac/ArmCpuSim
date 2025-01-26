@@ -63,7 +63,11 @@ fn main() {
         executor0.assign(decoded);
         executor0.execute(&mut state);
 
-        state.regs.pc = state.regs.pc.wrapping_add(if is_32_bit { 4 } else { 2 });
+        // increment pc
+        match decoded.it {
+            IT::BL | IT::BLX | IT::B | IT::BX => {},
+            _ => state.regs.pc += if is_32_bit { 4 } else { 2 },
+        }
 
         logger.log(decoded, &state.regs);
 

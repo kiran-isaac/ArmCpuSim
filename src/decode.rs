@@ -141,8 +141,6 @@ pub enum IT {
     /// Move (register) copies a value from a register to the destination register. Encoding T2 updates the condition flags
     /// based on the value.
     MOVReg,
-    /// Move (shifted register) is a pseudo-instruction for ASR, LSL, LSR, and ROR
-    MOVShift,
     /// Move to Register from Special register moves the value from the selected special-purpose register into a
     /// general-purpose ARM register.
     MRS,
@@ -157,7 +155,6 @@ pub enum IT {
     MVN,
     /// UNUSED: Negate is a pre-UAL synonym for RSB (immediate) with an immediate value of 0. See RSB (immediate) on
     /// page A6-154 for details
-    Neg,
     /// No Operation does nothing. This instruction can be used for code alignment purposes.
     NOP,
     /// Logical OR (register) performs a bitwise, inclusive, OR of two register values, and writes the result to the
@@ -517,8 +514,8 @@ pub fn decode(i: u32) -> I {
                     // Data Processing
                     0b0000 => {
                         let opcode = briz(i, 6, 9);
-                        let rdn = briz(i, 0, 2) as u8;
-                        let rm = briz(i, 3, 5) as u8;
+                        let lowreg = briz(i, 0, 2) as u8;
+                        let highreg = briz(i, 3, 5) as u8;
 
                         let it = match opcode {
                             0b0000 => IT::AND,
@@ -530,11 +527,36 @@ pub fn decode(i: u32) -> I {
                             0b0110 => IT::SBC,
                             0b0111 => IT::ROR,
                             0b1000 => IT::TST,
-                            0b1001 => IT::RSB,
+                            // An annoying special case
+                            0b1001 => {
+                                return I {
+                                    it: IT::RSB,
+                                    rd: lowreg,
+                                    rn: highreg,
+                                    rm: 0,
+                                    immu: 0,
+                                    imms: 0,
+                                    rt: 0,
+                                    rl: 0,
+                                    setflags: true,
+                                }
+                            },
                             0b1010 => IT::CMPReg, // T1
                             0b1011 => IT::CMN,
                             0b1100 => IT::ORR,
-                            0b1101 => IT::MUL,
+                            0b1101 => {
+                                return I {
+                                    it: IT::MUL,
+                                    rd: lowreg,
+                                    rn: highreg,
+                                    rm: lowreg,
+                                    immu: 0,
+                                    imms: 0,
+                                    rt: 0,
+                                    rl: 0,
+                                    setflags: true,
+                                }
+                            },
                             0b1110 => IT::BIC,
                             0b1111 => IT::MVN,
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
@@ -542,9 +564,9 @@ pub fn decode(i: u32) -> I {
 
                         return I {
                             it,
-                            rd: rdn,
-                            rn: rdn,
-                            rm,
+                            rd: lowreg,
+                            rn: lowreg,
+                            rm: highreg,
                             immu: 0,
                             imms: 0,
                             rt: 0,
@@ -680,7 +702,7 @@ pub fn decode(i: u32) -> I {
                             0b100 => IT::LDRReg,
                             0b101 => IT::LDRHReg,
                             0b110 => IT::LDRBReg,
-                            0b111 => IT::LDRBReg,
+                            0b111 => IT::LDRSH,
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
                         };
 
@@ -702,6 +724,7 @@ pub fn decode(i: u32) -> I {
                         let rn = briz(i, 3, 5) as u8;
                         let rt = briz(i, 0, 2) as u8;
 
+                        // TODO: Fix decode. Test by running simpleadd program
                         let it = match briz(i, 11, 12) {
                             // STRImm (T1)
                             0b00 => IT::STRImm,
