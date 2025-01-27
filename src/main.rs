@@ -59,7 +59,7 @@ fn main() {
     let logfile = "traces/log.txt";
     let mut log_file = OpenOptions::new()
         .write(true)
-        .create(true)
+        .create(true).truncate(true)
         .open(logfile)
         .unwrap();
     let stack_dump_file = "traces/stack_dump.txt";

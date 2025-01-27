@@ -68,7 +68,7 @@ impl Executor {
                     _ => 0,
                 };
 
-                let (result, carry) = add_with_carry(n as u32, m, carry);
+                let (result, carry, overflow) = add_with_carry(n as u32, m, carry);
 
                 match i.it {
                     CMN | CMPImm | CMPReg => {}
@@ -82,10 +82,10 @@ impl Executor {
                 if i.rd != 15 && i.setflags {
                     state.regs.apsr.n = bit_as_bool(result, 31);
                     state.regs.apsr.z = hamming_weight(result) == 0;
-                    state.regs.apsr.c = carry;
+                    state.regs.apsr.c = carry == 1;
                     match i.it {
                         ADC | SBC | RSB | CMPReg | CMPImm | CMN => {
-                            state.regs.apsr.v = carry;
+                            state.regs.apsr.v = overflow == 1;
                         }
                         _ => {}
                     }
@@ -174,7 +174,7 @@ impl Executor {
                 if func.is_some() {
                     // debug trap, faster than conditional breakpoint
                     #[cfg(debug_assertions)]
-                    if func.unwrap() == "strcmp" {
+                    if func.unwrap() == "bubble_sort" {
                         print!("")
                     }
 
@@ -374,6 +374,15 @@ impl Executor {
                 state.regs.set(i.rd, result);
             }
             NOP => {}
+            UXTH | UXTB => {
+                let value = state.regs.get(i.rm);
+                let result = match i.it {
+                    UXTH => (value & 0xffff) as u32,
+                    UXTB => (value & 0xff) as u32,
+                    _ => unreachable!(),
+                };
+                state.regs.set(i.rd, result);
+            }
             _ => unimplemented!("Instruction execute not implemented: {:?}", i.it),
         }
     }

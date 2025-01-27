@@ -7,7 +7,7 @@ where
 
 #[inline(always)]
 fn n_ones(n: u32) -> u32 {
-    (1 << n) - 1
+    (1 as u32).wrapping_shl(n) - 1
 }
 
 /// Bit range inclusive zero extend
@@ -37,12 +37,16 @@ pub fn hamming_weight(i: u32) -> u32 {
 
 // pub fn sign_extend(i: u32) -> u32 {}
 
-pub fn add_with_carry(a: u32, b: u32, c: u8) -> (u32, bool) {
-    let (sum1, carry1) = a.overflowing_add(b);
-    let (sum2, carry2) = sum1.overflowing_add(c as u32);
-    let overflowed = carry1 || carry2;
 
-    (sum2, overflowed)
+
+pub fn add_with_carry(a: u32, b: u32, c: u8) -> (u32, u8, u8) {
+    let unsigned_sum = (a as u64).wrapping_add(b as u64).wrapping_add(c as u64);
+    let signed_sum = (a as i64).wrapping_add(b as i64).wrapping_add(c as i64);
+    let result = unsigned_sum as u32;
+    let carry_out = if result == (unsigned_sum as u32) {0} else {1};
+    let overflowed = if i32::from_ne_bytes(result.to_ne_bytes()) == (signed_sum as i32) {0} else {1};
+
+    (result, carry_out, overflowed)
 }
 
 #[allow(dead_code)]
