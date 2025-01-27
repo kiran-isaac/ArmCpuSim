@@ -17,5 +17,5 @@ int main() {
   strcat(buf2, "World!\n");
   svc_puts(buf2);
 
-  svc_exit(strcmp(buf, buf2) == 0);
+  svc_exit(strcmp(buf, buf2) != 0);
 }

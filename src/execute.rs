@@ -155,22 +155,7 @@ impl Executor {
                 let pc_value = state.regs.pc + 4;
 
                 let target = match i.it {
-                    BL => {
-                        let addr = (pc_value as i64).wrapping_add(i.imms as i64) as u32;
-                        // get if branching to a function
-                        let func = state.mem.get_function_at(addr + 1);
-                        if func.is_some() {
-                            println!(
-                                "Calling: {:?}({:#08X}, {:#08X}, {:#08X}, {:#08X})",
-                                func.unwrap(),
-                                state.regs.get(0),
-                                state.regs.get(1),
-                                state.regs.get(2),
-                                state.regs.get(3)
-                            );
-                        }
-                        addr
-                    }
+                    BL => (pc_value as i64).wrapping_add(i.imms as i64) as u32,
                     BLX | BX => state.regs.get(i.rm),
                     B => {
                         if state.regs.apsr.cond(i.rn) {
@@ -182,6 +167,29 @@ impl Executor {
                     _ => unreachable!(),
                 };
 
+                // get if branching to a function
+                let func = state.mem.get_function_at(target + 1);
+                if func.is_some() {
+                    if func.unwrap() == "strcmp" {
+                        print!("")
+                    }
+                    print!(
+                        "Calling: {:?}({:#08X}, {:#08X}, {:#08X}, {:#08X})",
+                        func.unwrap(),
+                        state.regs.get(0),
+                        state.regs.get(1),
+                        state.regs.get(2),
+                        state.regs.get(3)
+                    );
+                    match i.it {
+                        BL | BLX => {
+                            print!(" Link: {:#08X}", pc_value);
+                        }
+                        _ => {}
+                    }
+                    println!();
+                }
+
                 match i.it {
                     BL => {
                         state.regs.lr = (pc_value & 0xfffffffe) + 1;
@@ -189,12 +197,7 @@ impl Executor {
                     BLX => {
                         state.regs.lr = ((pc_value - 2) & 0xfffffffe) + 1;
                     }
-                    B => {
-                        if state.regs.apsr.cond(i.rn) {
-                            state.regs.lr = (pc_value & 0xfffffffe) + 1;
-                        }
-                    }
-                    BX => {}
+                    B | BX => {}
                     _ => unreachable!(),
                 }
                 state.regs.pc = target & 0xfffffffe;
