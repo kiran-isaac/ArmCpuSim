@@ -754,23 +754,29 @@ pub fn decode(i: u32) -> I {
                 0b10 => match briz(i, 10, 13) {
                     // Load/store single data item pt2
                     0b0000..=0b0111 => {
-                        let imm5 = briz(i, 6, 10);
-                        let mut rn = briz(i, 3, 5) as u8;
-                        let rt = briz(i, 0, 2) as u8;
-
                         let it = match briz(i, 11, 12) {
                             0b00 => IT::STRHImm,
                             0b01 => IT::LDRHImm,
-                            0b10 => {
-                                // STRImm (T2)
-                                rn = 13;
-                                IT::STRImm
-                            },
-                            0b11 => {
-                                // LDRImm (T2)
-                                rn = 13;
-                                IT::STRImm
-                            },
+                            0b10 => IT::STRImm,
+                            0b11 => IT::LDRImm,
+                            _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                        };
+
+                        let (immu, rn, rt) = match it {
+                            IT::STRImm | IT::LDRImm => {
+                                let imm8 = briz(i, 0, 7);
+                                let rt = briz(i, 8, 10) as u8;
+                                let rn = 13;
+
+                                (imm8 << 2, rn, rt)
+                            }
+                            IT::STRHImm | IT::LDRHImm => {
+                                let imm5 = briz(i, 6, 10);
+                                let rn = briz(i, 3, 5) as u8;
+                                let rt = briz(i, 0, 2) as u8;
+
+                                (imm5 << 1, rn, rt)
+                            }
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
                         };
 
@@ -778,7 +784,7 @@ pub fn decode(i: u32) -> I {
                             it,
                             rn,
                             rt,
-                            immu: imm5,
+                            immu,
                             rm: 0,
                             rd: 0,
                             rl: 0,
