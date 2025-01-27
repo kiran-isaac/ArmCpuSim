@@ -26,5 +26,7 @@ int main() {
     unsigned len = 6;
     bubble_sort(arr, len);
 
+    // TODO: Proper comparison
+
     svc_exit(arr[5]);
 }
