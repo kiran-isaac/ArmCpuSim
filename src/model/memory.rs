@@ -165,6 +165,11 @@ impl Memory {
         }
     }
 
+    pub fn set_byte_nolog(&mut self, vaddr: u32, value: u8) {
+        let addr = self.mm(vaddr) as usize;
+        self.memory[addr] = value;
+    }
+
     pub fn get_instruction(&self, vaddr: u32) -> u32 {
         let hw1 = self.get_halfword_nolog(vaddr);
 

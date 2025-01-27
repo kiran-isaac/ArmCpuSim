@@ -5,6 +5,6 @@ void svc_exit(unsigned code);
 
 void svc_puts(const char *s);
 
-void svc_gets();
+void svc_gets(const char buf[]);
 
 #endif // syscalls_h

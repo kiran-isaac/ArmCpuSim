@@ -1,3 +1,5 @@
+use std::io::{Read, Write};
+
 use crate::{ProcessorState, I};
 
 /// HALT = 0,
@@ -17,6 +19,20 @@ pub fn syscall(i: &I, state: &mut ProcessorState) {
                 }
                 print!("{}", c as char);
                 addr += 1;
+            }
+        }
+        2 => {
+            // flush incase of output on same line
+            std::io::stdout().flush().unwrap();
+            let addr = state.regs.get(0) as u32;
+            let mut i = 0;
+            loop {
+                let c = std::io::stdin().bytes().next().unwrap().unwrap();
+                if c == 10 {
+                    break;
+                }
+                state.mem.set_byte_nolog(addr + i, c);
+                i += 1;
             }
         }
         _ => unimplemented!(),

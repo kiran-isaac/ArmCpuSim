@@ -2,14 +2,7 @@
 #include <string.h>
 
 int main() {
-    char buf[20] = "Hello, ";
-    strcat(buf, "World!\n");
-    svc_puts(buf);
-
-    char buf2[20] = "Hello, ";
-    strcat(buf2, "World!\n");
-    svc_puts(buf2);
-
+  while (1) {
     char password_buf[20];
     svc_puts("Enter password: ");
 
@@ -20,9 +13,9 @@ int main() {
 
     if (strcmp(password_buf, "password") == 0) {
       svc_puts("Correct password!\n");
+      svc_exit(0);
     } else {
       svc_puts("Incorrect password!\n");
     }
-
-    svc_exit(strcmp(buf, buf2) != 0);
+  }
 }
