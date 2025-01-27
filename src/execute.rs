@@ -57,7 +57,7 @@ impl Executor {
                         #[cfg(debug_assertions)]
                         assert_eq!(i.immu, 0);
                         i.immu
-                    },
+                    }
                     _ => unreachable!(),
                 };
                 let carry = match i.it {
@@ -155,7 +155,22 @@ impl Executor {
                 let pc_value = state.regs.pc + 4;
 
                 let target = match i.it {
-                    BL => (pc_value as i64).wrapping_add(i.imms as i64) as u32,
+                    BL => {
+                        let addr = (pc_value as i64).wrapping_add(i.imms as i64) as u32;
+                        // get if branching to a function
+                        let func = state.mem.get_function_at(addr + 1);
+                        if func.is_some() {
+                            println!(
+                                "Calling: {:?}({:#08X}, {:#08X}, {:#08X}, {:#08X})",
+                                func.unwrap(),
+                                state.regs.get(0),
+                                state.regs.get(1),
+                                state.regs.get(2),
+                                state.regs.get(3)
+                            );
+                        }
+                        addr
+                    }
                     BLX | BX => state.regs.get(i.rm),
                     B => {
                         if state.regs.apsr.cond(i.rn) {
@@ -197,9 +212,13 @@ impl Executor {
                     }
                 }
                 if wback {
-                    state
-                        .regs
-                        .set(i.rn, state.regs.get(i.rn).wrapping_add(4 * hamming_weight(i.rl as u32)));
+                    state.regs.set(
+                        i.rn,
+                        state
+                            .regs
+                            .get(i.rn)
+                            .wrapping_add(4 * hamming_weight(i.rl as u32)),
+                    );
                 }
             }
             STMIA => {
@@ -221,8 +240,12 @@ impl Executor {
             LDRImm | LDRReg | LDRLit | LDRBImm | LDRBReg | LDRHReg | LDRHImm | LDRSB | LDRSH => {
                 let addr = match i.it {
                     LDRImm | LDRBImm | LDRHImm => state.regs.get(i.rn).wrapping_add(i.immu),
-                    LDRLit => ((state.regs.pc >> 2) << 2).wrapping_add(i.immu).wrapping_add(4),
-                    LDRReg | LDRBReg | LDRHReg => state.regs.get(i.rn).wrapping_add(state.regs.get(i.rm)),
+                    LDRLit => ((state.regs.pc >> 2) << 2)
+                        .wrapping_add(i.immu)
+                        .wrapping_add(4),
+                    LDRReg | LDRBReg | LDRHReg => {
+                        state.regs.get(i.rn).wrapping_add(state.regs.get(i.rm))
+                    }
                     _ => unreachable!(),
                 };
                 let value = match i.it {
@@ -238,7 +261,9 @@ impl Executor {
             STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => {
                 let addr = match i.it {
                     STRImm | STRBImm | STRHImm => state.regs.get(i.rn).wrapping_add(i.immu),
-                    STRReg | STRBReg | STRHReg => state.regs.get(i.rn).wrapping_add(state.regs.get(i.rm)),
+                    STRReg | STRBReg | STRHReg => {
+                        state.regs.get(i.rn).wrapping_add(state.regs.get(i.rm))
+                    }
                     _ => unreachable!(),
                 };
                 let value = state.regs.get(i.rt);

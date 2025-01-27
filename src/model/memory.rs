@@ -16,6 +16,7 @@ pub struct Memory {
     flash_size: u32,
     ram_start: u32,
     ram_size: u32,
+    functions: HashMap<u64, String> 
 }
 
 impl Memory {
@@ -59,6 +60,14 @@ impl Memory {
             }
         }
 
+        // Get Functions 
+        let functions: HashMap<u64, String> = symtab.iter()
+            .filter(|sym| sym.st_symtype() == 2 && sym.st_shndx != 0)
+            .map(|sym| (sym.st_value, strtab.get(sym.st_name as usize).unwrap().to_string()))
+            .collect();
+
+        println!("{:?}", functions);
+
         // Set reg values
         regs.pc = *symtab_map.get("__flash").unwrap() as u32;
         regs.sp =
@@ -72,15 +81,18 @@ impl Memory {
         let mem_size = (flash_size + ram_size) as usize;
         let mut memory: Vec<u8> = Vec::new();
 
+        // println!("{:?}", symtab_map);
+
         memory.resize(mem_size, 0);
 
         let segment_parse_table = elf_file.segments().unwrap();
         for phdr in segment_parse_table.into_iter() {
+            println!("{:X?}", phdr);
             if phdr.p_type != PT_LOAD {
                 continue;
             }
             let segment_bytes = elf_file.segment_data(&phdr).unwrap();
-            let mut mem_addr = phdr.p_vaddr as usize;
+            let mut mem_addr = phdr.p_paddr as usize;
 
             // #[cfg(debug_assertions)]
             // {
@@ -101,7 +113,12 @@ impl Memory {
             flash_size,
             ram_start,
             ram_size,
+            functions
         }
+    }
+
+    pub fn get_function_at(&self, addr: u32) -> Option<&String> {
+        self.functions.get(&(addr as u64))
     }
 
     /// Dump from vaddr to mem end
