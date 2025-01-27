@@ -106,12 +106,20 @@ impl Memory {
 
     /// Dump from vaddr to mem end
     pub fn dump_stack(&self, vsp: u32) -> String {
-        let mut s = "STACK DUMP: ".to_string();
+        let original_vsp = vsp;
+        let mut s = "STACK DUMP: \n".to_string();
         let mut vsp = vsp;
         while self.mm(vsp) < self.memory.len() as u32 {
+            s.push_str(format!("{:#08X}: ", vsp).as_str());
             s.push_str(format!("{:02X?}", self.get_byte(vsp)).as_str());
-            vsp += 1
+            vsp += 1;
+            if self.mm(vsp) >= self.memory.len() as u32 {
+                break;
+            }
+            s.push_str(format!("{:02X?}\n", self.get_byte(vsp)).as_str());
+            vsp += 1;
         }
+        s.push_str(format!("\nStack size: {:#X}\n", vsp - original_vsp).as_str());
         s
     }
 
@@ -183,10 +191,10 @@ impl Memory {
         }
         if self.is_little_endian {
             let bytes = value.to_le_bytes();
-            self.memory[addr] = bytes[2];
-            self.memory[addr + 1] = bytes[3];
-            self.memory[addr + 2] = bytes[0];
-            self.memory[addr + 3] = bytes[1];
+            self.memory[addr] = bytes[0];
+            self.memory[addr + 1] = bytes[1];
+            self.memory[addr + 2] = bytes[2];
+            self.memory[addr + 3] = bytes[3];
         } else {
             unimplemented!("Big endian not supported yet");
         }
@@ -201,8 +209,8 @@ impl Memory {
             panic!("Out of bounds attempt to write: {}", info)
         }
         if self.is_little_endian {
-            self.memory[addr] = (value & 0xff) as u8;
-            self.memory[addr + 1] = (value >> 8) as u8;
+            self.memory[addr] = (value >> 8) as u8;
+            self.memory[addr + 1] = (value & 0xff) as u8;
         } else {
             unimplemented!("Big endian not supported yet");
         }

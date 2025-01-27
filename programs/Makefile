@@ -6,9 +6,6 @@ LINKER_SCRIPT := script.ld
 %.dis : %.out
 	$(ARMET)/bin/llvm-objdump -D  $< > $@ 
 
-%.dis : %.o
-	$(ARMET)/bin/llvm-objdump -d $< > $@
-
 %.s: %.c
 	$(ARMET)/bin/clang -O0 -S $(CLANG_TARGET_OPTIONS) $< -o $@
 
@@ -18,11 +15,11 @@ LINKER_SCRIPT := script.ld
 %.out: %.o
 	$(ARMET)/bin/clang $(CLANG_TARGET_OPTIONS) syscalls/syscalls.o $< -o $@ -T $(LINKER_SCRIPT)
 
-%.dis: %.c  
+%.out: %.c  
 	$(MAKE) $(<:.c=.s)
 	$(MAKE) $(<:.c=.o)
 	$(MAKE) $(@:.out=.o)
-	$(MAKE) $(@:.dis=.out)
+
 
 all: $(C_FILES:.c=.dis) $(C_FILES:.c=.s) $(C_FILES:.c=.out)
 

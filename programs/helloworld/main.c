@@ -1,6 +1,9 @@
 #include "../syscalls/syscalls.h"
+#include <string.h>
 
 int main() {
-  svc_puts("Hello, World!\n");
+  char buf[20] = "Hello, ";
+  strcat(buf, "World!\n");
+  svc_puts(buf);
   svc_exit(0);
 }

@@ -812,7 +812,7 @@ pub fn decode(i: u32) -> I {
                     // ADDSpImm (T1)
                     0b1010 | 0b1011 => {
                         let rd = briz(i, 8, 10) as u8;
-                        let imm8 = briz(i, 0, 7);
+                        let imm8 = briz(i, 0, 7) << 2;
 
                         return I {
                             it: IT::ADDSpImm,
@@ -831,7 +831,7 @@ pub fn decode(i: u32) -> I {
                         match briz(i, 5, 11) {
                             // ADDSpImm (T2)
                             0b0000000..=0b0000011 => {
-                                let imm7 = briz(i, 0, 6);
+                                let imm7 = briz(i, 0, 6) << 2;
 
                                 return I {
                                     it: IT::ADDSpImm,
@@ -1033,7 +1033,7 @@ pub fn decode(i: u32) -> I {
 
                                 match cond {
                                     0b0000..=0b1110 => {
-                                        let imm7 = briz(i, 0, 6) << 0;
+                                        let imm7 = briz(i, 0, 6) << 1;
                                         let sign = bit_as_bool(i, 7);
 
                                         let imm8 = i32::from_ne_bytes(
@@ -1092,7 +1092,7 @@ pub fn decode(i: u32) -> I {
                         return I {
                             it: IT::B,
                             imms: imm11,
-                            rn: 0,
+                            rn: 0b1110,
                             rd: 0,
                             rt: 0,
                             rl: 0,

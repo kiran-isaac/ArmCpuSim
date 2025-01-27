@@ -62,7 +62,7 @@ impl Executor {
                 };
                 let carry = match i.it {
                     ADC | SBC => state.regs.apsr.c as u8,
-                    CMPReg | RSB | SUBImm | SUBReg | SUBSP => 1,
+                    CMPReg | CMPImm | RSB | SUBImm | SUBReg | SUBSP => 1,
                     _ => 0,
                 };
 
@@ -82,7 +82,7 @@ impl Executor {
                     state.regs.apsr.z = hamming_weight(result) == 0;
                     state.regs.apsr.c = carry;
                     match i.it {
-                        ADC | SBC | RSB | CMPReg | CMN => {
+                        ADC | SBC | RSB | CMPReg | CMPImm | CMN => {
                             state.regs.apsr.v = carry;
                         }
                         _ => {}
@@ -161,15 +161,23 @@ impl Executor {
                         if state.regs.apsr.cond(i.rn) {
                             (pc_value as i64).wrapping_add(i.imms as i64) as u32
                         } else {
-                            state.regs.pc
+                            state.regs.pc + 2
                         }
                     }
                     _ => unreachable!(),
                 };
 
                 match i.it {
-                    BL | BLX | B => {
+                    BL => {
                         state.regs.lr = (pc_value & 0xfffffffe) + 1;
+                    }
+                    BLX => {
+                        state.regs.lr = ((pc_value - 2) & 0xfffffffe) + 1;
+                    }
+                    B => {
+                        if state.regs.apsr.cond(i.rn) {
+                            state.regs.lr = (pc_value & 0xfffffffe) + 1;
+                        }
                     }
                     BX => {}
                     _ => unreachable!(),
@@ -229,8 +237,8 @@ impl Executor {
             }
             STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => {
                 let addr = match i.it {
-                    STRImm | STRBImm | STRHImm => state.regs.get(i.rn) + i.immu,
-                    STRReg | STRBReg | STRHReg => state.regs.get(i.rn) + state.regs.get(i.rm),
+                    STRImm | STRBImm | STRHImm => state.regs.get(i.rn).overflowing_add(i.immu).0,
+                    STRReg | STRBReg | STRHReg => state.regs.get(i.rn).overflowing_add(state.regs.get(i.rm)).0,
                     _ => unreachable!(),
                 };
                 let value = state.regs.get(i.rt);
@@ -262,9 +270,10 @@ impl Executor {
                     }
                 }
                 if bit_as_bool(i.rl as u32, 15) {
-                    state.regs.pc = state.mem.get_word(addr);
+                    // -1 to align + -2 to cancel out the pc increment
+                    state.regs.pc = state.mem.get_word(addr) - 3;
                 }
-                state.regs.sp = state.regs.sp + 4 * hamming_weight(i.rl as u32)
+                state.regs.sp += 4 * hamming_weight(i.rl as u32)
             }
             PUSH => {
                 let mut addr = state.regs.sp - 4 * hamming_weight(i.rl as u32);
