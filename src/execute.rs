@@ -193,13 +193,13 @@ impl Executor {
                             wback = false;
                         }
                         state.regs.set(b as u8, state.mem.get_word(addr));
-                        addr += 4;
+                        addr = addr.wrapping_add(4);
                     }
                 }
                 if wback {
                     state
                         .regs
-                        .set(i.rn, state.regs.get(i.rn) + 4 * hamming_weight(i.rl as u32));
+                        .set(i.rn, state.regs.get(i.rn).wrapping_add(4 * hamming_weight(i.rl as u32)));
                 }
             }
             STMIA => {
@@ -211,7 +211,7 @@ impl Executor {
                             state.regs.get(b as u8),
                             format!("I:STMIA,PC:{:#X}", state.regs.pc),
                         );
-                        addr += 4;
+                        addr = addr.wrapping_add(4);
                     }
                 }
                 state
@@ -220,9 +220,9 @@ impl Executor {
             }
             LDRImm | LDRReg | LDRLit | LDRBImm | LDRBReg | LDRHReg | LDRHImm | LDRSB | LDRSH => {
                 let addr = match i.it {
-                    LDRImm | LDRBImm | LDRHImm => state.regs.get(i.rn) + i.immu,
-                    LDRLit => ((state.regs.pc >> 2) << 2) + i.immu + 4,
-                    LDRReg | LDRBReg | LDRHReg => state.regs.get(i.rn) + state.regs.get(i.rm),
+                    LDRImm | LDRBImm | LDRHImm => state.regs.get(i.rn).wrapping_add(i.immu),
+                    LDRLit => ((state.regs.pc >> 2) << 2).wrapping_add(i.immu).wrapping_add(4),
+                    LDRReg | LDRBReg | LDRHReg => state.regs.get(i.rn).wrapping_add(state.regs.get(i.rm)),
                     _ => unreachable!(),
                 };
                 let value = match i.it {
@@ -237,8 +237,8 @@ impl Executor {
             }
             STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => {
                 let addr = match i.it {
-                    STRImm | STRBImm | STRHImm => state.regs.get(i.rn).overflowing_add(i.immu).0,
-                    STRReg | STRBReg | STRHReg => state.regs.get(i.rn).overflowing_add(state.regs.get(i.rm)).0,
+                    STRImm | STRBImm | STRHImm => state.regs.get(i.rn).wrapping_add(i.immu),
+                    STRReg | STRBReg | STRHReg => state.regs.get(i.rn).wrapping_add(state.regs.get(i.rm)),
                     _ => unreachable!(),
                 };
                 let value = state.regs.get(i.rt);
@@ -266,14 +266,14 @@ impl Executor {
                 for b in 0..8 {
                     if bit_as_bool(i.rl as u32, b) {
                         state.regs.set(b as u8, state.mem.get_word(addr));
-                        addr += 4;
+                        addr = addr.wrapping_add(4);
                     }
                 }
                 if bit_as_bool(i.rl as u32, 15) {
                     // -1 to align + -2 to cancel out the pc increment
                     state.regs.pc = state.mem.get_word(addr) - 3;
                 }
-                state.regs.sp += 4 * hamming_weight(i.rl as u32)
+                state.regs.sp = state.regs.sp.wrapping_add(4 * hamming_weight(i.rl as u32))
             }
             PUSH => {
                 let mut addr = state.regs.sp - 4 * hamming_weight(i.rl as u32);
@@ -284,10 +284,10 @@ impl Executor {
                             state.regs.get(b as u8),
                             format!("I:{:?},PC:{:#X}", i.it, state.regs.pc),
                         );
-                        addr += 4;
+                        addr = addr.wrapping_add(4);
                     }
                 }
-                state.regs.sp -= 4 * hamming_weight(i.rl as u32);
+                state.regs.sp = state.regs.sp.wrapping_sub(4 * hamming_weight(i.rl as u32));
             }
             REV => {
                 let value = state.regs.get(i.rm);
