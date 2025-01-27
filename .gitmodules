@@ -1,0 +1,6 @@
+[submodule "programs/emdoom"]
+	path = programs/emdoom
+	url = git@github.com:cnlohr/embeddedDOOM.git
+[submodule "programs/doom-nano]"]
+	path = programs/doom-nano
+	url = git@github.com:daveruiz/doom-nano.git
