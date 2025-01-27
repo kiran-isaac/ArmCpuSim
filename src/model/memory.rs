@@ -164,10 +164,10 @@ impl Memory {
         let addr = self.mm(vaddr) as usize;
         if self.is_little_endian {
             u32::from_le_bytes([
-                self.memory[addr + 2],
-                self.memory[addr + 3],
                 self.memory[addr],
                 self.memory[addr + 1],
+                self.memory[addr + 2],
+                self.memory[addr + 3],
             ])
         } else {
             unimplemented!("Big endian not supported yet");

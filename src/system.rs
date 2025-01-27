@@ -11,6 +11,17 @@ pub fn syscall(i: &I, state: &mut ProcessorState) {
         0 => {
             state.halt = state.regs.get(0) as i32;
         }
+        1 => {
+            let mut addr = state.regs.get(0) as u32;
+            loop {
+                let c = state.mem.get_byte(addr);
+                if c == 0 {
+                    break;
+                }
+                print!("{}", c as char);
+                addr += 1;
+            }
+        }
         _ => unimplemented!()
     }
 }
