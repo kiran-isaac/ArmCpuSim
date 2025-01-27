@@ -1,6 +1,5 @@
 mod binary;
 mod decode;
-mod dispatch;
 mod execute;
 mod log;
 mod model;
@@ -9,14 +8,13 @@ mod system;
 #[cfg(test)]
 mod test;
 
-use std::clone;
 use std::fs::OpenOptions;
 use std::io::Write;
 
 use binary::is_32_bit;
 use decode::*;
 use execute::Executor;
-use log::Logger;
+use log::Tracer;
 use model::Memory;
 use model::Registers;
 
@@ -57,11 +55,18 @@ fn main() {
 
     // create trace dir if it doesn't exist
     std::fs::create_dir_all("traces").unwrap();
-    // let mut logger = Logger::new(format!("traces/trace{}.csv", current_utc_time.timestamp_micros() / 1000).as_str(), &state.regs);
-    let mut logger = Logger::new("traces/trace.csv", &state.regs);
+    let mut tracer = Tracer::new("traces/trace.csv", &state.regs);
+    let logfile = "traces/log.txt";
+    let mut log_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(logfile)
+        .unwrap();
     let stack_dump_file = "traces/stack_dump.txt";
 
     loop {
+        let mut logstr = String::new();
+
         let instruction = state.mem.get_instruction(state.regs.pc);
         let is_32_bit = is_32_bit(instruction);
 
@@ -73,18 +78,24 @@ fn main() {
 
         let _old_pc = state.regs.pc;
 
+        // create std::fmt::Formatter to pass to execute
         executor0.assign(decoded);
-        executor0.execute(&mut state);
+        executor0.execute(&mut state, &mut logstr);
+        log_file.write_all(logstr.as_bytes()).unwrap();
 
-        overwrite_file(stack_dump_file, state.mem.dump_stack(state.regs.sp).as_str()).unwrap();
+        overwrite_file(
+            stack_dump_file,
+            state.mem.dump_stack(state.regs.sp).as_str(),
+        )
+        .unwrap();
 
         // increment pc
         match decoded.it {
-            IT::BL | IT::BLX | IT::B | IT::BX => {},
+            IT::BL | IT::BLX | IT::B | IT::BX => {}
             _ => state.regs.pc += if is_32_bit { 4 } else { 2 },
         }
 
-        logger.log(decoded, &state.regs);
+        tracer.log(decoded, &state.regs);
 
         if state.halt >= 0 {
             println!("Exiting with code: {}", state.halt);

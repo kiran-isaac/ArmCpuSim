@@ -26,11 +26,6 @@ pub fn bit_as_bool(i: u32, bit_index: u32) -> bool {
     (i >> bit_index) & 1 == 1
 }
 
-#[inline(always)]
-pub fn bit(i: u32, bit_index: u32) -> u32 {
-    (i >> bit_index) & 1
-}
-
 pub fn is_32_bit(i: u32) -> bool {
     (i >> 16) != 0
 }
@@ -50,6 +45,7 @@ pub fn add_with_carry(a: u32, b: u32, c: u8) -> (u32, bool) {
     (sum2, overflowed)
 }
 
+#[allow(dead_code)]
 pub enum ShiftType {
     LSL,
     LSR,
@@ -58,7 +54,7 @@ pub enum ShiftType {
     RRX,
 }
 
-pub fn shift_with_carry(t: ShiftType, a : u32, b : u8, c : u8) -> (u32, bool) {
+pub fn shift_with_carry(t: ShiftType, a: u32, b: u8, c: u8) -> (u32, bool) {
     if b == 0 {
         return (a, c != 0);
     } else {
@@ -89,7 +85,6 @@ pub fn shift_with_carry(t: ShiftType, a : u32, b : u8, c : u8) -> (u32, bool) {
     }
 }
 
-
 fn ror(value: u32, shift: u8) -> u32 {
     let shift = shift % 32; // Ensure the shift is within the range of 0-31
     (value >> shift) | (value << (32 - shift))
@@ -114,11 +109,12 @@ mod tests {
         assert_eq!(briz(0xb084, 4, 7), 8);
         assert_eq!(briz(0xb084, 0, 3), 4);
 
-        assert_eq!(7, briz(0xf345fb3c, 29, 31)); 
+        assert_eq!(7, briz(0xf345fb3c, 29, 31));
     }
 
     #[test]
     fn test_add3() {
         assert_eq!((0x0, true), add_with_carry(0xfffffff0, 0xf, 1));
-        assert_eq!((0xffffffff, false), add_with_carry(0xfffffff0, 0xf, 0));}
+        assert_eq!((0xffffffff, false), add_with_carry(0xfffffff0, 0xf, 0));
+    }
 }

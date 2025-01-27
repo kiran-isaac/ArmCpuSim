@@ -1,22 +1,22 @@
 use std::io::Write;
 
-use crate::{model::Registers, I, IT::*};
+use crate::{model::Registers, I};
 
-pub struct Logger {
+pub struct Tracer {
     file: std::fs::File,
     previous_regs: Registers,
-    i_count: usize
+    i_count: usize,
 }
 
-impl Logger {
-    pub fn new(filename: &str, initialstate: &Registers) -> Logger {
+impl Tracer {
+    pub fn new(filename: &str, initialstate: &Registers) -> Tracer {
         let mut file = std::fs::File::create(filename).unwrap();
         file.write(b"I, PC                ,Instruction, LR, SP  ,Rd   ,Rn   ,Rm   ,Rt   ,Rl                 ,Immu     ,Imms\n")
             .unwrap();
-        Logger {
+        Tracer {
             file,
             previous_regs: initialstate.clone(),
-            i_count: 0
+            i_count: 0,
         }
     }
 
@@ -64,16 +64,6 @@ impl Logger {
         } else {
             format!("{:X}>{:X}", previous, current)
         }
-    }
-
-    fn reg_change_logs(&self, i: I, new_regs: &Registers) -> String {
-        format!(
-            "{:<17}, {:<17}, {:<17}, {:<17}",
-            self.reg_change_log(i.rd, new_regs),
-            self.reg_change_log(i.rn, new_regs),
-            self.reg_change_log(i.rm, new_regs),
-            self.reg_change_log(i.rt, new_regs)
-        )
     }
 
     pub fn log(&mut self, i: I, new_regs: &Registers) {

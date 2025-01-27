@@ -3,6 +3,7 @@ use elf::abi::PT_LOAD;
 use elf::endian::{AnyEndian, EndianParse};
 use elf::ElfBytes;
 use std::collections::HashMap;
+use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
 
@@ -16,7 +17,7 @@ pub struct Memory {
     flash_size: u32,
     ram_start: u32,
     ram_size: u32,
-    functions: HashMap<u64, String> 
+    functions: HashMap<u64, String>,
 }
 
 impl Memory {
@@ -60,13 +61,17 @@ impl Memory {
             }
         }
 
-        // Get Functions 
-        let functions: HashMap<u64, String> = symtab.iter()
+        // Get Functions
+        let functions: HashMap<u64, String> = symtab
+            .iter()
             .filter(|sym| sym.st_symtype() == 2 && sym.st_shndx != 0)
-            .map(|sym| (sym.st_value, strtab.get(sym.st_name as usize).unwrap().to_string()))
+            .map(|sym| {
+                (
+                    sym.st_value,
+                    strtab.get(sym.st_name as usize).unwrap().to_string(),
+                )
+            })
             .collect();
-
-        println!("{:?}", functions);
 
         // Set reg values
         regs.pc = *symtab_map.get("__flash").unwrap() as u32;
@@ -87,18 +92,12 @@ impl Memory {
 
         let segment_parse_table = elf_file.segments().unwrap();
         for phdr in segment_parse_table.into_iter() {
-            println!("{:X?}", phdr);
             if phdr.p_type != PT_LOAD {
                 continue;
             }
             let segment_bytes = elf_file.segment_data(&phdr).unwrap();
             let mut mem_addr = phdr.p_paddr as usize;
 
-            // #[cfg(debug_assertions)]
-            // {
-            //     println!("{:X?}", phdr);
-            //     println!("{:08X?}, : {:02X?}\n\n", mem_addr, segment_bytes);
-            // }
             for byte in segment_bytes {
                 memory[mem_addr] = *byte;
                 mem_addr += 1;
@@ -113,7 +112,7 @@ impl Memory {
             flash_size,
             ram_start,
             ram_size,
-            functions
+            functions,
         }
     }
 
@@ -128,12 +127,12 @@ impl Memory {
         let mut vsp = vsp;
         while self.mm(vsp) < self.memory.len() as u32 {
             s.push_str(format!("{:#08X}: ", vsp).as_str());
-            s.push_str(format!("{:02X?}", self.get_byte(vsp)).as_str());
+            s.push_str(format!("{:02X?}", self.get_byte_nolog(vsp)).as_str());
             vsp += 1;
             if self.mm(vsp) >= self.memory.len() as u32 {
                 break;
             }
-            s.push_str(format!("{:02X?}\n", self.get_byte(vsp)).as_str());
+            s.push_str(format!("{:02X?}\n", self.get_byte_nolog(vsp)).as_str());
             vsp += 1;
         }
         s.push_str(format!("\nStack size: {:#X}\n", vsp - original_vsp).as_str());
@@ -150,31 +149,12 @@ impl Memory {
         }
     }
 
-    pub fn get_instruction(&self, vaddr: u32) -> u32 {
-        let hw1 = self.get_halfword(vaddr);
-
-        if matches_mask(hw1, 0b11101 << 11)
-            || matches_mask(hw1, 0b11110 << 11)
-            || matches_mask(hw1, 0b11111 << 11)
-        {
-            let hw1 = (hw1 as u32) << 16;
-            let hw2 = self.get_halfword(vaddr + 2) as u32;
-            hw1 + hw2
-        } else {
-            hw1 as u32
-        }
-    }
-
-    pub fn get_byte(&self, vaddr: u32) -> u8 {
+    pub fn get_byte_nolog(&self, vaddr: u32) -> u8 {
         let addr = self.mm(vaddr) as usize;
-        if self.is_little_endian {
-            self.memory[addr] as u8
-        } else {
-            unimplemented!("Big endian not supported yet");
-        }
+        self.memory[addr]
     }
 
-    pub fn get_halfword(&self, vaddr: u32) -> u16 {
+    pub fn get_halfword_nolog(&self, vaddr: u32) -> u16 {
         let addr = self.mm(vaddr) as usize;
         if self.is_little_endian {
             let lower = self.memory[addr] as u16;
@@ -185,9 +165,61 @@ impl Memory {
         }
     }
 
-    pub fn get_word(&self, vaddr: u32) -> u32 {
+    pub fn get_instruction(&self, vaddr: u32) -> u32 {
+        let hw1 = self.get_halfword_nolog(vaddr);
+
+        if matches_mask(hw1, 0b11101 << 11)
+            || matches_mask(hw1, 0b11110 << 11)
+            || matches_mask(hw1, 0b11111 << 11)
+        {
+            let hw1 = (hw1 as u32) << 16;
+            let hw2 = self.get_halfword_nolog(vaddr + 2) as u32;
+            hw1 + hw2
+        } else {
+            hw1 as u32
+        }
+    }
+
+    pub fn get_byte(&self, vaddr: u32, info: &str, event_log: &mut String) -> u8 {
         let addr = self.mm(vaddr) as usize;
-        if self.is_little_endian {
+        let value = if self.is_little_endian {
+            self.memory[addr] as u8
+        } else {
+            unimplemented!("Big endian not supported yet");
+        };
+        #[cfg(debug_assertions)]
+        writeln!(
+            event_log,
+            "{}: Get byte at Mem[{:#X}]: {}",
+            info, vaddr, value
+        )
+        .unwrap();
+        value
+    }
+
+    pub fn get_halfword(&self, vaddr: u32, info: &str, event_log: &mut String) -> u16 {
+        let addr = self.mm(vaddr) as usize;
+        let value = if self.is_little_endian {
+            let lower = self.memory[addr] as u16;
+            let upper = self.memory[addr + 1] as u16;
+            (upper << 8) + lower
+        } else {
+            unimplemented!("Big endian not supported yet");
+        };
+        #[cfg(debug_assertions)]
+        writeln!(
+            event_log,
+            "{}: Get halfword at Mem[{:#X}]: {}",
+            info, vaddr, value
+        )
+        .unwrap();
+
+        value
+    }
+
+    pub fn get_word(&self, vaddr: u32, info: &str, event_log: &mut String) -> u32 {
+        let addr = self.mm(vaddr) as usize;
+        let value = if self.is_little_endian {
             u32::from_le_bytes([
                 self.memory[addr],
                 self.memory[addr + 1],
@@ -196,10 +228,18 @@ impl Memory {
             ])
         } else {
             unimplemented!("Big endian not supported yet");
-        }
+        };
+        #[cfg(debug_assertions)]
+        writeln!(
+            event_log,
+            "{}: Get word at Mem[{:#X}]: {}",
+            info, vaddr, value
+        )
+        .unwrap();
+        value
     }
 
-    pub fn set_word(&mut self, vaddr: u32, value: u32, info: String) {
+    pub fn set_word(&mut self, vaddr: u32, value: u32, info: &str, event_log: &mut String) {
         let addr = self.mm(vaddr) as usize;
         if (addr as u32) < (self.flash_start + self.flash_size) {
             panic!("Attempt to write to RO flash memory: {}", info)
@@ -215,10 +255,16 @@ impl Memory {
         } else {
             unimplemented!("Big endian not supported yet");
         }
-        println!("{}: Set word at Mem[{:#X}] to {}", info, vaddr, value)
+        #[cfg(debug_assertions)]
+        writeln!(
+            event_log,
+            "{}: Set word at Mem[{:#X}] to {}",
+            info, vaddr, value
+        )
+        .unwrap();
     }
 
-    pub fn set_halfword(&mut self, vaddr: u32, value: u16, info: String) {
+    pub fn set_halfword(&mut self, vaddr: u32, value: u16, info: &str, event_log: &mut String) {
         let addr = self.mm(vaddr) as usize;
         if (addr as u32) < (self.flash_start + self.flash_size) {
             panic!("Attempt to write to RO flash memory: {}", info)
@@ -231,10 +277,16 @@ impl Memory {
         } else {
             unimplemented!("Big endian not supported yet");
         }
-        println!("{}: Set halfword at Mem[{:#X}] to {}", info, vaddr, value)
+        #[cfg(debug_assertions)]
+        writeln!(
+            event_log,
+            "{}: Set halfword at Mem[{:#X}] to {}",
+            info, vaddr, value
+        )
+        .unwrap();
     }
 
-    pub fn set_byte(&mut self, vaddr: u32, value: u8, info: String) {
+    pub fn set_byte(&mut self, vaddr: u32, value: u8, info: &str, event_log: &mut String) {
         let addr = self.mm(vaddr) as usize;
         if (addr as u32) < (self.flash_start + self.flash_size) {
             panic!("Attempt to write to RO flash memory: {}", info)
@@ -246,6 +298,12 @@ impl Memory {
         } else {
             unimplemented!("Big endian not supported yet");
         }
-        println!("{}: Set byte at Mem[{:#X}] to {}", info, vaddr, value)
+        #[cfg(debug_assertions)]
+        writeln!(
+            event_log,
+            "{}: Set byte at Mem[{:#X}] to {}",
+            info, vaddr, value
+        )
+        .unwrap();
     }
 }

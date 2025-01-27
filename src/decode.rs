@@ -1,7 +1,6 @@
-use std::mem;
-
 use crate::binary::{bit_as_bool, briz};
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum IT {
     UNPREDICTABLE,
@@ -540,7 +539,7 @@ pub fn decode(i: u32) -> I {
                                     rl: 0,
                                     setflags: true,
                                 }
-                            },
+                            }
                             0b1010 => IT::CMPReg, // T1
                             0b1011 => IT::CMN,
                             0b1100 => IT::ORR,
@@ -556,7 +555,7 @@ pub fn decode(i: u32) -> I {
                                     rl: 0,
                                     setflags: true,
                                 }
-                            },
+                            }
                             0b1110 => IT::BIC,
                             0b1111 => IT::MVN,
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),

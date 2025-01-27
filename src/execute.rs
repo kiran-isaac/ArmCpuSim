@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use crate::{binary::*, system::syscall, ProcessorState, I, IT::*};
 
 pub struct Executor {
@@ -27,7 +29,7 @@ impl Executor {
         self.cycles_remaining
     }
 
-    pub fn execute(&self, state: &mut ProcessorState) {
+    pub fn execute(&self, state: &mut ProcessorState, event_log: &mut String) {
         let i = match self.i {
             None => panic!("Cannot execute: No instruction assigned"),
             Some(i) => i,
@@ -170,24 +172,29 @@ impl Executor {
                 // get if branching to a function
                 let func = state.mem.get_function_at(target + 1);
                 if func.is_some() {
+                    // debug trap, faster than conditional breakpoint
+                    #[cfg(debug_assertions)]
                     if func.unwrap() == "strcmp" {
                         print!("")
                     }
-                    print!(
+
+                    write!(
+                        event_log,
                         "Calling: {:?}({:#08X}, {:#08X}, {:#08X}, {:#08X})",
                         func.unwrap(),
                         state.regs.get(0),
                         state.regs.get(1),
                         state.regs.get(2),
                         state.regs.get(3)
-                    );
+                    )
+                    .unwrap();
                     match i.it {
                         BL | BLX => {
-                            print!(" Link: {:#08X}", pc_value);
+                            write!(event_log, " Link: {:#08X}", pc_value).unwrap();
                         }
                         _ => {}
                     }
-                    println!();
+                    writeln!(event_log).unwrap();
                 }
 
                 match i.it {
@@ -205,12 +212,18 @@ impl Executor {
             LDMIA => {
                 let mut wback = true;
                 let mut addr = state.regs.get(i.rn);
+                #[allow(unused)]
+                let info_str = "";
+                #[cfg(debug_assertions)]
+                let info_str = format!("I:LDMIA,PC:{:#X}", state.regs.pc);
                 for b in 0..7 {
                     if bit_as_bool(i.rl as u32, b) {
                         if b as u8 == i.rn {
                             wback = false;
                         }
-                        state.regs.set(b as u8, state.mem.get_word(addr));
+                        state
+                            .regs
+                            .set(b as u8, state.mem.get_word(addr, &info_str, event_log));
                         addr = addr.wrapping_add(4);
                     }
                 }
@@ -226,13 +239,15 @@ impl Executor {
             }
             STMIA => {
                 let mut addr = state.regs.get(i.rn);
+                #[allow(unused)]
+                let info_str = "";
+                #[cfg(debug_assertions)]
+                let info_str = format!("I:STMIA,PC:{:#X}", state.regs.pc);
                 for b in 0..15 {
                     if bit_as_bool(i.rl as u32, b) {
-                        state.mem.set_word(
-                            addr,
-                            state.regs.get(b as u8),
-                            format!("I:STMIA,PC:{:#X}", state.regs.pc),
-                        );
+                        state
+                            .mem
+                            .set_word(addr, state.regs.get(b as u8), &info_str, event_log);
                         addr = addr.wrapping_add(4);
                     }
                 }
@@ -251,12 +266,17 @@ impl Executor {
                     }
                     _ => unreachable!(),
                 };
+                #[allow(unused)]
+                let info_str = "";
+
+                #[cfg(debug_assertions)]
+                let info_str = &format!("I:{:?},PC:{:#X}", i.it, state.regs.pc);
                 let value = match i.it {
-                    LDRImm | LDRReg | LDRLit => state.mem.get_word(addr),
-                    LDRHImm | LDRHReg => state.mem.get_halfword(addr) as u32,
-                    LDRBImm | LDRBReg => state.mem.get_byte(addr) as u32,
-                    LDRSH => state.mem.get_halfword(addr) as i16 as i32 as u32,
-                    LDRSB => state.mem.get_byte(addr) as i8 as i32 as u32,
+                    LDRImm | LDRReg | LDRLit => state.mem.get_word(addr, info_str, event_log),
+                    LDRHImm | LDRHReg => state.mem.get_halfword(addr, info_str, event_log) as u32,
+                    LDRBImm | LDRBReg => state.mem.get_byte(addr, info_str, event_log) as u32,
+                    LDRSH => state.mem.get_halfword(addr, info_str, event_log) as i16 as i32 as u32,
+                    LDRSB => state.mem.get_byte(addr, info_str, event_log) as i8 as i32 as u32,
                     _ => unreachable!(),
                 };
                 state.regs.set(i.rt, value);
@@ -274,44 +294,59 @@ impl Executor {
                     STRImm | STRReg => state.mem.set_word(
                         addr,
                         value,
-                        format!("I:{:?},PC:{:#X}", i.it, state.regs.pc),
+                        &format!("I:{:?},PC:{:#X}", i.it, state.regs.pc),
+                        event_log,
                     ),
                     STRHImm | STRHReg => state.mem.set_halfword(
                         addr,
                         value as u16,
-                        format!("I:{:?},PC:{:#X}", i.it, state.regs.pc),
+                        &format!("I:{:?},PC:{:#X}", i.it, state.regs.pc),
+                        event_log,
                     ),
                     STRBImm | STRBReg => state.mem.set_byte(
                         addr,
                         value as u8,
-                        format!("I:{:?},PC:{:#X}", i.it, state.regs.pc),
+                        &format!("I:{:?},PC:{:#X}", i.it, state.regs.pc),
+                        event_log,
                     ),
                     _ => unreachable!(),
                 };
             }
             POP => {
                 let mut addr = state.regs.sp;
+                #[allow(unused)]
+                let info_str = "";
+                #[cfg(debug_assertions)]
+                let info_str = format!("I:POP,PC:{:#X}", state.regs.pc);
                 for b in 0..8 {
                     if bit_as_bool(i.rl as u32, b) {
-                        state.regs.set(b as u8, state.mem.get_word(addr));
+                        state
+                            .regs
+                            .set(b as u8, state.mem.get_word(addr, &info_str, event_log));
                         addr = addr.wrapping_add(4);
                     }
                 }
                 if bit_as_bool(i.rl as u32, 15) {
                     // -1 to align + -2 to cancel out the pc increment
-                    state.regs.pc = state.mem.get_word(addr) - 3;
+                    state.regs.pc = state.mem.get_word(
+                        addr,
+                        &format!("I:POPPING_PC,PC:{:#X}", state.regs.pc),
+                        event_log,
+                    ) - 3;
                 }
                 state.regs.sp = state.regs.sp.wrapping_add(4 * hamming_weight(i.rl as u32))
             }
             PUSH => {
                 let mut addr = state.regs.sp - 4 * hamming_weight(i.rl as u32);
+                #[allow(unused)]
+                let info_str = "";
+                #[cfg(debug_assertions)]
+                let info_str = format!("I:PUSH,PC:{:#X}", state.regs.pc);
                 for b in 0..15 {
                     if bit_as_bool(i.rl as u32, b) {
-                        state.mem.set_word(
-                            addr,
-                            state.regs.get(b as u8),
-                            format!("I:{:?},PC:{:#X}", i.it, state.regs.pc),
-                        );
+                        state
+                            .mem
+                            .set_word(addr, state.regs.get(b as u8), &info_str, event_log);
                         addr = addr.wrapping_add(4);
                     }
                 }

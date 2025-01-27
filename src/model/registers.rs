@@ -1,5 +1,3 @@
-use std::ops::Index;
-
 #[derive(Clone, Copy)]
 pub struct Registers {
     // R0-R12

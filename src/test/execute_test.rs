@@ -1,4 +1,4 @@
-use crate::{Executor, I, IT, ProcessorState};
+use crate::{Executor, ProcessorState, I, IT};
 
 #[test]
 fn exit_syscall_test() {

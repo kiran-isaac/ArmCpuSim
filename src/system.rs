@@ -1,11 +1,8 @@
 use crate::{ProcessorState, I};
 
-pub enum Syscalls {
-    HALT = 0,
-    PUTS = 1,
-    GETS = 2,
-}
-
+/// HALT = 0,
+/// PUTS = 1,
+/// GETS = 2,
 pub fn syscall(i: &I, state: &mut ProcessorState) {
     match i.immu {
         0 => {
@@ -14,7 +11,7 @@ pub fn syscall(i: &I, state: &mut ProcessorState) {
         1 => {
             let mut addr = state.regs.get(0) as u32;
             loop {
-                let c = state.mem.get_byte(addr);
+                let c = state.mem.get_byte_nolog(addr);
                 if c == 0 {
                     break;
                 }
@@ -22,6 +19,6 @@ pub fn syscall(i: &I, state: &mut ProcessorState) {
                 addr += 1;
             }
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     }
 }
