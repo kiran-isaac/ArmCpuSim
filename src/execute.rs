@@ -174,7 +174,7 @@ impl Executor {
                 if func.is_some() {
                     // debug trap, faster than conditional breakpoint
                     #[cfg(debug_assertions)]
-                    if func.unwrap() == "bubble_sort" {
+                    if func.unwrap() == "quick_sort" {
                         print!("")
                     }
 
@@ -332,7 +332,7 @@ impl Executor {
                         addr,
                         &format!("I:POPPING_PC,PC:{:#X}", state.regs.pc),
                         event_log,
-                    ) - 3;
+                    ).wrapping_sub(3);
                 }
                 state.regs.sp = state.regs.sp.wrapping_add(4 * hamming_weight(i.rl as u32))
             }
@@ -342,7 +342,7 @@ impl Executor {
                 let info_str = "";
                 #[cfg(debug_assertions)]
                 let info_str = format!("I:PUSH,PC:{:#X}", state.regs.pc);
-                for b in 0..15 {
+                for b in 0..8 {
                     if bit_as_bool(i.rl as u32, b) {
                         state
                             .mem
@@ -350,6 +350,13 @@ impl Executor {
                         addr = addr.wrapping_add(4);
                     }
                 }
+                // LR
+                if bit_as_bool(i.rl as u32, 14) {
+                    state
+                        .mem
+                        .set_word(addr, state.regs.get(14), &info_str, event_log);
+                }
+
                 state.regs.sp = state.regs.sp.wrapping_sub(4 * hamming_weight(i.rl as u32));
             }
             REV => {

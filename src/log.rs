@@ -59,18 +59,19 @@ impl Tracer {
     fn reg_change_log(&self, reg: u8, new_regs: &Registers) -> String {
         let previous = self.previous_regs.get(reg);
         let current = new_regs.get(reg);
-        if previous == current {
-            format!("{:X}", previous)
+        let s = if previous == current {
+            format!(">{:X}", previous)
         } else {
             format!("{:X}>{:X}", previous, current)
-        }
+        };
+        s
     }
 
     pub fn log(&mut self, i: I, new_regs: &Registers) {
         self.file
             .write(
                 format!(
-                    "{},{},{},{},{}   ,{}\n",
+                    "{}, {}, {}, {}, {}   ,{}\n",
                     self.i_count,
                     self.reg_change_log(15, new_regs),
                     format!("{:?}", i.it),

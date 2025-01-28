@@ -28,6 +28,7 @@ fn overwrite_file(file_path: &str, content: &str) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)
+        .create(true)
         .open(file_path)?;
 
     file.write_all(content.as_bytes())?;
