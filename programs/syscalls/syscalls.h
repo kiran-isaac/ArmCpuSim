@@ -1,10 +1,10 @@
 #ifndef syscalls_h
 #define syscalls_h
 
-void svc_exit(unsigned code);
+static inline void svc_exit(unsigned code) { __asm("svc 0"); };
 
-void svc_puts(const char *s);
+static inline void svc_puts(const char *s) { __asm("svc 1"); };
 
-void svc_gets(const char buf[]);
+static inline void svc_gets(const char buf[]) { __asm("svc 2"); }
 
 #endif // syscalls_h

@@ -13,7 +13,7 @@ LINKER_SCRIPT := script.ld
 	$(ARMET)/bin/clang -c $(CLANG_TARGET_OPTIONS) $< -o $@
 
 %.out: %.o
-	$(ARMET)/bin/clang $(CLANG_TARGET_OPTIONS) syscalls/syscalls.o $< -o $@ -T $(LINKER_SCRIPT)
+	$(ARMET)/bin/clang $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
 
 %.out: %.c  
 	$(MAKE) $(<:.c=.s)
