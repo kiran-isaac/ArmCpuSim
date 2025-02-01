@@ -1,3 +1,5 @@
+use std::{io::Write, os::unix::fs::FileExt};
+
 use super::*;
 
 // mostly the same as cortex m0 delays
@@ -39,7 +41,7 @@ impl Executor {
         self.i = Some(i);
         // Lookup how long an instruction should take
         self.cycles_remaining = i_len_lookup(&i);
-        
+
         self.is_32_bit = is_32_bit;
     }
 }
@@ -53,11 +55,25 @@ impl ExecutorPool {
         false
     }
 
-    pub fn tick(&mut self, state: &mut ProcessorState, event_log: &mut String) {
+    pub fn tick(&mut self, state: &mut ProcessorState) {
         for executor in self.pool.iter_mut() {
             if executor.i.is_some() {
                 if executor.cycles_remaining == 0 {
-                    executor.execute_instruction(state, event_log);
+                    #[cfg(debug_assertions)]
+                    let instruction_executed = executor.i.unwrap();
+
+                    let mut event_log = String::new();
+
+                    executor.execute_instruction(state, &mut event_log);
+
+                    #[cfg(debug_assertions)]
+                    {
+                        self.tracer.log(instruction_executed, &state.regs);
+                        self.log_file.write(event_log.as_bytes());
+                        self.stack_file
+                            .write_all_at(state.mem.dump_stack(state.regs.sp).as_bytes(), 0)
+                            .unwrap();
+                    }
                 } else {
                     executor.cycles_remaining -= 1;
                 }

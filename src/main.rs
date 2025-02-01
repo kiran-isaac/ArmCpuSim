@@ -58,55 +58,31 @@ fn main() {
 
     let _entry_point = state.mem.entrypoint;
     state.regs.pc = _entry_point as u32;
-    let mut executorpool = ExecutorPool::new(1);
 
     // create trace dir if it doesn't exist
     std::fs::create_dir_all("traces").unwrap();
     let mut tracer = Tracer::new("traces/trace.csv", &state.regs);
-    let logfile = "traces/log.txt";
-    let mut log_file = OpenOptions::new()
-        .write(true)
-        .create(true).truncate(true)
-        .open(logfile)
-        .unwrap();
+    let log_file_path = "traces/log.txt";
     let stack_dump_file = "traces/stack_dump.txt";
 
-    loop {
-        let mut logstr = String::new();
+    let mut executorpool = ExecutorPool::new(1, tracer, &log_file_path, &stack_dump_file);
 
+    loop {
         let instruction = state.mem.get_instruction(state.regs.pc);
 
-        if state.regs.pc == 0x2a {
+        // Debug trap
+        if state.regs.pc >= 0x2a {
             print!("")
         }
 
         let decoded = decode(instruction);
 
-        let _old_pc = state.regs.pc;
-
         // Progresses the executors state, and then tries to assign the 
         // task to it untill it works
         while !executorpool.assign(decoded, is_32_bit(instruction)) {
-            executorpool.tick(&mut state, &mut logstr);
-            logstr.push('\n');
-            tracer.log(decoded, &state.regs);
-
-            overwrite_file(
-                stack_dump_file,
-                state.mem.dump_stack(state.regs.sp).as_str(),
-            )
-            .unwrap();
+            executorpool.tick(&mut state);
         }
-        executorpool.tick(&mut state, &mut logstr);        
-        log_file.write_all(logstr.as_bytes()).unwrap();
-
-        overwrite_file(
-            stack_dump_file,
-            state.mem.dump_stack(state.regs.sp).as_str(),
-        )
-        .unwrap();
-
-        tracer.log(decoded, &state.regs);
+        executorpool.tick(&mut state);        
 
         if state.halt >= 0 {
             println!("Exiting with code: {}", state.halt);
