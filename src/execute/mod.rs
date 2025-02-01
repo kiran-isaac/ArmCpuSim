@@ -9,6 +9,7 @@ mod executor_pool;
 pub struct Executor {
     i: Option<I>,
     cycles_remaining: usize,
+    is_32_bit: bool
 }
 
 #[allow(unused)]
@@ -31,6 +32,7 @@ impl Executor {
         Executor {
             i: None,
             cycles_remaining: 0,
+            is_32_bit: false
         }
     }
 }

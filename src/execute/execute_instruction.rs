@@ -1,11 +1,13 @@
 use super::*;
 
 impl Executor {
-    pub fn execute_instruction(&self, state: &mut ProcessorState, event_log: &mut String) {
+    pub fn execute_instruction(&mut self, state: &mut ProcessorState, event_log: &mut String) {
         let i = match self.i {
             None => panic!("Cannot execute: No instruction assigned"),
             Some(i) => i,
         };
+
+        self.i = None;
 
         match i.it {
             UNPREDICTABLE => panic!("Cannot execute unpredictable"),
@@ -363,6 +365,12 @@ impl Executor {
                 state.regs.set(i.rd, result);
             }
             _ => unimplemented!("Instruction execute not implemented: {:?}", i.it),
+        }
+        
+        // increment pc
+        match i.it {
+            BL | BLX | B | BX => {}
+            _ => state.regs.pc += if self.is_32_bit { 4 } else { 2 },
         }
     }
 }

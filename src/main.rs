@@ -60,8 +60,6 @@ fn main() {
     state.regs.pc = _entry_point as u32;
     let mut executorpool = ExecutorPool::new(1);
 
-    // let current_utc_time = chrono::Utc::now();
-
     // create trace dir if it doesn't exist
     std::fs::create_dir_all("traces").unwrap();
     let mut tracer = Tracer::new("traces/trace.csv", &state.regs);
@@ -77,7 +75,6 @@ fn main() {
         let mut logstr = String::new();
 
         let instruction = state.mem.get_instruction(state.regs.pc);
-        let is_32_bit = is_32_bit(instruction);
 
         if state.regs.pc == 0x2a {
             print!("")
@@ -89,12 +86,18 @@ fn main() {
 
         // Progresses the executors state, and then tries to assign the 
         // task to it untill it works
-        executorpool.tick(&mut state, &mut logstr);
-        while !executorpool.assign(decoded) {
-            logstr.push('\n');
+        while !executorpool.assign(decoded, is_32_bit(instruction)) {
             executorpool.tick(&mut state, &mut logstr);
+            logstr.push('\n');
+            tracer.log(decoded, &state.regs);
+
+            overwrite_file(
+                stack_dump_file,
+                state.mem.dump_stack(state.regs.sp).as_str(),
+            )
+            .unwrap();
         }
-        
+        executorpool.tick(&mut state, &mut logstr);        
         log_file.write_all(logstr.as_bytes()).unwrap();
 
         overwrite_file(
@@ -102,12 +105,6 @@ fn main() {
             state.mem.dump_stack(state.regs.sp).as_str(),
         )
         .unwrap();
-
-        // increment pc
-        match decoded.it {
-            IT::BL | IT::BLX | IT::B | IT::BX => {}
-            _ => state.regs.pc += if is_32_bit { 4 } else { 2 },
-        }
 
         tracer.log(decoded, &state.regs);
 
