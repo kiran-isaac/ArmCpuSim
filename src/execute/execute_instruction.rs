@@ -1,35 +1,7 @@
-use std::fmt::Write;
-
-use crate::{binary::*, system::syscall, ProcessorState, I, IT::*};
-
-pub struct Executor {
-    i: Option<I>,
-    cycles_remaining: usize,
-}
-
-#[allow(unused)]
-struct ExecutorPool {
-    pool: [Executor; 8],
-    scoreboard: [bool; 16],
-}
+use super::*;
 
 impl Executor {
-    pub fn new() -> Self {
-        Executor {
-            i: None,
-            cycles_remaining: 0,
-        }
-    }
-
-    pub fn assign(&mut self, i: I) -> usize {
-        self.i = Some(i);
-        // Lookup how long an instruction should take
-        self.cycles_remaining = 1;
-
-        self.cycles_remaining
-    }
-
-    pub fn execute(&self, state: &mut ProcessorState, event_log: &mut String) {
+    pub fn execute_instruction(&self, state: &mut ProcessorState, event_log: &mut String) {
         let i = match self.i {
             None => panic!("Cannot execute: No instruction assigned"),
             Some(i) => i,

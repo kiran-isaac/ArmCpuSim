@@ -56,9 +56,9 @@ pub enum IT {
     /// the result, and discards the result
     CMPReg,
     /// UNUSED: Change Processor State
-    CPS,
+    // CPS,
     /// UNUSED: Copy is a synonym for move
-    CPY,
+    // CPY,
     /// UNUSED?: Data Memory Barrier acts as a memory barrier. It ensures that all explicit memory accesses that appear in program
     /// order before the DMB instruction are observed before any explicit memory accesses that appear in program order after
     /// the DMB instruction. It does not affect the ordering of any other instructions executing on the processor
@@ -233,8 +233,6 @@ pub enum IT {
     /// Test (register) performs a logical AND operation on two register values. It updates the condition flags based on the
     /// result, and discards the result
     TST,
-    /// Permanently Undefined generates an Undefined Instruction exception.
-    UDF,
     /// Unsigned Extend Byte extracts an 8-bit value from a register, zero extends it to 32 bits, and writes the result to the
     /// destination register.
     UXTB,

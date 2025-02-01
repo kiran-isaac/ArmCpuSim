@@ -2,10 +2,10 @@
 #include <string.h>
 
 int main() {
+  char password_buf[20];
   while (1) {
-    char password_buf[20];
     svc_puts("Enter password: ");
-
+    memset(password_buf, 'a', sizeof(password_buf));
     svc_gets(password_buf);
     svc_puts("You entered: ");
     svc_puts(password_buf);

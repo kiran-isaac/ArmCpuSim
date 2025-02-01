@@ -14,6 +14,7 @@ use std::io::Write;
 use binary::is_32_bit;
 use decode::*;
 use execute::Executor;
+use execute::ExecutorPool;
 use log::Tracer;
 use model::Memory;
 use model::Registers;
@@ -36,6 +37,13 @@ fn overwrite_file(file_path: &str, content: &str) -> std::io::Result<()> {
 }
 
 fn main() {
+    let sdl_context = sdl2::init().unwrap();
+    let video_subsystem = sdl_context.video().unwrap();
+    let window = video_subsystem.window("rust-sdl2 demo", 800, 600)
+        .position_centered()
+        .build()
+        .unwrap();
+
     let mut registers = Registers::new();
     let app_path = std::env::args().nth(1).unwrap();
 
@@ -50,7 +58,7 @@ fn main() {
 
     let _entry_point = state.mem.entrypoint;
     state.regs.pc = _entry_point as u32;
-    let mut executor0 = Executor::new();
+    let mut executorpool = ExecutorPool::new(1);
 
     // let current_utc_time = chrono::Utc::now();
 
@@ -79,9 +87,14 @@ fn main() {
 
         let _old_pc = state.regs.pc;
 
-        // create std::fmt::Formatter to pass to execute
-        executor0.assign(decoded);
-        executor0.execute(&mut state, &mut logstr);
+        // Progresses the executors state, and then tries to assign the 
+        // task to it untill it works
+        executorpool.tick(&mut state, &mut logstr);
+        while !executorpool.assign(decoded) {
+            logstr.push('\n');
+            executorpool.tick(&mut state, &mut logstr);
+        }
+        
         log_file.write_all(logstr.as_bytes()).unwrap();
 
         overwrite_file(

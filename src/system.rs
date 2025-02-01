@@ -34,6 +34,8 @@ pub fn syscall(i: &I, state: &mut ProcessorState) {
                 state.mem.set_byte_nolog(addr + i, c);
                 i += 1;
             }
+            // add null terminator
+            state.mem.set_byte_nolog(addr + i, 0);
         }
         _ => unimplemented!(),
     }
