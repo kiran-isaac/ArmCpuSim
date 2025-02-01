@@ -4,6 +4,7 @@ use super::*;
 
 // mostly the same as cortex m0 delays
 fn i_len_lookup(i: &I) -> usize {
+    return 1;
     match i.it {
         // add/shift, 3 if pc relative
         ADDReg | MOVReg => {
@@ -69,7 +70,7 @@ impl ExecutorPool {
                     #[cfg(debug_assertions)]
                     {
                         self.tracer.log(instruction_executed, &state.regs);
-                        self.log_file.write(event_log.as_bytes());
+                        self.log_file.write(event_log.as_bytes()).unwrap();
                         self.stack_file
                             .write_all_at(state.mem.dump_stack(state.regs.sp).as_bytes(), 0)
                             .unwrap();

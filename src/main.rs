@@ -39,7 +39,8 @@ fn overwrite_file(file_path: &str, content: &str) -> std::io::Result<()> {
 fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
-    let window = video_subsystem.window("rust-sdl2 demo", 800, 600)
+    let window = video_subsystem
+        .window("rust-sdl2 demo", 800, 600)
         .position_centered()
         .build()
         .unwrap();
@@ -61,7 +62,7 @@ fn main() {
 
     // create trace dir if it doesn't exist
     std::fs::create_dir_all("traces").unwrap();
-    let mut tracer = Tracer::new("traces/trace.csv", &state.regs);
+    let tracer = Tracer::new("traces/trace.csv", &state.regs);
     let log_file_path = "traces/log.txt";
     let stack_dump_file = "traces/stack_dump.txt";
 
@@ -77,12 +78,11 @@ fn main() {
 
         let decoded = decode(instruction);
 
-        // Progresses the executors state, and then tries to assign the 
+        // Progresses the executors state, and then tries to assign the
         // task to it untill it works
         while !executorpool.assign(decoded, is_32_bit(instruction)) {
             executorpool.tick(&mut state);
         }
-        executorpool.tick(&mut state);        
 
         if state.halt >= 0 {
             println!("Exiting with code: {}", state.halt);
