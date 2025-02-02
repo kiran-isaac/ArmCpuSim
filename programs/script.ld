@@ -212,10 +212,10 @@ SECTIONS
 	PROVIDE (__heap_end = __stack - (DEFINED(__stack_size) ? __stack_size : 4K));
 	PROVIDE (__heap_size = __heap_end - __heap_start);
 
-        /* Allow a minimum heap size to be specified */
-        .heap (NOLOAD) : {
-                . += (DEFINED(__heap_size_min) ? __heap_size_min : 0);
-        } >ram :ram
+	/* Allow a minimum heap size to be specified */
+	.heap (NOLOAD) : {
+			. += (DEFINED(__heap_size_min) ? __heap_size_min : 0);
+	} >ram :ram
 
 	/* Define a stack region to make sure it fits in memory */
 	.stack (NOLOAD) : {

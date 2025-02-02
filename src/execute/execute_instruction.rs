@@ -16,7 +16,7 @@ impl Executor {
             SVC => syscall(&i, state),
 
             // ADD
-            ADC | SBC | ADDReg | ADDImm | ADDSpImm | CMN | CMPReg | CMPImm | RSB | SUBImm
+            ADR | ADC | SBC | ADDReg | ADDImm | ADDSpImm | CMN | CMPReg | CMPImm | RSB | SUBImm
             | SUBReg | SUBSP => {
                 match i.it {
                     CMN | CMPImm | CMPReg => {
@@ -57,7 +57,7 @@ impl Executor {
 
                 match i.it {
                     CMN | CMPImm | CMPReg => {}
-                    ADC | ADDImm | ADDReg | ADDSpImm | SBC | RSB | SUBImm | SUBReg | SUBSP => {
+                    ADC | ADDImm | ADDReg | ADDSpImm | SBC | RSB | SUBImm | SUBReg | SUBSP | ADR => {
                         state.regs.set(i.rd, result)
                     }
                     _ => unreachable!(),
