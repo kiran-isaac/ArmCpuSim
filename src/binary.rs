@@ -41,7 +41,7 @@ pub fn add_with_carry(a: u32, b: u32, c: u8) -> (u32, u8, u8) {
     let unsigned_sum = (a as u64).wrapping_add(b as u64).wrapping_add(c as u64);
     let signed_sum = (a as i64).wrapping_add(b as i64).wrapping_add(c as i64);
     let result = unsigned_sum as u32;
-    let carry_out = if result == (unsigned_sum as u32) {
+    let carry_out = if (result as u64) == unsigned_sum {
         0
     } else {
         1

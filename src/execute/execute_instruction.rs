@@ -18,6 +18,14 @@ impl Executor {
             // ADD
             ADC | SBC | ADDReg | ADDImm | ADDSpImm | CMN | CMPReg | CMPImm | RSB | SUBImm
             | SUBReg | SUBSP => {
+                match i.it {
+                    CMN | CMPImm | CMPReg => {
+                        if state.regs.pc == 0x6a {
+                            print!("");
+                        }
+                    }
+                    _ => {}
+                }
                 let n = match i.it {
                     ADR => state.regs.pc,
                     ADDSpImm | SUBSP => state.regs.sp,
@@ -28,7 +36,10 @@ impl Executor {
                     ADC | ADDReg => state.regs.get(i.rm),
                     ADDImm | ADDSpImm | ADR => i.immu,
                     CMPImm | SUBSP => !i.immu,
-                    CMPReg | SBC | SUBImm | SUBReg => !state.regs.get(i.rm),
+                    CMPReg | SBC | SUBImm | SUBReg => {
+                        let m = state.regs.get(i.rm);
+                        !m
+                    }
                     RSB => {
                         #[cfg(debug_assertions)]
                         assert_eq!(i.immu, 0);
@@ -153,7 +164,7 @@ impl Executor {
                 if func.is_some() {
                     // debug trap, faster than conditional breakpoint
                     #[cfg(debug_assertions)]
-                    if func.unwrap() == "quick_sort" {
+                    if func.unwrap() == "bubble_sort" {
                         print!("")
                     }
 

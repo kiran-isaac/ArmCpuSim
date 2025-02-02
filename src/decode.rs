@@ -724,10 +724,16 @@ pub fn decode(i: u32) -> I {
                         let it = match briz(i, 11, 12) {
                             // STRImm (T1)
                             0b00 => IT::STRImm,
+                            // LDRImm (T1)
                             0b01 => IT::LDRImm,
                             0b10 => IT::STRBImm,
                             0b11 => IT::LDRBImm,
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
+                        };
+
+                        let immu = match it {
+                            IT::STRImm | IT::LDRImm => imm5 << 2,
+                            _ => imm5
                         };
 
                         return I {
@@ -737,7 +743,7 @@ pub fn decode(i: u32) -> I {
                             rm: 0,
                             rd: 0,
                             rl: 0,
-                            immu: imm5,
+                            immu,
                             imms: 0,
                             setflags: false,
                         };
