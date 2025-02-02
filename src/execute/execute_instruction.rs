@@ -105,20 +105,25 @@ impl Executor {
                 state.regs.apsr.n = bit_as_bool(result, 31);
                 state.regs.apsr.z = hamming_weight(result) == 0;
             }
-            AND | BIC | EOR | ORR => {
+            AND | BIC | EOR | ORR | TST => {
                 let n = state.regs.get(i.rn);
+
                 let m = match i.it {
                     BIC => !state.regs.get(i.rm),
-                    AND | EOR | ORR => state.regs.get(i.rm),
+                    AND | EOR | ORR | TST => state.regs.get(i.rm),
                     _ => unreachable!(),
                 };
                 let result = match i.it {
-                    AND | BIC => n & m,
+                    AND | BIC | TST => n & m,
                     EOR => n ^ m,
                     ORR => n | m,
                     _ => unreachable!(),
                 };
-                state.regs.set(i.rd, result);
+
+                match i.it {
+                    TST => {}
+                    _ => state.regs.set(i.rd, result),
+                }
 
                 if i.setflags {
                     state.regs.apsr.n = bit_as_bool(result, 31);
@@ -302,11 +307,14 @@ impl Executor {
                 }
                 if bit_as_bool(i.rl as u32, 15) {
                     // -1 to align + -2 to cancel out the pc increment
-                    state.regs.pc = state.mem.get_word(
-                        addr,
-                        &format!("I:POPPING_PC,PC:{:#X}", state.regs.pc),
-                        event_log,
-                    ).wrapping_sub(3);
+                    state.regs.pc = state
+                        .mem
+                        .get_word(
+                            addr,
+                            &format!("I:POPPING_PC,PC:{:#X}", state.regs.pc),
+                            event_log,
+                        )
+                        .wrapping_sub(3);
                 }
                 state.regs.sp = state.regs.sp.wrapping_add(4 * hamming_weight(i.rl as u32))
             }
@@ -366,7 +374,7 @@ impl Executor {
             }
             _ => unimplemented!("Instruction execute not implemented: {:?}", i.it),
         }
-        
+
         // increment pc
         match i.it {
             BL | BLX | B | BX => {}

@@ -22,7 +22,10 @@ fn main() {
     //     .build()
     //     .unwrap();
 
-    let config = RunConfig {executors: 1, pipelined: false};
+    let config = RunConfig {
+        executors: 1,
+        pipelined: false,
+    };
 
     let mut registers = Registers::new();
     let app_path = std::env::args().nth(1).unwrap();
@@ -41,6 +44,10 @@ fn main() {
     let mut runner = Runner::from_config(&config, state);
 
     loop {
-        runner.tick()
+        let (pc, executed_count) = runner.tick();
+
+        if executed_count >= 196 {
+            print!("")
+        }
     }
 }

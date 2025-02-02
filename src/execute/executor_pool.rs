@@ -1,4 +1,8 @@
-use std::{io::Write, os::unix::fs::FileExt};
+use std::{
+    fs::read_to_string,
+    io::{Read, Write},
+    os::unix::fs::FileExt,
+};
 
 use super::*;
 
@@ -65,6 +69,7 @@ impl ExecutorPool {
                     let mut event_log = String::new();
 
                     executor.execute_instruction(state, &mut event_log);
+                    self.executed_count += 1;
 
                     if state.halting >= 0 {
                         println!("Exiting with code: {}", state.halting);
@@ -75,9 +80,15 @@ impl ExecutorPool {
                     {
                         self.tracer.log(instruction_executed, &state.regs);
                         self.log_file.write(event_log.as_bytes()).unwrap();
-                        self.stack_file
-                            .write_all_at(state.mem.dump_stack(state.regs.sp).as_bytes(), 0)
-                            .unwrap();
+                        
+                        let mut stack_file_existing = String::new();
+                        self.stack_file.read_to_string(&mut stack_file_existing).unwrap();
+
+                        let stack_dump = state.mem.dump_stack(state.regs.sp, self.executed_count);
+                        let combined_stack = stack_dump + &stack_file_existing;
+
+                        self.stack_file.set_len(0).unwrap(); // Clear the file before writing
+                        self.stack_file.write_all(combined_stack.as_bytes()).unwrap();
                     }
                 } else {
                     executor.cycles_remaining -= 1;

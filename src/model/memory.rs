@@ -121,7 +121,7 @@ impl Memory {
     }
 
     /// Dump from vaddr to mem end
-    pub fn dump_stack(&self, vsp: u32) -> String {
+    pub fn dump_stack(&self, vsp: u32, i_count: u32) -> String {
         let original_vsp = vsp;
         let mut s = "STACK DUMP: \n".to_string();
         let mut vsp = vsp;
@@ -135,7 +135,7 @@ impl Memory {
             s.push_str(format!("{:02X?}\n", self.get_byte_nolog(vsp)).as_str());
             vsp += 1;
         }
-        s.push_str(format!("\nStack size: {:#X}\n", vsp - original_vsp).as_str());
+        s.push_str(format!("\nI: {}, Stack size: {:#X}\n", i_count, vsp - original_vsp).as_str());
         s
     }
 

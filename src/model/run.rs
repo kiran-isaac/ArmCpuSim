@@ -8,11 +8,17 @@ pub struct RunConfig {
 
 impl RunConfig {
     pub fn no_pipeline_no_superscalar() -> Self {
-        RunConfig {executors: 1, pipelined: false}
+        RunConfig {
+            executors: 1,
+            pipelined: false,
+        }
     }
 
     pub fn pipeline_no_superscalar() -> Self {
-        RunConfig {executors: 1, pipelined: false}
+        RunConfig {
+            executors: 1,
+            pipelined: false,
+        }
     }
 }
 
@@ -40,7 +46,8 @@ impl Runner {
         }
     }
 
-    pub fn tick(&mut self) {
+    /// Returns PC, and the instruction count
+    pub fn tick(&mut self) -> (u32, u32) {
         if !self.config.pipelined && self.config.executors == 1 {
             let instruction = self.state.mem.get_instruction(self.state.regs.pc);
             let decoded = decode(instruction);
@@ -50,5 +57,7 @@ impl Runner {
         } else {
             unimplemented!()
         };
+
+        (self.state.regs.pc, self.executor_pool.executed_count)
     }
 }

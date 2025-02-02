@@ -22,6 +22,7 @@ pub struct ExecutorPool {
     tracer: Tracer,
     log_file: File,
     stack_file: File,
+    pub(super) executed_count: u32,
 }
 
 impl ExecutorPool {
@@ -37,11 +38,13 @@ impl ExecutorPool {
                 .open(log_file_path)
                 .unwrap(),
             stack_file: OpenOptions::new()
+                .read(true)
                 .write(true)
                 .create(true)
-                .truncate(true)
+                .truncate(false)
                 .open(stack_file_path)
                 .unwrap(),
+            executed_count: 0,
         }
     }
 }

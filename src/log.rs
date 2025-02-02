@@ -16,7 +16,7 @@ impl Tracer {
         Tracer {
             file,
             previous_regs: initialstate.clone(),
-            i_count: 0,
+            i_count: 1,
         }
     }
 
