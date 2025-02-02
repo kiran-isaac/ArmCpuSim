@@ -70,19 +70,9 @@ fn main() {
 
     loop {
         let instruction = state.mem.get_instruction(state.regs.pc);
-
-        // Debug trap
-        if state.regs.pc >= 0x2a {
-            print!("")
-        }
-
         let decoded = decode(instruction);
-
-        // Progresses the executors state, and then tries to assign the
-        // task to it untill it works
-        while !executorpool.assign(decoded, is_32_bit(instruction)) {
-            executorpool.tick(&mut state);
-        }
+        executorpool.assign(decoded, is_32_bit(instruction));
+        println!("{}", executorpool.flush(&mut state));
 
         if state.halt >= 0 {
             println!("Exiting with code: {}", state.halt);

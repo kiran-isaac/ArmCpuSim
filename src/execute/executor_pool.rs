@@ -4,7 +4,6 @@ use super::*;
 
 // mostly the same as cortex m0 delays
 fn i_len_lookup(i: &I) -> usize {
-    return 1;
     match i.it {
         // add/shift, 3 if pc relative
         ADDReg | MOVReg => {
@@ -59,7 +58,7 @@ impl ExecutorPool {
     pub fn tick(&mut self, state: &mut ProcessorState) {
         for executor in self.pool.iter_mut() {
             if executor.i.is_some() {
-                if executor.cycles_remaining == 0 {
+                if executor.cycles_remaining == 1 {
                     #[cfg(debug_assertions)]
                     let instruction_executed = executor.i.unwrap();
 
@@ -80,5 +79,24 @@ impl ExecutorPool {
                 }
             }
         }
+    }
+
+    pub fn all_empty(&self) -> bool {
+        for executor in &self.pool {
+            if executor.i.is_some() {
+                return false;
+            }
+        }
+        true
+    }
+
+    /// Run all instructions to completion
+    pub fn flush(&mut self, state: &mut ProcessorState) -> usize {
+        let mut count = 0;
+        while !self.all_empty() {
+            self.tick(state);
+            count += 1;
+        }
+        count
     }
 }
