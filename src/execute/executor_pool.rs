@@ -71,11 +71,6 @@ impl ExecutorPool {
                     executor.execute_instruction(state, &mut event_log);
                     self.executed_count += 1;
 
-                    if state.halting >= 0 {
-                        println!("Exiting with code: {}", state.halting);
-                        std::process::exit(state.halting)
-                    }
-
                     #[cfg(debug_assertions)]
                     {
                         self.tracer.log(instruction_executed, &state.regs);
@@ -90,6 +85,12 @@ impl ExecutorPool {
                         self.stack_file.write_all(stack_dump.as_bytes()).unwrap();
                         self.stack_file.flush().unwrap();
                     }
+
+                    if state.halting.is_some() {
+                        println!("Exiting with code: {}", state.halting.unwrap());
+                        std::process::exit(state.halting.unwrap() as i32)
+                    }
+
                 } else {
                     executor.cycles_remaining -= 1;
                 }

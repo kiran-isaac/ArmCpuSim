@@ -8,7 +8,7 @@ use crate::{ProcessorState, I};
 pub fn syscall(i: &I, state: &mut ProcessorState) {
     match i.immu {
         0 => {
-            state.halting = state.regs.get(0) as i32;
+            state.halting = Some(state.regs.get(0) as u8);
         }
         1 => {
             let mut addr = state.regs.get(0) as u32;

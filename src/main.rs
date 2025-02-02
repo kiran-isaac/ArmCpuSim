@@ -36,7 +36,7 @@ fn main() {
     let mut state = ProcessorState {
         regs: registers,
         mem: memory,
-        halting: -1,
+        halting: None,
     };
 
     state.regs.pc = state.mem.entrypoint as u32;
@@ -46,7 +46,7 @@ fn main() {
     loop {
         let (pc, executed_count) = runner.tick();
 
-        if executed_count >= 77 {
+        if executed_count >= 15 {
             print!("")
         }
     }

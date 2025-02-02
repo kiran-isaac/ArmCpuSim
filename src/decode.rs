@@ -577,14 +577,14 @@ pub fn decode(i: u32) -> I {
                         0b0000 | 0b0001 | 0b0010 | 0b0011 => {
                             let n = briz(i, 7, 7);
                             let rm = briz(i, 3, 6);
-                            let rn = briz(i, 0, 2) + n << 4;
+                            let rdn = briz(i, 0, 2) + (n << 3);
 
                             return I {
                                 it: IT::ADDReg,
-                                rn: rn as u8,
+                                rn: rdn as u8,
                                 rm: rm as u8,
                                 setflags: true,
-                                rd: 0,
+                                rd: rdn as u8,
                                 immu: 0,
                                 imms: 0,
                                 rt: 0,

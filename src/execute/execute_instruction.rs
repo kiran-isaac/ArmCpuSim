@@ -264,7 +264,9 @@ impl Executor {
                 let addr = match i.it {
                     STRImm | STRBImm | STRHImm => state.regs.get(i.rn).wrapping_add(i.immu),
                     STRReg | STRBReg | STRHReg => {
-                        state.regs.get(i.rn).wrapping_add(state.regs.get(i.rm))
+                        let n = state.regs.get(i.rn);
+                        let offset = state.regs.get(i.rm);
+                        n.wrapping_add(offset)
                     }
                     _ => unreachable!(),
                 };

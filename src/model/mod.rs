@@ -9,5 +9,5 @@ pub use run::*;
 pub struct ProcessorState {
     pub regs: Registers,
     pub mem: Memory,
-    pub halting: i32,
+    pub halting: Option<u8>,
 }
