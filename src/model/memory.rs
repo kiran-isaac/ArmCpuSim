@@ -123,20 +123,20 @@ impl Memory {
     /// Dump from vaddr to mem end
     pub fn dump_stack(&self, vsp: u32, i_count: u32) -> String {
         let original_vsp = vsp;
-        let mut s = "STACK DUMP: \n".to_string();
         let mut vsp = vsp;
+
+        let mut dump_str = String::new();
         while self.mm(vsp) < self.memory.len() as u32 {
-            s.push_str(format!("{:#08X}: ", vsp).as_str());
-            s.push_str(format!("{:02X?}", self.get_byte_nolog(vsp)).as_str());
+            dump_str.push_str(format!("{:#08X}:{:#08X}: ",  vsp - original_vsp, vsp).as_str());
+            dump_str.push_str(format!("{:02X?}", self.get_byte_nolog(vsp)).as_str());
             vsp += 1;
             if self.mm(vsp) >= self.memory.len() as u32 {
                 break;
             }
-            s.push_str(format!("{:02X?}\n", self.get_byte_nolog(vsp)).as_str());
+            dump_str.push_str(format!("{:02X?}\n", self.get_byte_nolog(vsp)).as_str());
             vsp += 1;
         }
-        s.push_str(format!("\nI: {}, Stack size: {:#X}\n", i_count, vsp - original_vsp).as_str());
-        s
+        format!("I: {}, Stack size: {:#X}\n{}\n", i_count, vsp - original_vsp, dump_str)
     }
 
     /// Memory Map: Virtual -> Physical

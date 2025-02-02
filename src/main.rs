@@ -46,7 +46,7 @@ fn main() {
     loop {
         let (pc, executed_count) = runner.tick();
 
-        if executed_count >= 196 {
+        if executed_count >= 77 {
             print!("")
         }
     }

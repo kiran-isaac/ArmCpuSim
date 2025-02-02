@@ -1,4 +1,4 @@
-#include "../syscalls/syscalls.h"
+#include "../../syscalls/syscalls.h"
 #include <stdio.h>
 
 void swap(char* arr, int i, int j) {

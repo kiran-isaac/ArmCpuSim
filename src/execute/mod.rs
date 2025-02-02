@@ -41,7 +41,7 @@ impl ExecutorPool {
                 .read(true)
                 .write(true)
                 .create(true)
-                .truncate(false)
+                .truncate(true)
                 .open(stack_file_path)
                 .unwrap(),
             executed_count: 0,
