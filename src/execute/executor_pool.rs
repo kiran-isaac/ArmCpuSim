@@ -66,6 +66,11 @@ impl ExecutorPool {
 
                     executor.execute_instruction(state, &mut event_log);
 
+                    if state.halting >= 0 {
+                        println!("Exiting with code: {}", state.halting);
+                        std::process::exit(state.halting)
+                    }
+
                     #[cfg(debug_assertions)]
                     {
                         self.tracer.log(instruction_executed, &state.regs);

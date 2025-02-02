@@ -4,46 +4,25 @@ mod execute;
 mod log;
 mod model;
 mod system;
-
 #[cfg(test)]
 mod test;
 
-use std::fs::OpenOptions;
-use std::io::Write;
-
 use binary::is_32_bit;
 use decode::*;
-use execute::Executor;
 use execute::ExecutorPool;
 use log::Tracer;
-use model::Memory;
-use model::Registers;
-
-struct ProcessorState {
-    pub regs: Registers,
-    pub mem: Memory,
-    pub halt: i32,
-}
-
-fn overwrite_file(file_path: &str, content: &str) -> std::io::Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(file_path)?;
-
-    file.write_all(content.as_bytes())?;
-    Ok(())
-}
+use model::*;
 
 fn main() {
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
-    let window = video_subsystem
-        .window("rust-sdl2 demo", 800, 600)
-        .position_centered()
-        .build()
-        .unwrap();
+    // let sdl_context = sdl2::init().unwrap();
+    // let video_subsystem = sdl_context.video().unwrap();
+    // let window = video_subsystem
+    //     .window("rust-sdl2 demo", 800, 600)
+    //     .position_centered()
+    //     .build()
+    //     .unwrap();
+
+    let config = RunConfig {executors: 1, pipelined: false};
 
     let mut registers = Registers::new();
     let app_path = std::env::args().nth(1).unwrap();
@@ -54,29 +33,14 @@ fn main() {
     let mut state = ProcessorState {
         regs: registers,
         mem: memory,
-        halt: -1,
+        halting: -1,
     };
 
-    let _entry_point = state.mem.entrypoint;
-    state.regs.pc = _entry_point as u32;
+    state.regs.pc = state.mem.entrypoint as u32;
 
-    // create trace dir if it doesn't exist
-    std::fs::create_dir_all("traces").unwrap();
-    let tracer = Tracer::new("traces/trace.csv", &state.regs);
-    let log_file_path = "traces/log.txt";
-    let stack_dump_file = "traces/stack_dump.txt";
-
-    let mut executorpool = ExecutorPool::new(1, tracer, &log_file_path, &stack_dump_file);
+    let mut runner = Runner::from_config(&config, state);
 
     loop {
-        let instruction = state.mem.get_instruction(state.regs.pc);
-        let decoded = decode(instruction);
-        executorpool.assign(decoded, is_32_bit(instruction));
-        println!("{}", executorpool.flush(&mut state));
-
-        if state.halt >= 0 {
-            println!("Exiting with code: {}", state.halt);
-            std::process::exit(state.halt)
-        }
+        runner.tick()
     }
 }

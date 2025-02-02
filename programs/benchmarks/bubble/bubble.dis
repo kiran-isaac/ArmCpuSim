@@ -1,0 +1,667 @@
+
+sort/bubble.out:	file format elf32-littlearm
+
+Disassembly of section .text:
+
+00000000 <swap>:
+       0: b084         	sub	sp, #0x10
+       2: 9003         	str	r0, [sp, #0xc]
+       4: 9102         	str	r1, [sp, #0x8]
+       6: 9201         	str	r2, [sp, #0x4]
+       8: 9803         	ldr	r0, [sp, #0xc]
+       a: 9902         	ldr	r1, [sp, #0x8]
+       c: 5c40         	ldrb	r0, [r0, r1]
+       e: 4669         	mov	r1, sp
+      10: 7008         	strb	r0, [r1]
+      12: 9903         	ldr	r1, [sp, #0xc]
+      14: 9801         	ldr	r0, [sp, #0x4]
+      16: 5c08         	ldrb	r0, [r1, r0]
+      18: 9a02         	ldr	r2, [sp, #0x8]
+      1a: 5488         	strb	r0, [r1, r2]
+      1c: 9800         	ldr	r0, [sp]
+      1e: 9903         	ldr	r1, [sp, #0xc]
+      20: 9a01         	ldr	r2, [sp, #0x4]
+      22: 5488         	strb	r0, [r1, r2]
+      24: b004         	add	sp, #0x10
+      26: 4770         	bx	lr
+
+00000028 <bubble_sort>:
+      28: b580         	push	{r7, lr}
+      2a: af00         	add	r7, sp, #0x0
+      2c: b084         	sub	sp, #0x10
+      2e: 9003         	str	r0, [sp, #0xc]
+      30: 9102         	str	r1, [sp, #0x8]
+      32: 2000         	movs	r0, #0x0
+      34: 9001         	str	r0, [sp, #0x4]
+      36: e7ff         	b	0x38 <bubble_sort+0x10> @ imm = #-0x2
+      38: 9801         	ldr	r0, [sp, #0x4]
+      3a: 9902         	ldr	r1, [sp, #0x8]
+      3c: 4288         	cmp	r0, r1
+      3e: da23         	bge	0x88 <bubble_sort+0x60> @ imm = #0x46
+      40: e7ff         	b	0x42 <bubble_sort+0x1a> @ imm = #-0x2
+      42: 2000         	movs	r0, #0x0
+      44: 9000         	str	r0, [sp]
+      46: e7ff         	b	0x48 <bubble_sort+0x20> @ imm = #-0x2
+      48: 9800         	ldr	r0, [sp]
+      4a: 9a02         	ldr	r2, [sp, #0x8]
+      4c: 9901         	ldr	r1, [sp, #0x4]
+      4e: 43c9         	mvns	r1, r1
+      50: 1889         	adds	r1, r1, r2
+      52: 4288         	cmp	r0, r1
+      54: da13         	bge	0x7e <bubble_sort+0x56> @ imm = #0x26
+      56: e7ff         	b	0x58 <bubble_sort+0x30> @ imm = #-0x2
+      58: 9803         	ldr	r0, [sp, #0xc]
+      5a: 9a00         	ldr	r2, [sp]
+      5c: 1881         	adds	r1, r0, r2
+      5e: 5c80         	ldrb	r0, [r0, r2]
+      60: 7849         	ldrb	r1, [r1, #0x1]
+      62: 4288         	cmp	r0, r1
+      64: dd06         	ble	0x74 <bubble_sort+0x4c> @ imm = #0xc
+      66: e7ff         	b	0x68 <bubble_sort+0x40> @ imm = #-0x2
+      68: 9803         	ldr	r0, [sp, #0xc]
+      6a: 9900         	ldr	r1, [sp]
+      6c: 1c4a         	adds	r2, r1, #0x1
+      6e: f7ff ffc7    	bl	0x0 <swap>              @ imm = #-0x72
+      72: e7ff         	b	0x74 <bubble_sort+0x4c> @ imm = #-0x2
+      74: e7ff         	b	0x76 <bubble_sort+0x4e> @ imm = #-0x2
+      76: 9800         	ldr	r0, [sp]
+      78: 1c40         	adds	r0, r0, #0x1
+      7a: 9000         	str	r0, [sp]
+      7c: e7e4         	b	0x48 <bubble_sort+0x20> @ imm = #-0x38
+      7e: e7ff         	b	0x80 <bubble_sort+0x58> @ imm = #-0x2
+      80: 9801         	ldr	r0, [sp, #0x4]
+      82: 1c40         	adds	r0, r0, #0x1
+      84: 9001         	str	r0, [sp, #0x4]
+      86: e7d7         	b	0x38 <bubble_sort+0x10> @ imm = #-0x52
+      88: b004         	add	sp, #0x10
+      8a: bd80         	pop	{r7, pc}
+
+0000008c <is_sorted>:
+      8c: b580         	push	{r7, lr}
+      8e: af00         	add	r7, sp, #0x0
+      90: b084         	sub	sp, #0x10
+      92: 9003         	str	r0, [sp, #0xc]
+      94: 9102         	str	r1, [sp, #0x8]
+      96: 2000         	movs	r0, #0x0
+      98: 9001         	str	r0, [sp, #0x4]
+      9a: e7ff         	b	0x9c <is_sorted+0x10>   @ imm = #-0x2
+      9c: 9801         	ldr	r0, [sp, #0x4]
+      9e: 9902         	ldr	r1, [sp, #0x8]
+      a0: 1e49         	subs	r1, r1, #0x1
+      a2: 4288         	cmp	r0, r1
+      a4: da14         	bge	0xd0 <is_sorted+0x44>   @ imm = #0x28
+      a6: e7ff         	b	0xa8 <is_sorted+0x1c>   @ imm = #-0x2
+      a8: 9803         	ldr	r0, [sp, #0xc]
+      aa: 9a01         	ldr	r2, [sp, #0x4]
+      ac: 1881         	adds	r1, r0, r2
+      ae: 5c80         	ldrb	r0, [r0, r2]
+      b0: 7849         	ldrb	r1, [r1, #0x1]
+      b2: 4288         	cmp	r0, r1
+      b4: dd07         	ble	0xc6 <is_sorted+0x3a>   @ imm = #0xe
+      b6: e7ff         	b	0xb8 <is_sorted+0x2c>   @ imm = #-0x2
+      b8: 4809         	ldr	r0, [pc, #0x24]         @ 0xe0 <is_sorted+0x54>
+      ba: f000 f813    	bl	0xe4 <svc_puts>         @ imm = #0x26
+      be: 2001         	movs	r0, #0x1
+      c0: f000 f815    	bl	0xee <svc_exit>         @ imm = #0x2a
+      c4: e008         	b	0xd8 <is_sorted+0x4c>   @ imm = #0x10
+      c6: e7ff         	b	0xc8 <is_sorted+0x3c>   @ imm = #-0x2
+      c8: 9801         	ldr	r0, [sp, #0x4]
+      ca: 1c40         	adds	r0, r0, #0x1
+      cc: 9001         	str	r0, [sp, #0x4]
+      ce: e7e5         	b	0x9c <is_sorted+0x10>   @ imm = #-0x36
+      d0: 4802         	ldr	r0, [pc, #0x8]          @ 0xdc <is_sorted+0x50>
+      d2: f000 f807    	bl	0xe4 <svc_puts>         @ imm = #0xe
+      d6: e7ff         	b	0xd8 <is_sorted+0x4c>   @ imm = #-0x2
+      d8: b004         	add	sp, #0x10
+      da: bd80         	pop	{r7, pc}
+      dc: 5d 01 00 00  	.word	0x0000015d
+      e0: 48 01 00 00  	.word	0x00000148
+
+000000e4 <svc_puts>:
+      e4: b081         	sub	sp, #0x4
+      e6: 9000         	str	r0, [sp]
+      e8: df01         	svc	#0x1
+      ea: b001         	add	sp, #0x4
+      ec: 4770         	bx	lr
+
+000000ee <svc_exit>:
+      ee: b081         	sub	sp, #0x4
+      f0: 9000         	str	r0, [sp]
+      f2: df00         	svc	#0x0
+      f4: b001         	add	sp, #0x4
+      f6: 4770         	bx	lr
+
+000000f8 <main>:
+      f8: b580         	push	{r7, lr}
+      fa: af00         	add	r7, sp, #0x0
+      fc: b086         	sub	sp, #0x18
+      fe: 480d         	ldr	r0, [pc, #0x34]         @ 0x134 <main+0x3c>
+     100: 9005         	str	r0, [sp, #0x14]
+     102: 480d         	ldr	r0, [pc, #0x34]         @ 0x138 <main+0x40>
+     104: 9004         	str	r0, [sp, #0x10]
+     106: 480d         	ldr	r0, [pc, #0x34]         @ 0x13c <main+0x44>
+     108: 9003         	str	r0, [sp, #0xc]
+     10a: 480d         	ldr	r0, [pc, #0x34]         @ 0x140 <main+0x48>
+     10c: 9002         	str	r0, [sp, #0x8]
+     10e: 2010         	movs	r0, #0x10
+     110: 9001         	str	r0, [sp, #0x4]
+     112: 9901         	ldr	r1, [sp, #0x4]
+     114: a802         	add	r0, sp, #0x8
+     116: 9000         	str	r0, [sp]
+     118: f7ff ff86    	bl	0x28 <bubble_sort>      @ imm = #-0xf4
+     11c: 9800         	ldr	r0, [sp]
+     11e: 9901         	ldr	r1, [sp, #0x4]
+     120: f7ff ffb4    	bl	0x8c <is_sorted>        @ imm = #-0x98
+     124: 9800         	ldr	r0, [sp]
+     126: 7800         	ldrb	r0, [r0]
+     128: f7ff ffe1    	bl	0xee <svc_exit>         @ imm = #-0x3e
+     12c: 2000         	movs	r0, #0x0
+     12e: b006         	add	sp, #0x18
+     130: bd80         	pop	{r7, pc}
+     132: 46c0         	mov	r8, r8
+     134: 01 06 08 09  	.word	0x09080601
+     138: 04 03 00 c9  	.word	0xc9000304
+     13c: 07 05 67 5b  	.word	0x5b670507
+     140: 0a 02 11 13  	.word	0x1311020a
+
+00000144 <__text_end>:
+     144: d4 d4 d4 d4  	.word	0xd4d4d4d4
+
+Disassembly of section .rodata:
+
+00000148 <.rodata>:
+     148: 7241         	strb	r1, [r0, #0x9]
+     14a: 6172         	str	r2, [r6, #0x14]
+     14c: 2079         	movs	r0, #0x79
+     14e: 7369         	strb	r1, [r5, #0xd]
+     150: 6e20         	ldr	r0, [r4, #0x60]
+     152: 746f         	strb	r7, [r5, #0x11]
+     154: 7320         	strb	r0, [r4, #0xc]
+     156: 726f         	strb	r7, [r5, #0x9]
+     158: 6574         	str	r4, [r6, #0x54]
+     15a: 0a64         	lsrs	r4, r4, #0x9
+     15c: 4100         	asrs	r0, r0
+     15e: 7272         	strb	r2, [r6, #0x9]
+     160: 7961         	ldrb	r1, [r4, #0x5]
+     162: 6920         	ldr	r0, [r4, #0x10]
+     164: 2073         	movs	r0, #0x73
+     166: 6f73         	ldr	r3, [r6, #0x74]
+     168: 7472         	strb	r2, [r6, #0x11]
+     16a: 6465         	str	r5, [r4, #0x44]
+     16c: 000a         	movs	r2, r1
+     16e: 020a         	lsls	r2, r1, #0x8
+     170: 1311         	asrs	r1, r2, #0xc
+     172: 0507         	lsls	r7, r0, #0x14
+     174: 5b67         	ldrh	r7, [r4, r5]
+     176: 0304         	lsls	r4, r0, #0xc
+     178: c900         	<unknown>
+     17a: 0601         	lsls	r1, r0, #0x18
+     17c: 0908         	lsrs	r0, r1, #0x4
+
+Disassembly of section .stack:
+
+20000000 <.stack>:
+...
+
+Disassembly of section .comment:
+
+00000000 <.comment>:
+       0: 6300         	str	r0, [r0, #0x30]
+       2: 616c         	str	r4, [r5, #0x14]
+       4: 676e         	str	r6, [r5, #0x74]
+       6: 7620         	strb	r0, [r4, #0x18]
+       8: 7265         	strb	r5, [r4, #0x9]
+       a: 6973         	ldr	r3, [r6, #0x14]
+       c: 6e6f         	ldr	r7, [r5, #0x64]
+       e: 3120         	adds	r1, #0x20
+      10: 2e39         	cmp	r6, #0x39
+      12: 2e31         	cmp	r6, #0x31
+      14: 0035         	movs	r5, r6
+      16: 694c         	ldr	r4, [r1, #0x14]
+      18: 6b6e         	ldr	r6, [r5, #0x34]
+      1a: 7265         	strb	r5, [r4, #0x9]
+      1c: 203a         	movs	r0, #0x3a
+      1e: 4c4c         	ldr	r4, [pc, #0x130]        @ 0x150 <.rodata+0x8>
+      20: 2044         	movs	r0, #0x44
+      22: 3931         	subs	r1, #0x31
+      24: 312e         	adds	r1, #0x2e
+      26: 352e         	adds	r5, #0x2e
+      28: 00           	<unknown>
+
+Disassembly of section .ARM.attributes:
+
+00000000 <.ARM.attributes>:
+       0: 4041         	eors	r1, r0
+       2: 0000         	movs	r0, r0
+       4: 6100         	str	r0, [r0, #0x10]
+       6: 6165         	str	r5, [r4, #0x14]
+       8: 6962         	ldr	r2, [r4, #0x14]
+       a: 0100         	lsls	r0, r0, #0x4
+       c: 0036         	movs	r6, r6
+       e: 0000         	movs	r0, r0
+      10: 3243         	adds	r2, #0x43
+      12: 302e         	adds	r0, #0x2e
+      14: 0039         	movs	r1, r7
+      16: 6305         	str	r5, [r0, #0x30]
+      18: 726f         	strb	r7, [r5, #0x9]
+      1a: 6574         	str	r4, [r6, #0x54]
+      1c: 2d78         	cmp	r5, #0x78
+      1e: 306d         	adds	r0, #0x6d
+      20: 0600         	lsls	r0, r0, #0x18
+      22: 070c         	lsls	r4, r1, #0x1c
+      24: 084d         	lsrs	r5, r1, #0x1
+      26: 0900         	lsrs	r0, r0, #0x4
+      28: 0e01         	lsrs	r1, r0, #0x18
+      2a: 1100         	asrs	r0, r0, #0x4
+      2c: 1201         	asrs	r1, r0, #0x8
+      2e: 1404         	asrs	r4, r0, #0x10
+      30: 1501         	asrs	r1, r0, #0x14
+      32: 1700         	asrs	r0, r0, #0x1c
+      34: 1803         	adds	r3, r0, r0
+      36: 1901         	adds	r1, r0, r4
+      38: 1a01         	subs	r1, r0, r0
+      3a: 1e02         	subs	r2, r0, #0x0
+      3c: 2206         	movs	r2, #0x6
+      3e: 2600         	movs	r6, #0x0
+      40: 01           	<unknown>
+
+Disassembly of section .symtab:
+
+00000000 <.symtab>:
+		...
+      10: 0001         	movs	r1, r0
+		...
+      1a: 0000         	movs	r0, r0
+      1c: 0004         	movs	r4, r0
+      1e: fff1 000a    	<unknown>
+		...
+      2e: 0001         	movs	r1, r0
+      30: 000d         	movs	r5, r1
+      32: 0000         	movs	r0, r0
+      34: 00e5         	lsls	r5, r4, #0x3
+      36: 0000         	movs	r0, r0
+      38: 000a         	movs	r2, r1
+      3a: 0000         	movs	r0, r0
+      3c: 0002         	movs	r2, r0
+      3e: 0001         	movs	r1, r0
+      40: 0016         	movs	r6, r2
+      42: 0000         	movs	r0, r0
+      44: 00ef         	lsls	r7, r5, #0x3
+      46: 0000         	movs	r0, r0
+      48: 000a         	movs	r2, r1
+      4a: 0000         	movs	r0, r0
+      4c: 0002         	movs	r2, r0
+      4e: 0001         	movs	r1, r0
+      50: 001f         	movs	r7, r3
+      52: 0000         	movs	r0, r0
+      54: 00dc         	lsls	r4, r3, #0x3
+		...
+      5e: 0001         	movs	r1, r0
+      60: 0022         	movs	r2, r4
+      62: 0000         	movs	r0, r0
+      64: 00e4         	lsls	r4, r4, #0x3
+		...
+      6e: 0001         	movs	r1, r0
+      70: 0025         	movs	r5, r4
+      72: 0000         	movs	r0, r0
+      74: 0134         	lsls	r4, r6, #0x4
+		...
+      7e: 0001         	movs	r1, r0
+      80: 0048         	lsls	r0, r1, #0x1
+		...
+      8a: 0000         	movs	r0, r0
+      8c: 0200         	lsls	r0, r0, #0x8
+      8e: 0001         	movs	r1, r0
+      90: 0028         	movs	r0, r5
+      92: 0000         	movs	r0, r0
+      94: 0001         	movs	r1, r0
+      96: 0000         	movs	r0, r0
+      98: 0028         	movs	r0, r5
+      9a: 0000         	movs	r0, r0
+      9c: 0012         	movs	r2, r2
+      9e: 0001         	movs	r1, r0
+      a0: 002d         	movs	r5, r5
+      a2: 0000         	movs	r0, r0
+      a4: 0029         	movs	r1, r5
+      a6: 0000         	movs	r0, r0
+      a8: 0064         	lsls	r4, r4, #0x1
+      aa: 0000         	movs	r0, r0
+      ac: 0012         	movs	r2, r2
+      ae: 0001         	movs	r1, r0
+      b0: 0039         	movs	r1, r7
+      b2: 0000         	movs	r0, r0
+      b4: 008d         	lsls	r5, r1, #0x2
+      b6: 0000         	movs	r0, r0
+      b8: 0058         	lsls	r0, r3, #0x1
+      ba: 0000         	movs	r0, r0
+      bc: 0012         	movs	r2, r2
+      be: 0001         	movs	r1, r0
+      c0: 0043         	lsls	r3, r0, #0x1
+      c2: 0000         	movs	r0, r0
+      c4: 00f9         	lsls	r1, r7, #0x3
+      c6: 0000         	movs	r0, r0
+      c8: 004c         	lsls	r4, r1, #0x1
+      ca: 0000         	movs	r0, r0
+      cc: 0012         	movs	r2, r2
+      ce: 0001         	movs	r1, r0
+      d0: 0055         	lsls	r5, r2, #0x1
+		...
+      da: 0000         	movs	r0, r0
+      dc: 0010         	movs	r0, r2
+      de: fff1 005d    	<unknown>
+      e2: 0000         	movs	r0, r0
+      e4: 0000         	movs	r0, r0
+      e6: 0010         	movs	r0, r2
+      e8: 0000         	movs	r0, r0
+      ea: 0000         	movs	r0, r0
+      ec: 0010         	movs	r0, r2
+      ee: fff1 006a    	<unknown>
+      f2: 0000         	movs	r0, r0
+      f4: 0000         	movs	r0, r0
+      f6: 2000         	movs	r0, #0x0
+      f8: 0000         	movs	r0, r0
+      fa: 0000         	movs	r0, r0
+      fc: 0010         	movs	r0, r2
+      fe: fff1 0070    	<unknown>
+     102: 0000         	movs	r0, r0
+     104: 0000         	movs	r0, r0
+     106: 0200         	lsls	r0, r0, #0x8
+     108: 0000         	movs	r0, r0
+     10a: 0000         	movs	r0, r0
+     10c: 0010         	movs	r0, r2
+     10e: fff1 007b    	<unknown>
+     112: 0000         	movs	r0, r0
+     114: 0001         	movs	r1, r0
+     116: 0000         	movs	r0, r0
+     118: 0000         	movs	r0, r0
+     11a: 0000         	movs	r0, r0
+     11c: 0010         	movs	r0, r2
+     11e: fff1 0087    	<unknown>
+     122: 0000         	movs	r0, r0
+     124: 0000         	movs	r0, r0
+     126: 2000         	movs	r0, #0x0
+     128: 0000         	movs	r0, r0
+     12a: 0000         	movs	r0, r0
+     12c: 0010         	movs	r0, r2
+     12e: 0006         	movs	r6, r0
+     130: 0091         	lsls	r1, r2, #0x2
+		...
+     13a: 0000         	movs	r0, r0
+     13c: 0010         	movs	r0, r2
+     13e: 0000         	movs	r0, r0
+     140: 00a1         	lsls	r1, r4, #0x2
+     142: 0000         	movs	r0, r0
+     144: 0000         	movs	r0, r0
+     146: 0008         	movs	r0, r1
+     148: 0000         	movs	r0, r0
+     14a: 0000         	movs	r0, r0
+     14c: 0010         	movs	r0, r2
+     14e: fff1 00ae    	<unknown>
+		...
+     15a: 0000         	movs	r0, r0
+     15c: 0010         	movs	r0, r2
+     15e: fff1 00ba    	<unknown>
+		...
+     16a: 0000         	movs	r0, r0
+     16c: 0010         	movs	r0, r2
+     16e: fff1 00cd    	<unknown>
+     172: 0000         	movs	r0, r0
+     174: 017e         	lsls	r6, r7, #0x5
+     176: 0000         	movs	r0, r0
+     178: 0000         	movs	r0, r0
+     17a: 0000         	movs	r0, r0
+     17c: 0010         	movs	r0, r2
+     17e: fff1 00df    	<unknown>
+     182: 0000         	movs	r0, r0
+     184: 017e         	lsls	r6, r7, #0x5
+     186: 0000         	movs	r0, r0
+     188: 0000         	movs	r0, r0
+     18a: 0000         	movs	r0, r0
+     18c: 0010         	movs	r0, r2
+     18e: fff1 00ed    	<unknown>
+     192: 0000         	movs	r0, r0
+     194: 017e         	lsls	r6, r7, #0x5
+     196: 0000         	movs	r0, r0
+     198: 0000         	movs	r0, r0
+     19a: 0000         	movs	r0, r0
+     19c: 0010         	movs	r0, r2
+     19e: fff1 0100    	<unknown>
+     1a2: 0000         	movs	r0, r0
+     1a4: 0000         	movs	r0, r0
+     1a6: 2000         	movs	r0, #0x0
+     1a8: 0000         	movs	r0, r0
+     1aa: 0000         	movs	r0, r0
+     1ac: 0010         	movs	r0, r2
+     1ae: 0004         	movs	r4, r0
+     1b0: 010b         	lsls	r3, r1, #0x4
+     1b2: 0000         	movs	r0, r0
+     1b4: 0000         	movs	r0, r0
+     1b6: 2000         	movs	r0, #0x0
+     1b8: 0000         	movs	r0, r0
+     1ba: 0000         	movs	r0, r0
+     1bc: 0010         	movs	r0, r2
+     1be: 0003         	movs	r3, r0
+     1c0: 0118         	lsls	r0, r3, #0x4
+     1c2: 0000         	movs	r0, r0
+     1c4: 0144         	lsls	r4, r0, #0x5
+     1c6: 0000         	movs	r0, r0
+     1c8: 0000         	movs	r0, r0
+     1ca: 0000         	movs	r0, r0
+     1cc: 0010         	movs	r0, r2
+     1ce: 0001         	movs	r1, r0
+     1d0: 0123         	lsls	r3, r4, #0x4
+     1d2: 0000         	movs	r0, r0
+     1d4: 0000         	movs	r0, r0
+     1d6: 2000         	movs	r0, #0x0
+     1d8: 0000         	movs	r0, r0
+     1da: 0000         	movs	r0, r0
+     1dc: 0010         	movs	r0, r2
+     1de: 0006         	movs	r6, r0
+
+Disassembly of section .shstrtab:
+
+00000000 <.shstrtab>:
+       0: 2e00         	cmp	r6, #0x0
+       2: 6574         	str	r4, [r6, #0x54]
+       4: 7478         	strb	r0, [r7, #0x11]
+       6: 2e00         	cmp	r6, #0x0
+       8: 6f72         	ldr	r2, [r6, #0x74]
+       a: 6164         	str	r4, [r4, #0x14]
+       c: 6174         	str	r4, [r6, #0x14]
+       e: 2e00         	cmp	r6, #0x0
+      10: 6164         	str	r4, [r4, #0x14]
+      12: 6174         	str	r4, [r6, #0x14]
+      14: 2e00         	cmp	r6, #0x0
+      16: 6474         	str	r4, [r6, #0x44]
+      18: 7461         	strb	r1, [r4, #0x11]
+      1a: 0061         	lsls	r1, r4, #0x1
+      1c: 742e         	strb	r6, [r5, #0x10]
+      1e: 7362         	strb	r2, [r4, #0xd]
+      20: 0073         	lsls	r3, r6, #0x1
+      22: 622e         	str	r6, [r5, #0x20]
+      24: 7373         	strb	r3, [r6, #0xd]
+      26: 2e00         	cmp	r6, #0x0
+      28: 6568         	str	r0, [r5, #0x54]
+      2a: 7061         	strb	r1, [r4, #0x1]
+      2c: 2e00         	cmp	r6, #0x0
+      2e: 7473         	strb	r3, [r6, #0x11]
+      30: 6361         	str	r1, [r4, #0x34]
+      32: 006b         	lsls	r3, r5, #0x1
+      34: 632e         	str	r6, [r5, #0x30]
+      36: 6d6f         	ldr	r7, [r5, #0x54]
+      38: 656d         	str	r5, [r5, #0x54]
+      3a: 746e         	strb	r6, [r5, #0x11]
+      3c: 2e00         	cmp	r6, #0x0
+      3e: 5241         	strh	r1, [r0, r1]
+      40: 2e4d         	cmp	r6, #0x4d
+      42: 7461         	strb	r1, [r4, #0x11]
+      44: 7274         	strb	r4, [r6, #0x9]
+      46: 6269         	str	r1, [r5, #0x24]
+      48: 7475         	strb	r5, [r6, #0x11]
+      4a: 7365         	strb	r5, [r4, #0xd]
+      4c: 2e00         	cmp	r6, #0x0
+      4e: 7973         	ldrb	r3, [r6, #0x5]
+      50: 746d         	strb	r5, [r5, #0x11]
+      52: 6261         	str	r1, [r4, #0x24]
+      54: 2e00         	cmp	r6, #0x0
+      56: 6873         	ldr	r3, [r6, #0x4]
+      58: 7473         	strb	r3, [r6, #0x11]
+      5a: 7472         	strb	r2, [r6, #0x11]
+      5c: 6261         	str	r1, [r4, #0x24]
+      5e: 2e00         	cmp	r6, #0x0
+      60: 7473         	strb	r3, [r6, #0x11]
+      62: 7472         	strb	r2, [r6, #0x11]
+      64: 6261         	str	r1, [r4, #0x24]
+      66: 00           	<unknown>
+
+Disassembly of section .strtab:
+
+00000000 <.strtab>:
+       0: 6200         	str	r0, [r0, #0x20]
+       2: 6275         	str	r5, [r6, #0x24]
+       4: 6c62         	ldr	r2, [r4, #0x44]
+       6: 2e65         	cmp	r6, #0x65
+       8: 0063         	lsls	r3, r4, #0x1
+       a: 7424         	strb	r4, [r4, #0x10]
+       c: 7300         	strb	r0, [r0, #0xc]
+       e: 6376         	str	r6, [r6, #0x34]
+      10: 705f         	strb	r7, [r3, #0x1]
+      12: 7475         	strb	r5, [r6, #0x11]
+      14: 0073         	lsls	r3, r6, #0x1
+      16: 7673         	strb	r3, [r6, #0x19]
+      18: 5f63         	ldrsh	r3, [r4, r5]
+      1a: 7865         	ldrb	r5, [r4, #0x1]
+      1c: 7469         	strb	r1, [r5, #0x11]
+      1e: 2400         	movs	r4, #0x0
+      20: 0064         	lsls	r4, r4, #0x1
+      22: 7424         	strb	r4, [r4, #0x10]
+      24: 2400         	movs	r4, #0x0
+      26: 0064         	lsls	r4, r4, #0x1
+      28: 7773         	strb	r3, [r6, #0x1d]
+      2a: 7061         	strb	r1, [r4, #0x1]
+      2c: 6200         	str	r0, [r0, #0x20]
+      2e: 6275         	str	r5, [r6, #0x24]
+      30: 6c62         	ldr	r2, [r4, #0x44]
+      32: 5f65         	ldrsh	r5, [r4, r5]
+      34: 6f73         	ldr	r3, [r6, #0x74]
+      36: 7472         	strb	r2, [r6, #0x11]
+      38: 6900         	ldr	r0, [r0, #0x10]
+      3a: 5f73         	ldrsh	r3, [r6, r5]
+      3c: 6f73         	ldr	r3, [r6, #0x74]
+      3e: 7472         	strb	r2, [r6, #0x11]
+      40: 6465         	str	r5, [r4, #0x44]
+      42: 6d00         	ldr	r0, [r0, #0x50]
+      44: 6961         	ldr	r1, [r4, #0x14]
+      46: 006e         	lsls	r6, r5, #0x1
+      48: 5f5f         	ldrsh	r7, [r3, r5]
+      4a: 7364         	strb	r4, [r4, #0xd]
+      4c: 5f6f         	ldrsh	r7, [r5, r5]
+      4e: 6168         	str	r0, [r5, #0x14]
+      50: 646e         	str	r6, [r5, #0x44]
+      52: 656c         	str	r4, [r5, #0x54]
+      54: 5f00         	ldrsh	r0, [r0, r4]
+      56: 665f         	str	r7, [r3, #0x64]
+      58: 616c         	str	r4, [r5, #0x14]
+      5a: 6873         	ldr	r3, [r6, #0x4]
+      5c: 5f00         	ldrsh	r0, [r0, r4]
+      5e: 665f         	str	r7, [r3, #0x64]
+      60: 616c         	str	r4, [r5, #0x14]
+      62: 6873         	ldr	r3, [r6, #0x4]
+      64: 735f         	strb	r7, [r3, #0xd]
+      66: 7a69         	ldrb	r1, [r5, #0x9]
+      68: 0065         	lsls	r5, r4, #0x1
+      6a: 5f5f         	ldrsh	r7, [r3, r5]
+      6c: 6172         	str	r2, [r6, #0x14]
+      6e: 006d         	lsls	r5, r5, #0x1
+      70: 5f5f         	ldrsh	r7, [r3, r5]
+      72: 6172         	str	r2, [r6, #0x14]
+      74: 5f6d         	ldrsh	r5, [r5, r5]
+      76: 6973         	ldr	r3, [r6, #0x14]
+      78: 657a         	str	r2, [r7, #0x54]
+      7a: 5f00         	ldrsh	r0, [r0, r4]
+      7c: 745f         	strb	r7, [r3, #0x11]
+      7e: 736c         	strb	r4, [r5, #0xd]
+      80: 615f         	str	r7, [r3, #0x14]
+      82: 696c         	ldr	r4, [r5, #0x14]
+      84: 6e67         	ldr	r7, [r4, #0x64]
+      86: 5f00         	ldrsh	r0, [r0, r4]
+      88: 625f         	str	r7, [r3, #0x24]
+      8a: 7373         	strb	r3, [r6, #0xd]
+      8c: 655f         	str	r7, [r3, #0x54]
+      8e: 646e         	str	r6, [r5, #0x44]
+      90: 5f00         	ldrsh	r0, [r0, r4]
+      92: 685f         	ldr	r7, [r3, #0x4]
+      94: 6165         	str	r5, [r4, #0x14]
+      96: 5f70         	ldrsh	r0, [r6, r5]
+      98: 6973         	ldr	r3, [r6, #0x14]
+      9a: 657a         	str	r2, [r7, #0x54]
+      9c: 6d5f         	ldr	r7, [r3, #0x54]
+      9e: 6e69         	ldr	r1, [r5, #0x64]
+      a0: 5f00         	ldrsh	r0, [r0, r4]
+      a2: 735f         	strb	r7, [r3, #0xd]
+      a4: 6174         	str	r4, [r6, #0x14]
+      a6: 6b63         	ldr	r3, [r4, #0x34]
+      a8: 735f         	strb	r7, [r3, #0xd]
+      aa: 7a69         	ldrb	r1, [r5, #0x9]
+      ac: 0065         	lsls	r5, r4, #0x1
+      ae: 5f5f         	ldrsh	r7, [r3, r5]
+      b0: 6164         	str	r4, [r4, #0x14]
+      b2: 6174         	str	r4, [r6, #0x14]
+      b4: 735f         	strb	r7, [r3, #0xd]
+      b6: 7a69         	ldrb	r1, [r5, #0x9]
+      b8: 0065         	lsls	r5, r4, #0x1
+      ba: 5f5f         	ldrsh	r7, [r3, r5]
+      bc: 6164         	str	r4, [r4, #0x14]
+      be: 6174         	str	r4, [r6, #0x14]
+      c0: 735f         	strb	r7, [r3, #0xd]
+      c2: 756f         	strb	r7, [r5, #0x15]
+      c4: 6372         	str	r2, [r6, #0x34]
+      c6: 5f65         	ldrsh	r5, [r4, r5]
+      c8: 6973         	ldr	r3, [r6, #0x14]
+      ca: 657a         	str	r2, [r7, #0x54]
+      cc: 5f00         	ldrsh	r0, [r0, r4]
+      ce: 645f         	str	r7, [r3, #0x44]
+      d0: 7461         	strb	r1, [r4, #0x11]
+      d2: 5f61         	ldrsh	r1, [r4, r5]
+      d4: 6f73         	ldr	r3, [r6, #0x74]
+      d6: 7275         	strb	r5, [r6, #0x9]
+      d8: 6563         	str	r3, [r4, #0x54]
+      da: 655f         	str	r7, [r3, #0x54]
+      dc: 646e         	str	r6, [r5, #0x44]
+      de: 5f00         	ldrsh	r0, [r0, r4]
+      e0: 645f         	str	r7, [r3, #0x44]
+      e2: 7461         	strb	r1, [r4, #0x11]
+      e4: 5f61         	ldrsh	r1, [r4, r5]
+      e6: 6f73         	ldr	r3, [r6, #0x74]
+      e8: 7275         	strb	r5, [r6, #0x9]
+      ea: 6563         	str	r3, [r4, #0x54]
+      ec: 5f00         	ldrsh	r0, [r0, r4]
+      ee: 745f         	strb	r7, [r3, #0x11]
+      f0: 6164         	str	r4, [r4, #0x14]
+      f2: 6174         	str	r4, [r6, #0x14]
+      f4: 735f         	strb	r7, [r3, #0xd]
+      f6: 756f         	strb	r7, [r5, #0x15]
+      f8: 6372         	str	r2, [r6, #0x34]
+      fa: 5f65         	ldrsh	r5, [r4, r5]
+      fc: 6e65         	ldr	r5, [r4, #0x64]
+      fe: 0064         	lsls	r4, r4, #0x1
+     100: 5f5f         	ldrsh	r7, [r3, r5]
+     102: 6164         	str	r4, [r4, #0x14]
+     104: 6174         	str	r4, [r6, #0x14]
+     106: 655f         	str	r7, [r3, #0x54]
+     108: 646e         	str	r6, [r5, #0x44]
+     10a: 5f00         	ldrsh	r0, [r0, r4]
+     10c: 645f         	str	r7, [r3, #0x44]
+     10e: 7461         	strb	r1, [r4, #0x11]
+     110: 5f61         	ldrsh	r1, [r4, r5]
+     112: 7473         	strb	r3, [r6, #0x11]
+     114: 7261         	strb	r1, [r4, #0x9]
+     116: 0074         	lsls	r4, r6, #0x1
+     118: 5f5f         	ldrsh	r7, [r3, r5]
+     11a: 6574         	str	r4, [r6, #0x54]
+     11c: 7478         	strb	r0, [r7, #0x11]
+     11e: 655f         	str	r7, [r3, #0x54]
+     120: 646e         	str	r6, [r5, #0x44]
+     122: 5f00         	ldrsh	r0, [r0, r4]
+     124: 6e65         	ldr	r5, [r4, #0x64]
+     126: 0064         	lsls	r4, r4, #0x1
