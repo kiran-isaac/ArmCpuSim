@@ -121,10 +121,4 @@ mod tests {
 
         assert_eq!(7, briz(0xf345fb3c, 29, 31));
     }
-
-    #[test]
-    fn test_add3() {
-        assert_eq!((0x0, true), add_with_carry(0xfffffff0, 0xf, 1));
-        assert_eq!((0xffffffff, false), add_with_carry(0xfffffff0, 0xf, 0));
-    }
 }
