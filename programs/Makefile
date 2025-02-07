@@ -15,11 +15,11 @@ LINKER_SCRIPT := script.ld
 %.out: %.o
 	$(ARMET)/bin/clang $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
 
-%.out: %.c  
+%.dis: %.c  
 	$(MAKE) $(<:.c=.s)
-	$(MAKE) $(<:.c=.o)
-	$(MAKE) $(@:.out=.o)
-
+	$(MAKE) $(<:.s=.o)
+	$(MAKE) $(<:.o=.out)
+	$(MAKE) $(<:.out=.dis)
 
 all: $(C_FILES:.c=.dis) $(C_FILES:.c=.s) $(C_FILES:.c=.out)
 
