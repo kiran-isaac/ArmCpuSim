@@ -27,9 +27,35 @@ void assert_is_sorted(int *arr, int n) {
   svc_puts("Array is sorted\n");
 }
 
+char* itoa(int value, char* result, int base) {
+    // check that the base if valid
+    if (base < 2 || base > 36) { *result = '\0'; return result; }
+
+    char* ptr = result, *ptr1 = result, tmp_char;
+    int tmp_value;
+
+    do {
+        tmp_value = value;
+        value /= base;
+        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
+    } while ( value );
+
+    // Apply negative sign
+    if (tmp_value < 0) *ptr++ = '-';
+    *ptr-- = '\0';
+
+    // Reverse the string
+    while(ptr1 < ptr) {
+        tmp_char = *ptr;
+        *ptr--= *ptr1;
+        *ptr1++ = tmp_char;
+    }
+    return result;
+}
+
 int main() {
   int arr[] = {
-      -1,    -2,    1,     -3846, -8960, -4841, 786,   -9604, 5179,  1866,
+      -1542, -2,    6188,  -3846, -8960, -4841, 786,   -9604, 5179,  1866,
       438,   77,    -1647, -9748, -1227, -1719, -407,  3955,  -4380, 6816,
       8491,  1677,  -914,  1950,  -8425, 3290,  779,   -1803, -8954, -2278,
       -1735, -2077, -9968, -2032, -5133, 548,   948,   9999,  -4208, -3715,
@@ -132,6 +158,8 @@ int main() {
   unsigned len = sizeof(arr) / sizeof(arr[0]);
   bubble_sort(arr, len);
   assert_is_sorted(arr, len);
+  char buf[100];
+  itoa(arr[0], buf, 10);
 
   svc_exit(0);
 }

@@ -49,11 +49,14 @@ impl Runner {
     /// Returns PC, and the instruction count
     pub fn tick(&mut self) -> (u32, u32) {
         if !self.config.pipelined && self.config.executors == 1 {
+            if self.state.regs.pc == 0x20 {
+                print!("");
+            }
             let instruction = self.state.mem.get_instruction(self.state.regs.pc);
             let decoded = decode(instruction);
             self.executor_pool.assign(decoded, is_32_bit(instruction));
             // Run all instructions to completion
-            self.executor_pool.flush(&mut self.state);
+            self.executor_pool.flush(&mut self.state)
         } else {
             unimplemented!()
         };

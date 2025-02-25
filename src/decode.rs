@@ -737,7 +737,7 @@ pub fn decode(i: u32) -> I {
                             _ => imm5
                         };
 
-                        return I {
+                        I {
                             it,
                             rn,
                             rt,
@@ -747,7 +747,7 @@ pub fn decode(i: u32) -> I {
                             immu,
                             imms: 0,
                             setflags: false,
-                        };
+                        }
                     }
                     _ => unreachable!("BRI issue: Invalid instr: {i}"),
                 },

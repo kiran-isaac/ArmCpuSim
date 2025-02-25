@@ -4,22 +4,10 @@ CLANG_TARGET_OPTIONS := --target=armv6m-none-eabi -mfloat-abi=soft -mthumb
 LINKER_SCRIPT := script.ld
 
 %.dis : %.out
-	$(ARMET)/bin/llvm-objdump -D  $< > $@ 
+	$(ARMET)/bin/llvm-objdump -D -S  $< > $@ 
 
-%.s: %.c
-	$(ARMET)/bin/clang -O0 -S $(CLANG_TARGET_OPTIONS) $< -o $@
-
-%.o: %.s
-	$(ARMET)/bin/clang -c $(CLANG_TARGET_OPTIONS) $< -o $@
-
-%.out: %.o
-	$(ARMET)/bin/clang $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
-
-%.dis: %.c  
-	$(MAKE) $(<:.c=.s)
-	$(MAKE) $(<:.s=.o)
-	$(MAKE) $(<:.o=.out)
-	$(MAKE) $(<:.out=.dis)
+%.out: %.c
+	$(ARMET)/bin/clang -O0 -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
 
 all: $(C_FILES:.c=.dis) $(C_FILES:.c=.s) $(C_FILES:.c=.out)
 
