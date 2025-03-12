@@ -37,6 +37,10 @@ pub fn syscall(i: &I, state: &mut ProcessorState) {
             // add null terminator
             state.mem.set_byte_nolog(addr + i, 0);
         }
+        3 => {
+            let value = state.regs.get(0);
+            print!("{}", value);
+        }
         _ => unimplemented!(),
     }
 }

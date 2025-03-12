@@ -7,4 +7,6 @@ static inline void svc_puts(const char *s) { __asm("svc 1"); };
 
 static inline void svc_gets(const char buf[]) { __asm("svc 2"); }
 
+static inline void svc_putint(int n) { __asm("svc 3"); }
+
 #endif // syscalls_h

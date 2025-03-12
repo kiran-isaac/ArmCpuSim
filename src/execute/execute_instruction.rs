@@ -35,8 +35,8 @@ impl Executor {
                 let m = match i.it {
                     ADC | ADDReg => state.regs.get(i.rm),
                     ADDImm | ADDSpImm | ADR => i.immu,
-                    CMPImm | SUBSP => !i.immu,
-                    CMPReg | SBC | SUBImm | SUBReg => {
+                    CMPImm | SUBSP | SUBImm => !i.immu,
+                    CMPReg | SBC | SUBReg => {
                         let m = state.regs.get(i.rm);
                         !m
                     }
@@ -57,9 +57,8 @@ impl Executor {
 
                 match i.it {
                     CMN | CMPImm | CMPReg => {}
-                    ADC | ADDImm | ADDReg | ADDSpImm | SBC | RSB | SUBImm | SUBReg | SUBSP | ADR => {
-                        state.regs.set(i.rd, result)
-                    }
+                    ADC | ADDImm | ADDReg | ADDSpImm | SBC | RSB | SUBImm | SUBReg | SUBSP
+                    | ADR => state.regs.set(i.rd, result),
                     _ => unreachable!(),
                 }
 
@@ -164,7 +163,7 @@ impl Executor {
                 if func.is_some() {
                     // debug trap, faster than conditional breakpoint
                     #[cfg(debug_assertions)]
-                    if func.unwrap() == "bubble_sort" {
+                    if func.unwrap() == "factorial" {
                         print!("")
                     }
 

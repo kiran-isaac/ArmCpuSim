@@ -726,7 +726,7 @@ pub fn decode(i: u32) -> I {
                             0b00 => IT::STRImm,
                             // LDRImm (T1)
                             0b01 => IT::LDRImm,
-                            
+
                             0b10 => IT::STRBImm,
                             0b11 => IT::LDRBImm,
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
@@ -734,7 +734,7 @@ pub fn decode(i: u32) -> I {
 
                         let immu = match it {
                             IT::STRImm | IT::LDRImm => imm5 << 2,
-                            _ => imm5
+                            _ => imm5,
                         };
 
                         I {

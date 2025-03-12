@@ -127,7 +127,7 @@ impl Memory {
 
         let mut dump_str = String::new();
         while self.mm(vsp) < self.memory.len() as u32 {
-            dump_str.push_str(format!("{:#08X}:{:#08X}: ",  vsp - original_vsp, vsp).as_str());
+            dump_str.push_str(format!("{:#08X}:{:#08X}: ", vsp - original_vsp, vsp).as_str());
             dump_str.push_str(format!("{:02X?}", self.get_byte_nolog(vsp)).as_str());
             vsp += 1;
             if self.mm(vsp) >= self.memory.len() as u32 {
@@ -136,7 +136,12 @@ impl Memory {
             dump_str.push_str(format!("{:02X?}\n", self.get_byte_nolog(vsp)).as_str());
             vsp += 1;
         }
-        format!("I: {}, Stack size: {:#X}\n{}\n", i_count, vsp - original_vsp, dump_str)
+        format!(
+            "I: {}, Stack size: {:#X}\n{}\n",
+            i_count,
+            vsp - original_vsp,
+            dump_str
+        )
     }
 
     /// Memory Map: Virtual -> Physical
