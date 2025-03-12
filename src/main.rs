@@ -6,6 +6,7 @@ mod model;
 mod system;
 #[cfg(test)]
 mod test;
+mod components;
 
 use binary::is_32_bit;
 use decode::*;

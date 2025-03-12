@@ -7,6 +7,8 @@ use crate::{binary::*, log::Tracer, system::syscall, ProcessorState, I, IT::*};
 
 mod execute_instruction;
 mod executor_pool;
+mod ALU;
+mod shift;
 
 #[derive(Clone, Copy)]
 pub struct Executor {
