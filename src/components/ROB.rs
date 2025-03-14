@@ -9,5 +9,5 @@ struct ROBEntry {
     pc: usize,
     status: ROBStatus,
     result: u32,
-
+    destination: u8,
 }
