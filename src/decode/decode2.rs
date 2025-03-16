@@ -68,10 +68,10 @@ pub fn decode2(i: I) -> Vec<I> {
                 if bit_as_bool(i.rl as u32, r) {
                     vec.push(I {
                         it: IT::STRImm,
-                        rt: target,
+                        rt: r as u8,
                         immu: sp_offset,
                         imms: 0,
-                        rn: r as u8,
+                        rn: target,
                         rd: 0,
                         rl: 0,
                         rm: 0,
