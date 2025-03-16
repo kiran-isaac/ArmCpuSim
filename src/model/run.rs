@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use crate::*;
 
 #[derive(Clone, Copy)]
@@ -26,6 +27,8 @@ pub struct Runner {
     state: ProcessorState,
     executor_pool: ExecutorPool,
     config: RunConfig,
+    
+    instr_queue: VecDeque<(I, bool)>,
 }
 
 impl Runner {
@@ -43,6 +46,8 @@ impl Runner {
             state,
             executor_pool,
             config: *config,
+            
+            instr_queue: VecDeque::new(),
         }
     }
 
@@ -52,9 +57,16 @@ impl Runner {
             if self.state.regs.pc == 0x20 {
                 print!("");
             }
-            let instruction = self.state.mem.get_instruction(self.state.regs.pc);
-            let decoded = decode(instruction);
-            self.executor_pool.assign(decoded, is_32_bit(instruction));
+            if self.instr_queue.len() <= 4 {
+                let instruction = self.state.mem.get_instruction(self.state.regs.pc);
+                for i in decode2(decode(instruction)) {
+                    self.instr_queue.push_back((i, false));
+                }
+            } 
+            
+            let (i, i_is_32_bit) = self.instr_queue.pop_front().unwrap();
+           
+            self.executor_pool.assign(i, i_is_32_bit);
             // Run all instructions to completion
             self.executor_pool.flush(&mut self.state)
         } else {

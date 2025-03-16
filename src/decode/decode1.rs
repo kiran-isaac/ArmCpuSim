@@ -252,6 +252,11 @@ pub enum IT {
     /// Hardware can use this hint to suspend and resume multiple code threads if it supports the capability.
     /// For general hint behavior, see Hint Instructions on page A6-98.
     YIELD,
+
+    /// Not a real architectural instruction. This is to ensure that loads to PC are treated specially.
+    /// Rn is addr
+    /// immu is offset
+    LoadPc
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -313,7 +318,7 @@ pub fn decode(i: u32) -> I {
                             let rd = briz(i, 0, 2) as u8;
                             let rm = briz(i, 3, 5) as u8;
 
-                            return if imm5 == 0 {
+                            if imm5 == 0 {
                                 I {
                                     it: IT::MOVReg,
                                     immu: 0,
@@ -337,7 +342,7 @@ pub fn decode(i: u32) -> I {
                                     rl: 0,
                                     setflags: true,
                                 }
-                            };
+                            }
                         }
                         // LSR
                         0b001 => {
@@ -346,7 +351,7 @@ pub fn decode(i: u32) -> I {
                             let rd = briz(i, 0, 2) as u8;
                             let rm = briz(i, 3, 5) as u8;
 
-                            return I {
+                            I {
                                 it: IT::LSRImm,
                                 immu: imm5,
                                 imms: 0,
@@ -356,7 +361,7 @@ pub fn decode(i: u32) -> I {
                                 rt: 0,
                                 rl: 0,
                                 setflags: true,
-                            };
+                            }
                         }
                         // ASR
                         0b010 => {
@@ -437,7 +442,7 @@ pub fn decode(i: u32) -> I {
                             let rd = briz(i, 8, 10) as u8;
                             let imm8 = briz(i, 0, 7);
 
-                            return I {
+                            I {
                                 it: IT::MOVImm,
                                 immu: imm8,
                                 rd,
@@ -447,13 +452,13 @@ pub fn decode(i: u32) -> I {
                                 rl: 0,
                                 rt: 0,
                                 imms: 0,
-                            };
+                            }
                         }
                         0b101 => {
                             let rn = briz(i, 8, 10) as u8;
                             let imm8 = briz(i, 0, 7);
 
-                            return I {
+                            I {
                                 it: IT::CMPImm,
                                 rn,
                                 immu: imm8,
@@ -463,14 +468,14 @@ pub fn decode(i: u32) -> I {
                                 rt: 0,
                                 rl: 0,
                                 imms: 0,
-                            };
+                            }
                         }
                         // ADDImm (T2)
                         0b110 => {
                             let rdn = briz(i, 8, 10) as u8;
                             let imm8 = briz(i, 0, 7);
 
-                            return I {
+                            I {
                                 it: IT::ADDImm,
                                 rd: rdn,
                                 rn: rdn,
@@ -480,7 +485,7 @@ pub fn decode(i: u32) -> I {
                                 rm: 0,
                                 rt: 0,
                                 rl: 0,
-                            };
+                            }
                         }
                         // SUBImm (T2)
                         0b111 => {
@@ -895,7 +900,7 @@ pub fn decode(i: u32) -> I {
                                 let m = briz(i, 8, 8);
                                 let rl = briz(i, 0, 7) + (m << 14);
 
-                                return I {
+                                I {
                                     it: IT::PUSH,
                                     rl: rl as u16,
                                     rn: 0,
@@ -905,7 +910,7 @@ pub fn decode(i: u32) -> I {
                                     immu: 0,
                                     imms: 0,
                                     setflags: false,
-                                };
+                                }
                             }
                             0b0110011 => unimplemented!("CPS"),
                             0b1010000..=0b1010111 => {

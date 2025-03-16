@@ -30,7 +30,7 @@ fn i_len_lookup(i: &I) -> usize {
 
         BL | DMB | DSB | ISB | MRS | MSR | SVC => 4,
 
-        WFI | WFE | YIELD | BKPT | SEV | UNDEFINED | UNPREDICTABLE => {
+        WFI | WFE | YIELD | BKPT | SEV | UNDEFINED | UNPREDICTABLE | LoadPc => {
             unimplemented!("timings for {:?}", i.it)
         }
     }
