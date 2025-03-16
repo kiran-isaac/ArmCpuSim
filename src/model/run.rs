@@ -28,7 +28,7 @@ pub struct Runner {
     executor_pool: ExecutorPool,
     config: RunConfig,
 
-    instr_queue: VecDeque<(I, bool)>,
+    instr_queue: VecDeque<(I, u8)>,
 }
 
 impl Runner {

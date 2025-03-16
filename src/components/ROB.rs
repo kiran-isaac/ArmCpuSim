@@ -1,5 +1,5 @@
-use crate::components::ROB::ROBEntryDest::Register;
-use crate::decode::{I, IT::*};
+use crate::components::ROB::ROBEntryDest::{AwaitingAddress, Register};
+use crate::decode::{I, IT, IT::*};
 
 enum ROBStatus {
     Pending,
@@ -17,10 +17,11 @@ struct ROB {
     queue: [Option<ROBEntry>; ROB_ENTRIES],
     head: usize,
     tail: usize,
+    op: IT,
 
     // None means not busy
     // Some(n) means ROB entry n holds the result
-    register_status: [Option<u8>; 16],
+    register_status: [Option<usize>; 16],
 }
 
 enum ROBEntryDest {
@@ -45,20 +46,78 @@ impl ROB {
             head: 0,
             tail: 0,
             register_status: [None; 16],
+            op: UNDEFINED,
         }
     }
 
     fn issue_receive(&mut self, i: &I, pc: u32) {
-        let mut dest = match i.it {
-            ADC | ADDImm | ADDReg | ADDSpImm | AND | ASRImm => ROBEntryDest::Register(i.rd),
+        let dest = match i.it {
+            // All ALU instructions that write back to rd
+            ADC | ADDImm | ADDReg | ADDSpImm | ADR | AND | BIC | EOR | MOVImm | MOVReg | MVN
+            | ORR | REVSH | REV16 | REV | RSB | SBC | ROR | SUBImm | SUBSP | SUBReg | SXTB
+            | SXTH | UXTB | UXTH => Register(i.rd),
 
-            LoadPc => ROBEntryDest::Register(15),
+            // All ALU instructions that dont write back, as well as branches and system calls
+            // Have none as a destination
+            TST | CMPImm | CMN | CMPReg | B | BL | BLX | BX | SVC => ROBEntryDest::None,
+
+            // All store instructions will be pending address calculation
+            STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => AwaitingAddress,
+
+            // All load instructions write back to rt
+            // (no clue why they differentiate between rd and rt)
+            LDRImm | LDRLit | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => {
+                Register(i.rt)
+            }
+
+            // Special case
+            LoadPc => Register(15),
+
+            _ => panic!("ROB cannot add {:?}", i.rt),
         };
 
         let new_entry = ROBEntry {
             pc,
             status: ROBStatus::Execute,
             value: 0,
+            dest,
         };
+
+        // Should be checked by caller
+        if self.is_full() {
+            panic!("ROB is full, cannot issue. Should be handled by caller to ROB::issue_recieve");
+        }
+
+        // If its gonna write to a register, add this to the register status
+        match new_entry.dest {
+            Register(rd) => self.register_status[rd as usize] = Some(self.tail),
+            _ => {}
+        }
+        self.queue[self.tail] = Some(new_entry);
+        self.increment_tail();
+    }
+
+    /// Wrapping increment
+    fn increment_tail(&mut self) {
+        self.tail += 1;
+        if self.tail == ROB_ENTRIES {
+            self.tail = 0;
+        }
+    }
+
+    /// Wrapping increment
+    fn increment_head(&mut self) {
+        self.head += 1;
+        if self.head == ROB_ENTRIES {
+            self.head = 0;
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.head == self.tail
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.head == self.tail + 1
     }
 }

@@ -1,3 +1,4 @@
+mod CPUs;
 mod binary;
 mod components;
 mod decode;
@@ -10,9 +11,8 @@ mod test;
 
 use binary::is_32_bit;
 use decode::*;
-use execute::ExecutorPool;
-use log::Tracer;
 use model::*;
+use CPUs::*;
 
 fn main() {
     // let sdl_context = sdl2::init().unwrap();
@@ -22,12 +22,6 @@ fn main() {
     //     .position_centered()
     //     .build()
     //     .unwrap();
-
-    let config = RunConfig {
-        executors: 1,
-        pipelined: false,
-    };
-
     let mut registers = Registers::new();
     let app_path = std::env::args().nth(1).unwrap();
 
@@ -42,13 +36,14 @@ fn main() {
 
     state.regs.pc = state.mem.entrypoint as u32;
 
-    let mut runner = Runner::from_config(&config, state);
+    let mut cpu = OoOSpeculative::new(
+        state,
+        "traces/trace.csv",
+        "traces/log.txt",
+        "traces/stack_dump.txt",
+    );
 
     loop {
-        let (pc, executed_count) = runner.tick();
-
-        if executed_count >= 15 {
-            print!("")
-        }
+        cpu.tick();
     }
 }

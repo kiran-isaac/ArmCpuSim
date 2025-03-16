@@ -1,4 +1,6 @@
 use super::*;
+use super::shift::ShiftType;
+use super::ALU::ALU;
 
 impl Executor {
     pub fn execute_instruction(&mut self, state: &mut ProcessorState, event_log: &mut String) {
