@@ -1,5 +1,5 @@
-use std::collections::VecDeque;
 use crate::*;
+use std::collections::VecDeque;
 
 #[derive(Clone, Copy)]
 pub struct RunConfig {
@@ -27,7 +27,7 @@ pub struct Runner {
     state: ProcessorState,
     executor_pool: ExecutorPool,
     config: RunConfig,
-    
+
     instr_queue: VecDeque<(I, bool)>,
 }
 
@@ -46,7 +46,7 @@ impl Runner {
             state,
             executor_pool,
             config: *config,
-            
+
             instr_queue: VecDeque::new(),
         }
     }
@@ -62,10 +62,10 @@ impl Runner {
                 for i in decode2(decode(instruction)) {
                     self.instr_queue.push_back((i, false));
                 }
-            } 
-            
+            }
+
             let (i, i_is_32_bit) = self.instr_queue.pop_front().unwrap();
-           
+
             self.executor_pool.assign(i, i_is_32_bit);
             // Run all instructions to completion
             self.executor_pool.flush(&mut self.state)

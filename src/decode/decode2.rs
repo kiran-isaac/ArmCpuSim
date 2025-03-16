@@ -1,6 +1,6 @@
-use crate::binary::{bit_as_bool, hamming_weight};
 /// We need to split some of the CISCy instructions into multiple instructions
 use super::*;
+use crate::binary::{bit_as_bool, hamming_weight};
 
 // enum MOps {
 //     // ALU instructions
@@ -75,7 +75,7 @@ pub fn decode2(i: I) -> Vec<I> {
                         rd: 0,
                         rl: 0,
                         rm: 0,
-                        setflags: false
+                        setflags: false,
                     });
                     sp_offset += 4
                 }
@@ -100,7 +100,7 @@ pub fn decode2(i: I) -> Vec<I> {
                         rd: 0,
                         rl: 0,
                         rm: 0,
-                        setflags: false
+                        setflags: false,
                     });
                     sp_offset += 4
                 }
@@ -115,7 +115,7 @@ pub fn decode2(i: I) -> Vec<I> {
                     rl: 0,
                     rm: 0,
                     rd: 0,
-                    setflags: false
+                    setflags: false,
                 })
             }
 
@@ -132,7 +132,9 @@ pub fn decode2(i: I) -> Vec<I> {
                 setflags: false,
             });
         }
-        _ => {vec.push(i);},
+        _ => {
+            vec.push(i);
+        }
     }
     vec
 }
