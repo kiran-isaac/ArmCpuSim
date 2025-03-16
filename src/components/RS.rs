@@ -6,7 +6,7 @@ enum RSData {
 #[derive(Hash, Eq, PartialEq, Debug, Copy, Clone)]
 struct RSId {
     section: u8,
-    location: u8
+    location: u8,
 }
 
 struct RS {

@@ -9,7 +9,6 @@ mod ALU;
 mod execute_instruction;
 mod executor_pool;
 mod shift;
-mod shifter;
 
 #[derive(Clone, Copy)]
 pub struct Executor {

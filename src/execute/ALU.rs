@@ -108,10 +108,8 @@ pub fn ALU(op: ALUOperation, n: u32, m: u32, c: bool) -> (u32, ASPRUpdate) {
             (result, ASPRUpdate::no_update())
         }
         ALUOperation::REV16 => {
-            let result = (n & 0xff) << 8
-                | (n & 0xff00) >> 8
-                | (n & 0xff0000) << 8
-                | (n & 0xff000000) >> 8;
+            let result =
+                (n & 0xff) << 8 | (n & 0xff00) >> 8 | (n & 0xff0000) << 8 | (n & 0xff000000) >> 8;
             (result, ASPRUpdate::no_update())
         }
         ALUOperation::REVSH => {
@@ -127,19 +125,11 @@ pub fn ALU(op: ALUOperation, n: u32, m: u32, c: bool) -> (u32, ASPRUpdate) {
             (result, ASPRUpdate::no_update())
         }
         ALUOperation::SXTH => {
-            let sign = if bit_as_bool(n, 15) {
-                0x80000000
-            } else {
-                0
-            };
+            let sign = if bit_as_bool(n, 15) { 0x80000000 } else { 0 };
             (sign + briz(n, 0, 14), ASPRUpdate::no_update())
         }
         ALUOperation::SXTB => {
-            let sign = if bit_as_bool(n, 7) {
-                0x80000000
-            } else {
-                0
-            };
+            let sign = if bit_as_bool(n, 7) { 0x80000000 } else { 0 };
             (sign + briz(n, 0, 6), ASPRUpdate::no_update())
         }
     }
