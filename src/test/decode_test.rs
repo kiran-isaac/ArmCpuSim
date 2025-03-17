@@ -13,7 +13,7 @@ fn adc_test() {
             rl: 0,
             immu: 0,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     );
     assert_eq!(
@@ -27,7 +27,7 @@ fn adc_test() {
             rl: 0,
             immu: 0,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     )
 }
@@ -45,7 +45,7 @@ fn addimm_test() {
             rl: 0,
             immu: 7,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     );
     assert_eq!(
@@ -59,7 +59,7 @@ fn addimm_test() {
             rl: 0,
             immu: 2,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     );
 
@@ -74,7 +74,7 @@ fn addimm_test() {
             rl: 0,
             immu: 0x64,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     );
 
@@ -89,7 +89,7 @@ fn addimm_test() {
             rl: 0,
             immu: 0x64,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     );
     assert_eq!(
@@ -103,7 +103,7 @@ fn addimm_test() {
             rl: 0,
             immu: 1,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     )
 }
@@ -138,7 +138,7 @@ fn dp_test() {
             rl: 0,
             immu: 0,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     );
     assert_eq!(
@@ -152,7 +152,7 @@ fn dp_test() {
             rl: 0,
             immu: 0,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     );
     assert_eq!(
@@ -166,7 +166,7 @@ fn dp_test() {
             rl: 0,
             immu: 0,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     );
     assert_eq!(
@@ -180,7 +180,7 @@ fn dp_test() {
             rl: 0,
             immu: 0,
             imms: 0,
-            setflags: true
+            setsflags: true
         }
     );
 }
@@ -198,7 +198,7 @@ fn bl_test() {
             rl: 0,
             immu: 0,
             imms: 122456,
-            setflags: false
+            setsflags: false
         }
     );
 
@@ -213,7 +213,7 @@ fn bl_test() {
             rl: 0,
             imms: -100000,
             immu: 0,
-            setflags: false
+            setsflags: false
         }
     );
 }

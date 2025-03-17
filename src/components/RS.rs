@@ -67,30 +67,50 @@ impl<const N: usize> RSSet<N> {
         Some(self.buf.iter().enumerate().find(|(i, rs)| !rs.busy)?.0)
     }
 
-    pub fn issue_receive(&mut self, i: &I, dest: Option<usize>, arf: &Registers, register_status: &[Option<usize>; 20]) -> Option<usize> {
-        // will return none if it cannot allocate
-        let alloc = self.get_alloc()?;
-
+    fn get_dependencies(&mut self, i: &I, arf: &Registers, register_status: &[Option<usize>; 20]) -> (RSData, RSData, RSData) {
         let mut j = RSData::None;
         let mut k = RSData::None;
         let mut l = RSData::None;
 
         // Set dependencies
         match self.issue_type {
-            IssueType::ALU | IssueType::MUL => {
-                j = Self::get_rs_data(i.rn, arf, register_status);
+            IssueType::ALU | IssueType::MUL | IssueType::Shift => {
                 match i.it {
-                    // Unary alu instructions dont require rm
-                    REV | REV16 | REVSH | SXTB | SXTH | UXTB | UXTH => {},
-                    // Binary alu instructions and mul require rm
-                    _ => {
+                    // Dual register
+                    ADC | MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | LSLReg | LSRReg |
+                    MOVReg | ORR | ROR | SBC | SUBReg => {
+                        j = Self::get_rs_data(i.rn, arf, register_status);
                         k = Self::get_rs_data(i.rm, arf, register_status);
                     }
+
+                    // register immediate (rn)
+                    ADDImm | ADDSpImm | CMPImm | SUBImm => {
+                        j = Self::get_rs_data(i.rn, arf, register_status);
+                        k = RSData::Data(i.immu);
+                    }
+
+                    // Immediate Only
+                    MOVImm => {
+                        j = RSData::Data(i.immu);
+                    }
+
+                    // Single Register (rm)
+                    MVN | REV | REV16 | REVSH | SXTB | SXTH | UXTB | UXTH => {
+                        j = Self::get_rs_data(i.rm, arf, register_status);
+                    }
+
+                    // Shift (rm is used as 1st operator not rn???)
+                    ASRImm | LSLImm | LSRImm => {
+                        j = Self::get_rs_data(i.rm, arf, register_status);
+                        k = RSData::Data(i.immu);
+                    }
+
+                    _ => panic!("{} should not have been issued here", i)
                 }
             }
             IssueType::LoadStore => {
                 match i.it {
-
+                    _ => panic!("{} should not have been issued here", i)
                 }
             }
             IssueType::Control => {
@@ -111,7 +131,7 @@ impl<const N: usize> RSSet<N> {
                                 j = Self::get_rs_data(18, arf, register_status);
                             }
                             // MI | PL
-                            0b0100 | 0b0101  => { // (true, false, false, false)
+                            0b0100 | 0b0101 => { // (true, false, false, false)
                                 j = Self::get_rs_data(16, arf, register_status);
                             },
                             // VS | VC
@@ -129,14 +149,14 @@ impl<const N: usize> RSSet<N> {
                                 k = Self::get_rs_data(19, arf, register_status);
                             },
                             // GT | LE
-                            0b1100 | 0b1101 => {// (true, true, false, true),
+                            0b1100 | 0b1101 => { // (true, true, false, true),
                                 j = Self::get_rs_data(16, arf, register_status);
                                 k = Self::get_rs_data(17, arf, register_status);
                                 l = Self::get_rs_data(19, arf, register_status);
                             }
                             // AL | NV
                             0b1110 | 0b1111 => {},
-                            _ => unreachable!(),
+                            _ => unreachable!("invalid cond code"),
                         }
                     }
                     BL | BX | BLX => {},
@@ -144,9 +164,19 @@ impl<const N: usize> RSSet<N> {
                     SVC => {
                         j = Self::get_rs_data(0, arf, register_status);
                     }
+                    _ => panic!("{} should not have been issued here", i)
                 };
             }
         }
+
+        (j, k, l)
+    }
+
+    pub fn issue_receive(&mut self, i: &I, dest: Option<usize>, arf: &Registers, register_status: &[Option<usize>; 20]) -> Option<usize> {
+        // will return none if it cannot allocate
+        let alloc = self.get_alloc()?;
+
+        let (j, k, l) = self.get_dependencies(i, arf, register_status);
 
         self[alloc] = RS {
             busy: true,

@@ -18,7 +18,7 @@ pub enum IT {
     /// This instruction adds a register value to the SP value, and writes the result to the destination register.
     // ADDSpReg,
     /// Address to Register adds an immediate value to the PC value, and writes the result to the destination register.
-    ADR,
+    // ADR, Encoded by ADDReg
     /// This instruction performs a bitwise AND of two register values, and writes the result to the destination register. It
     /// updates the condition flags based on the result
     AND,
@@ -219,7 +219,7 @@ pub enum IT {
     /// destination register. It updates the condition flags based on the result.
     SUBReg,
     /// This instruction subtracts an immediate value from the SP value, and writes the result to the destination register.
-    SUBSP,
+    // SUBSP, // encoded by subimm
     /// The Supervisor Call instruction generates a call to a system supervisor, see Exceptions on page B1-183 for more
     /// information. When the exception is escalated, a HardFault exception is caused.
     /// Use it as a call to an operating system to provide a service
@@ -270,7 +270,7 @@ pub struct I {
     pub rl: u16,
     pub immu: u32,
     pub imms: i32,
-    pub setflags: bool,
+    pub setsflags: bool,
 }
 
 impl I {
@@ -284,7 +284,7 @@ impl I {
             rl: 0,
             immu: 0,
             imms: 0,
-            setflags: false,
+            setsflags: false,
         }
     }
 
@@ -298,7 +298,7 @@ impl I {
             rl: 0,
             immu: 0,
             imms: 0,
-            setflags: false,
+            setsflags: false,
         }
     }
 }
@@ -328,7 +328,7 @@ pub fn decode(i: u32) -> I {
                                     rn: 0,
                                     rt: 0,
                                     rl: 0,
-                                    setflags: true,
+                                    setsflags: true,
                                 }
                             } else {
                                 I {
@@ -340,7 +340,7 @@ pub fn decode(i: u32) -> I {
                                     rn: 0,
                                     rt: 0,
                                     rl: 0,
-                                    setflags: true,
+                                    setsflags: true,
                                 }
                             }
                         }
@@ -360,7 +360,7 @@ pub fn decode(i: u32) -> I {
                                 rn: 0,
                                 rt: 0,
                                 rl: 0,
-                                setflags: true,
+                                setsflags: true,
                             }
                         }
                         // ASR
@@ -379,7 +379,7 @@ pub fn decode(i: u32) -> I {
                                 rn: 0,
                                 rt: 0,
                                 rl: 0,
-                                setflags: true,
+                                setsflags: true,
                             };
                         }
                         // ADDReg (T1), SUBReg (T1), ADDImm (T1), SUBImm (T1)
@@ -399,7 +399,7 @@ pub fn decode(i: u32) -> I {
                                     immu: 0,
                                     imms: 0,
                                     rl: 0,
-                                    setflags: true,
+                                    setsflags: true,
                                 },
                                 0b01 => I {
                                     it: IT::SUBReg,
@@ -410,7 +410,7 @@ pub fn decode(i: u32) -> I {
                                     immu: 0,
                                     imms: 0,
                                     rl: 0,
-                                    setflags: true,
+                                    setsflags: true,
                                 },
                                 0b10 => I {
                                     it: IT::ADDImm,
@@ -421,7 +421,7 @@ pub fn decode(i: u32) -> I {
                                     immu: rmorimm3 as u32,
                                     imms: 0,
                                     rl: 0,
-                                    setflags: true,
+                                    setsflags: true,
                                 },
                                 0b11 => I {
                                     it: IT::SUBImm,
@@ -432,7 +432,7 @@ pub fn decode(i: u32) -> I {
                                     immu: rmorimm3 as u32,
                                     imms: 0,
                                     rl: 0,
-                                    setflags: true,
+                                    setsflags: true,
                                 },
                                 _ => unreachable!("BRI issue: Invalid instr: {i}"),
                             };
@@ -446,7 +446,7 @@ pub fn decode(i: u32) -> I {
                                 it: IT::MOVImm,
                                 immu: imm8,
                                 rd,
-                                setflags: true,
+                                setsflags: true,
                                 rm: 0,
                                 rn: 0,
                                 rl: 0,
@@ -462,7 +462,7 @@ pub fn decode(i: u32) -> I {
                                 it: IT::CMPImm,
                                 rn,
                                 immu: imm8,
-                                setflags: true,
+                                setsflags: true,
                                 rd: 0,
                                 rm: 0,
                                 rt: 0,
@@ -480,7 +480,7 @@ pub fn decode(i: u32) -> I {
                                 rd: rdn,
                                 rn: rdn,
                                 immu: imm8,
-                                setflags: true,
+                                setsflags: true,
                                 imms: 0,
                                 rm: 0,
                                 rt: 0,
@@ -497,7 +497,7 @@ pub fn decode(i: u32) -> I {
                                 rd: rdn,
                                 rn: rdn,
                                 immu: imm8,
-                                setflags: true,
+                                setsflags: true,
                                 imms: 0,
                                 rm: 0,
                                 rt: 0,
@@ -540,7 +540,7 @@ pub fn decode(i: u32) -> I {
                                     imms: 0,
                                     rt: 0,
                                     rl: 0,
-                                    setflags: true,
+                                    setsflags: true,
                                 }
                             }
                             0b1010 => IT::CMPReg, // T1
@@ -556,7 +556,7 @@ pub fn decode(i: u32) -> I {
                                     imms: 0,
                                     rt: 0,
                                     rl: 0,
-                                    setflags: true,
+                                    setsflags: true,
                                 }
                             }
                             0b1110 => IT::BIC,
@@ -573,7 +573,7 @@ pub fn decode(i: u32) -> I {
                             imms: 0,
                             rt: 0,
                             rl: 0,
-                            setflags: true,
+                            setsflags: true,
                         };
                     }
                     // Special data instructions, branch and exchange
@@ -588,7 +588,7 @@ pub fn decode(i: u32) -> I {
                                 it: IT::ADDReg,
                                 rn: rdn as u8,
                                 rm: rm as u8,
-                                setflags: true,
+                                setsflags: true,
                                 rd: rdn as u8,
                                 immu: 0,
                                 imms: 0,
@@ -607,7 +607,7 @@ pub fn decode(i: u32) -> I {
                                 it: IT::CMPReg,
                                 rn: rn as u8,
                                 rm: rm as u8,
-                                setflags: true,
+                                setsflags: true,
                                 rd: 0,
                                 rt: 0,
                                 rl: 0,
@@ -626,7 +626,7 @@ pub fn decode(i: u32) -> I {
                                 it: IT::MOVReg,
                                 rd: rd as u8,
                                 rm: rm as u8,
-                                setflags: true,
+                                setsflags: true,
                                 rn: 0,
                                 rt: 0,
                                 rl: 0,
@@ -644,7 +644,7 @@ pub fn decode(i: u32) -> I {
                             return I {
                                 it: IT::BX,
                                 rm,
-                                setflags: false,
+                                setsflags: false,
                                 rd: 0,
                                 rt: 0,
                                 rn: 0,
@@ -662,7 +662,7 @@ pub fn decode(i: u32) -> I {
                             return I {
                                 it: IT::BLX,
                                 rm,
-                                setflags: false,
+                                setsflags: false,
                                 rd: 0,
                                 rn: 0,
                                 immu: 0,
@@ -687,7 +687,7 @@ pub fn decode(i: u32) -> I {
                             rn: 0,
                             rm: 0,
                             rl: 0,
-                            setflags: false,
+                            setsflags: false,
                         };
                     }
                     // Load/store single data item register
@@ -717,7 +717,7 @@ pub fn decode(i: u32) -> I {
                             rl: 0,
                             immu: 0,
                             imms: 0,
-                            setflags: false,
+                            setsflags: false,
                         };
                     }
                     // Load/store single data item immediate
@@ -751,7 +751,7 @@ pub fn decode(i: u32) -> I {
                             rl: 0,
                             immu,
                             imms: 0,
-                            setflags: false,
+                            setsflags: false,
                         }
                     }
                     _ => unreachable!("BRI issue: Invalid instr: {i}"),
@@ -789,7 +789,7 @@ pub fn decode(i: u32) -> I {
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
                         };
 
-                        return I {
+                        I {
                             it,
                             rn,
                             rt,
@@ -798,42 +798,42 @@ pub fn decode(i: u32) -> I {
                             rd: 0,
                             rl: 0,
                             imms: 0,
-                            setflags: false,
-                        };
+                            setsflags: false,
+                        }
                     }
                     // ADR
                     0b1000 | 0b1001 => {
                         let rd = briz(i, 8, 10) as u8;
                         let imm8 = briz(i, 0, 7);
 
-                        return I {
-                            it: IT::ADR,
+                        I {
+                            it: IT::ADDImm,
                             rd,
                             immu: imm8,
                             imms: 0,
                             rm: 0,
-                            rn: 0,
+                            rn: 15,
                             rt: 0,
                             rl: 0,
-                            setflags: false,
-                        };
+                            setsflags: false,
+                        }
                     }
                     // ADDSpImm (T1)
                     0b1010 | 0b1011 => {
                         let rd = briz(i, 8, 10) as u8;
                         let imm8 = briz(i, 0, 7) << 2;
 
-                        return I {
-                            it: IT::ADDSpImm,
+                        I {
+                            it: IT::ADDImm,
                             rd,
                             immu: imm8,
                             imms: 0,
                             rm: 0,
-                            rn: 0,
+                            rn: 13,
                             rt: 0,
                             rl: 0,
-                            setflags: false,
-                        };
+                            setsflags: false,
+                        }
                     }
                     // Misc
                     0b1100..=0b1111 => {
@@ -842,33 +842,33 @@ pub fn decode(i: u32) -> I {
                             0b0000000..=0b0000011 => {
                                 let imm7 = briz(i, 0, 6) << 2;
 
-                                return I {
-                                    it: IT::ADDSpImm,
+                                I {
+                                    it: IT::ADDImm,
                                     rd: 13,
                                     immu: imm7,
                                     imms: 0,
                                     rm: 0,
-                                    rn: 0,
+                                    rn: 13,
                                     rt: 0,
                                     rl: 0,
-                                    setflags: false,
-                                };
+                                    setsflags: false,
+                                }
                             }
                             // SUBSP
                             0b0000100..=0b0000111 => {
                                 let imm7 = briz(i, 0, 6) << 2;
 
-                                return I {
-                                    it: IT::SUBSP,
+                                I {
+                                    it: IT::SUBImm,
                                     rd: 13,
                                     immu: imm7,
                                     imms: 0,
                                     rm: 0,
-                                    rn: 0,
+                                    rn: 13,
                                     rt: 0,
                                     rl: 0,
-                                    setflags: false,
-                                };
+                                    setsflags: false,
+                                }
                             }
                             // SXTH, SXTB, UXTH, UXTB
                             0b0010000..=0b0010111 => {
@@ -883,17 +883,17 @@ pub fn decode(i: u32) -> I {
                                     _ => unreachable!("BRI issue: Invalid instr: {i}"),
                                 };
 
-                                return I {
+                                I {
                                     it,
                                     rd,
                                     rm,
                                     rn: 0,
                                     rt: 0,
                                     rl: 0,
-                                    setflags: false,
+                                    setsflags: false,
                                     immu: 0,
                                     imms: 0,
-                                };
+                                }
                             }
                             // Push multiple registers
                             0b0100000..=0b0101111 => {
@@ -909,7 +909,7 @@ pub fn decode(i: u32) -> I {
                                     rm: 0,
                                     immu: 0,
                                     imms: 0,
-                                    setflags: false,
+                                    setsflags: false,
                                 }
                             }
                             0b0110011 => unimplemented!("CPS"),
@@ -925,7 +925,7 @@ pub fn decode(i: u32) -> I {
                                     _ => unreachable!("BRI issue: Invalid instr: {i}"),
                                 };
 
-                                return I {
+                                I {
                                     it,
                                     rm,
                                     rd,
@@ -934,8 +934,8 @@ pub fn decode(i: u32) -> I {
                                     rl: 0,
                                     immu: 0,
                                     imms: 0,
-                                    setflags: false,
-                                };
+                                    setsflags: false,
+                                }
                             }
                             // Pop
                             0b1100000..=0b1101111 => {
@@ -951,7 +951,7 @@ pub fn decode(i: u32) -> I {
                                     rm: 0,
                                     immu: 0,
                                     imms: 0,
-                                    setflags: false,
+                                    setsflags: false,
                                 };
                             }
                             // BKPT
@@ -967,7 +967,7 @@ pub fn decode(i: u32) -> I {
                                     rt: 0,
                                     rl: 0,
                                     imms: 0,
-                                    setflags: false,
+                                    setsflags: false,
                                 };
                             }
                             0b1111000..=0b1111111 => {
@@ -983,7 +983,7 @@ pub fn decode(i: u32) -> I {
                                         rm: 0,
                                         rt: 0,
                                         rn: 0,
-                                        setflags: false,
+                                        setsflags: false,
                                     },
                                     _ => unimplemented!("Hints other than NOP"),
                                 }
@@ -1012,7 +1012,7 @@ pub fn decode(i: u32) -> I {
                             rt: 0,
                             immu: 0,
                             imms: 0,
-                            setflags: false,
+                            setsflags: false,
                         };
                     }
                     // LDM
@@ -1029,7 +1029,7 @@ pub fn decode(i: u32) -> I {
                             rt: 0,
                             immu: 0,
                             imms: 0,
-                            setflags: false,
+                            setsflags: false,
                         };
                     }
                     // Conditional Branch, UDF and SVC
@@ -1064,7 +1064,7 @@ pub fn decode(i: u32) -> I {
                                             rl: 0,
                                             rm: 0,
                                             immu: 0,
-                                            setflags: false,
+                                            setsflags: false,
                                         }
                                     }
                                     0b1111 => I {
@@ -1076,7 +1076,7 @@ pub fn decode(i: u32) -> I {
                                         rl: 0,
                                         rm: 0,
                                         imms: 0,
-                                        setflags: false,
+                                        setsflags: false,
                                     },
                                     _ => unreachable!("BRI issue: Invalid instr: {i}"),
                                 }
@@ -1107,7 +1107,7 @@ pub fn decode(i: u32) -> I {
                             rl: 0,
                             rm: 0,
                             immu: 0,
-                            setflags: false,
+                            setsflags: false,
                         };
                     }
                     _ => panic!("Invalid instr: {i}"),
@@ -1166,7 +1166,7 @@ pub fn decode(i: u32) -> I {
                                 rl: 0,
                                 immu: 0,
                                 imms: 0,
-                                setflags: false,
+                                setsflags: false,
                             }
                         }
                         // BL
@@ -1201,7 +1201,7 @@ pub fn decode(i: u32) -> I {
                                 rt: 0,
                                 rl: 0,
                                 immu: 0,
-                                setflags: false,
+                                setsflags: false,
                             }
                         }
                         _ => panic!("Invalid instr: {i}"),

@@ -53,15 +53,15 @@ pub fn decode2(i: I) -> Vec<I> {
             } as u8;
             // SP subtraction
             vec.push(I {
-                it: IT::SUBSP,
+                it: IT::SUBImm,
                 rd: target,
                 immu: n << 2,
                 imms: 0,
                 rm: 0,
-                rn: 0,
+                rn: 13,
                 rt: 0,
                 rl: 0,
-                setflags: false,
+                setsflags: false,
             });
             let mut sp_offset = 0;
             for r in 0..15 {
@@ -75,7 +75,7 @@ pub fn decode2(i: I) -> Vec<I> {
                         rd: 0,
                         rl: 0,
                         rm: 0,
-                        setflags: false,
+                        setsflags: false,
                     });
                     sp_offset += 4
                 }
@@ -100,7 +100,7 @@ pub fn decode2(i: I) -> Vec<I> {
                         rd: 0,
                         rl: 0,
                         rm: 0,
-                        setflags: false,
+                        setsflags: false,
                     });
                     sp_offset += 4
                 }
@@ -115,7 +115,7 @@ pub fn decode2(i: I) -> Vec<I> {
                     rl: 0,
                     rm: 0,
                     rd: 0,
-                    setflags: false,
+                    setsflags: false,
                 })
             }
 
@@ -129,7 +129,7 @@ pub fn decode2(i: I) -> Vec<I> {
                 rn: 0,
                 rt: 0,
                 rl: 0,
-                setflags: false,
+                setsflags: false,
             });
         }
         _ => {
@@ -154,7 +154,7 @@ mod decode2_test {
             rm: 0,
             immu: 0,
             imms: 0,
-            setflags: false,
+            setsflags: false,
         };
         println!("{:?}", decode2(i));
     }
@@ -170,7 +170,7 @@ mod decode2_test {
             rm: 0,
             immu: 0,
             imms: 0,
-            setflags: false,
+            setsflags: false,
         };
         println!("{:?}", decode2(i));
     }

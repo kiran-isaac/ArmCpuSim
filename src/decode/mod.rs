@@ -18,10 +18,10 @@ use IT::*;
 
 pub fn get_issue_type(it: IT) -> (IssueType, writesback) {
     match it {
-        ADC | ADDImm | ADDReg | ADDSpImm | ADR | AND | BIC
+        ADC | ADDImm | ADDReg | ADDSpImm | AND | BIC
         | CMN | CMPImm | CMPReg | EOR | MOVImm | MOVReg | MVN
         | ORR | REVSH | REV16 | REV | RSB | SBC | ROR | SUBImm
-        | SUBSP | SUBReg | SXTB | SXTH | UXTB | UXTH | TST => IssueType::ALU,
+        | SUBReg | SXTB | SXTH | UXTB | UXTH | TST => IssueType::ALU,
 
         MUL => IssueType::MUL,
 

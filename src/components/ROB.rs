@@ -55,9 +55,9 @@ impl ROB {
     pub fn issue_receive(&mut self, i: &I, pc: u32) {
         let rob_dest = match i.it {
             // All ALU instructions that write back to rd, and update CSPR
-            ADC | ADDImm | ADDReg | ADDSpImm | ADR | AND | BIC | EOR | MOVImm | MOVReg | MVN
-            | ORR | REVSH | REV16 | REV | RSB | SBC | ROR | SUBImm | SUBSP | SUBReg | SXTB
-            | SXTH | UXTB | UXTH => Register(i.rd, i.setflags),
+            ADC | ADDImm | ADDReg | ADDSpImm | AND | BIC | EOR | MOVImm | MOVReg | MVN
+            | ORR | REVSH | REV16 | REV | RSB | SBC | ROR | SUBImm  | SUBReg | SXTB
+            | SXTH | UXTB | UXTH => Register(i.rd, i.setsflags),
 
             // All ALU instructions that dont write back, as well as branches and system calls
             // Have none as a destination
