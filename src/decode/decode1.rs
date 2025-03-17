@@ -16,7 +16,7 @@ pub enum IT {
     /// This instruction adds an immediate value to the SP value, and writes the result to the destination register.
     ADDSpImm,
     /// This instruction adds a register value to the SP value, and writes the result to the destination register.
-    // ADDSpReg, This instruction is encoded by ADDReg
+    // ADDSpReg,
     /// Address to Register adds an immediate value to the PC value, and writes the result to the destination register.
     ADR,
     /// This instruction performs a bitwise AND of two register values, and writes the result to the destination register. It

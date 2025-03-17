@@ -4,19 +4,19 @@ mod decode2;
 pub use decode1::*;
 pub use decode2::*;
 
+#[derive(Eq, PartialEq, Copy, Clone)]
 pub enum IssueType {
     ALU,
     Shift,
     MUL,
-    Load,
-    Store,
+    LoadStore,
     /// Writing to PC, branching, system calls
     Control,
 }
 
 use IT::*;
 
-pub fn get_issue_type(it: IT) -> IssueType {
+pub fn get_issue_type(it: IT) -> (IssueType, writesback) {
     match it {
         ADC | ADDImm | ADDReg | ADDSpImm | ADR | AND | BIC
         | CMN | CMPImm | CMPReg | EOR | MOVImm | MOVReg | MVN
@@ -27,9 +27,7 @@ pub fn get_issue_type(it: IT) -> IssueType {
 
         B | LoadPc | BL | BLX | BX | SVC => IssueType::Control,
 
-        STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => IssueType::Store,
-
-        LDRImm | LDRLit | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => IssueType::Load,
+        STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg | LDRImm | LDRLit | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => IssueType::LoadStore,
 
         ASRImm | ASRReg | LSLImm | LSRImm | LSRReg | LSLReg => IssueType::Shift,
 

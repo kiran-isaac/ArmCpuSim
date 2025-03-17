@@ -1,5 +1,6 @@
 use crate::components::ROB::ROBEntryDest::{AwaitingAddress, Register};
 use crate::decode::{I, IT, IT::*};
+use crate::model::ASPR;
 
 enum ROBStatus {
     Pending,
@@ -20,16 +21,17 @@ pub struct ROB {
     op: IT,
 
     // None means not busy
-    // Some(n) means ROB entry n holds the result
-    register_status: [Option<usize>; 16],
+    // Some(n) means ROB entry n holds the result. 16 arch registers, then N Z C V
+    pub register_status: [Option<usize>; 20],
 }
 
 enum ROBEntryDest {
-    // Discards results. Only for CMP, CMN etc
     None,
     AwaitingAddress,
     Address(usize),
-    Register(u8),
+
+    /// Boolean for if it updates cspr
+    Register(u8, bool),
 }
 
 pub struct ROBEntry {
@@ -45,17 +47,17 @@ impl ROB {
             queue: [const { None }; ROB_ENTRIES],
             head: 0,
             tail: 0,
-            register_status: [None; 16],
+            register_status: [None; 20],
             op: UNDEFINED,
         }
     }
 
-    fn issue_receive(&mut self, i: &I, pc: u32) {
-        let dest = match i.it {
-            // All ALU instructions that write back to rd
+    pub fn issue_receive(&mut self, i: &I, pc: u32) {
+        let rob_dest = match i.it {
+            // All ALU instructions that write back to rd, and update CSPR
             ADC | ADDImm | ADDReg | ADDSpImm | ADR | AND | BIC | EOR | MOVImm | MOVReg | MVN
             | ORR | REVSH | REV16 | REV | RSB | SBC | ROR | SUBImm | SUBSP | SUBReg | SXTB
-            | SXTH | UXTB | UXTH => Register(i.rd),
+            | SXTH | UXTB | UXTH => Register(i.rd, i.setflags),
 
             // All ALU instructions that dont write back, as well as branches and system calls
             // Have none as a destination
@@ -64,14 +66,14 @@ impl ROB {
             // All store instructions will be pending address calculation
             STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => AwaitingAddress,
 
-            // All load instructions write back to rt
+            // All load instructions write back to rt, and do not update CSPR
             // (no clue why they differentiate between rd and rt)
             LDRImm | LDRLit | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => {
-                Register(i.rt)
+                Register(i.rt, false)
             }
 
             // Special case
-            LoadPc => Register(15),
+            LoadPc => Register(15, false),
 
             _ => panic!("ROB cannot add {:?}", i.rt),
         };
@@ -80,7 +82,7 @@ impl ROB {
             pc,
             status: ROBStatus::Execute,
             value: 0,
-            dest,
+            dest: rob_dest,
         };
 
         // Should be checked by caller
