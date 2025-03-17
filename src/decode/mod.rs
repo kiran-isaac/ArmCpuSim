@@ -4,7 +4,7 @@ mod decode2;
 pub use decode1::*;
 pub use decode2::*;
 
-#[derive(Eq, PartialEq, Copy, Clone)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum IssueType {
     ALU,
     Shift,
