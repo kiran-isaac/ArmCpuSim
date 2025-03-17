@@ -70,14 +70,40 @@ impl CPU for OoOSpeculative {
         // Issue
         if !self.rob.is_full() && self.iq.len() > 0 {
             let iqe = self.iq.pop_front().unwrap();
-            self.rob.issue_receive(&iqe.i, iqe.pc);
+            let dest = self.rob.issue_receive(&iqe.i, iqe.pc);
 
             match get_issue_type(iqe.i.it.clone()) {
-                IssueType::ALU => self.rs_alu.issue_receive(&iqe.i, dest, &self.state.regs, &self.rob.register_status),
-                IssueType::MUL => self.rs_mul.issue_receive(&self.state.regs, &self.rob.register_status),
-                IssueType::LoadStore => self.rs_ls.issue_receive(&self.state.regs, &self.rob.register_status),
-                IssueType::Control => self.rs_control.issue_receive(&self.state.regs, &self.rob.register_status),
-                _ => unimplemented!("where to put shift")
+                IssueType::ALU => self.rs_alu.issue_receive(
+                    &iqe.i,
+                    dest,
+                    &self.state.regs,
+                    &self.rob.register_status,
+                ),
+                IssueType::MUL => self
+                    .rs_mul
+                    .issue_receive(
+                        &iqe.i,
+                        dest,
+                        &self.state.regs,
+                        &self.rob.register_status,
+                    ),
+                IssueType::LoadStore => self
+                    .rs_ls
+                    .issue_receive(
+                        &iqe.i,
+                        dest,
+                        &self.state.regs,
+                        &self.rob.register_status,
+                    ),
+                IssueType::Control => self
+                    .rs_control
+                    .issue_receive(
+                        &iqe.i,
+                        dest,
+                        &self.state.regs,
+                        &self.rob.register_status,
+                    ),
+                _ => unimplemented!("where to put shift"),
             };
         }
 
@@ -94,10 +120,17 @@ impl CPU for OoOSpeculative {
                 for (i, mop) in i_as_mops.into_iter().enumerate() {
                     // Only increment PC if this is the last MOP in the stream
                     if i < mops_len - 1 {
-                        self.iq.push_back(InstructionQueueEntry { i: mop, pc, pc_increment: 0 });
+                        self.iq.push_back(InstructionQueueEntry {
+                            i: mop,
+                            pc,
+                            pc_increment: 0,
+                        });
                     } else {
-                        self.iq
-                            .push_back(InstructionQueueEntry { i: mop, pc, pc_increment });
+                        self.iq.push_back(InstructionQueueEntry {
+                            i: mop,
+                            pc,
+                            pc_increment,
+                        });
                     }
                 }
 
@@ -110,7 +143,10 @@ impl CPU for OoOSpeculative {
         // FETCH
         if self.fb.is_none() {
             let fetched = self.state.mem.get_instruction(self.fetch_pc);
-            self.fb = Some(FetchBufferEntry { i: fetched, pc: self.fetch_pc });
+            self.fb = Some(FetchBufferEntry {
+                i: fetched,
+                pc: self.fetch_pc,
+            });
             self.fetch_pc += if is_32_bit(fetched) { 4 } else { 2 };
         }
     }

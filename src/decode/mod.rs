@@ -16,7 +16,7 @@ pub enum IssueType {
 
 use IT::*;
 
-pub fn get_issue_type(it: IT) -> (IssueType, writesback) {
+pub fn get_issue_type(it: IT) -> (IssueType) {
     match it {
         ADC | ADDImm | ADDReg | ADDSpImm | AND | BIC
         | CMN | CMPImm | CMPReg | EOR | MOVImm | MOVReg | MVN
