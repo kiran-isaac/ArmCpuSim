@@ -1,7 +1,7 @@
 mod ooo_speculative;
 
-use crate::components::{ROB, RS};
-use crate::decode::{decode, decode2, get_issue_type, I, IT, IssueType};
+use crate::components::{ROB::*, RS};
+use crate::decode::{decode, decode2, get_issue_type, IssueType, I, IT};
 use crate::log::Tracer;
 use crate::model::{Memory, ProcessorState, Registers};
 pub use ooo_speculative::OoOSpeculative;

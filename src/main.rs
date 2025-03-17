@@ -8,11 +8,12 @@ mod model;
 mod system;
 #[cfg(test)]
 mod test;
-
 use binary::is_32_bit;
 use decode::*;
 use model::*;
 use CPUs::*;
+
+extern crate circular_buffer;
 
 fn main() {
     // let sdl_context = sdl2::init().unwrap();

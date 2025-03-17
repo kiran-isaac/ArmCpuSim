@@ -7,6 +7,7 @@ name = "aca"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "circular-buffer",
  "elf",
  "log",
  "sdl2",
@@ -73,6 +74,12 @@ dependencies = [
  "wasm-bindgen",
  "windows-targets",
 ]
+
+[[package]]
+name = "circular-buffer"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23bdce1da528cadbac4654b5632bfcd8c6c63e25b1d42cea919a95958790b51d"
 
 [[package]]
 name = "core-foundation-sys"

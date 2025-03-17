@@ -13,8 +13,8 @@ enum ROBStatus {
 
 const ROB_ENTRIES: usize = 64;
 
-struct ROB {
-    queue: [Option<ROBEntry>; ROB_ENTRIES],
+pub struct ROB {
+    queue: circular_buffer,
     head: usize,
     tail: usize,
     op: IT,
@@ -32,7 +32,7 @@ enum ROBEntryDest {
     Register(u8),
 }
 
-struct ROBEntry {
+pub struct ROBEntry {
     pub pc: u32,
     pub status: ROBStatus,
     pub value: u32,
@@ -40,7 +40,7 @@ struct ROBEntry {
 }
 
 impl ROB {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             queue: [const { None }; ROB_ENTRIES],
             head: 0,
