@@ -8,14 +8,30 @@ mod model;
 mod system;
 #[cfg(test)]
 mod test;
+
+extern crate ratatui;
+
+use std::io;
+use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use binary::is_32_bit;
 use decode::*;
 use model::*;
 use CPUs::*;
 
-extern crate circular_buffer;
+fn handle_events() -> std::io::Result<bool> {
+    match event::read()? {
+        Event::Key(key) if key.kind == KeyEventKind::Press => match key.code {
+            KeyCode::Char('q') => return Ok(true),
+            // handle other key events
+            _ => {}
+        },
+        // handle other events
+        _ => {}
+    }
+    Ok(false)
+}
 
-fn main() {
+fn main() -> io::Result<()> {
     // let sdl_context = sdl2::init().unwrap();
     // let video_subsystem = sdl_context.video().unwrap();
     // let window = video_subsystem
@@ -23,6 +39,7 @@ fn main() {
     //     .position_centered()
     //     .build()
     //     .unwrap();
+    let mut terminal = ratatui::init();
     let mut registers = Registers::new();
     let app_path = std::env::args().nth(1).unwrap();
 
@@ -37,6 +54,8 @@ fn main() {
 
     state.regs.pc = state.mem.entrypoint as u32;
 
+    let mut frame = terminal.get_frame();
+
     let mut cpu = OoOSpeculative::new(
         state,
         "traces/trace.csv",
@@ -46,5 +65,29 @@ fn main() {
 
     loop {
         cpu.tick();
+        terminal.draw(|f| cpu.render(f))?;
+
+        // Wait for enter
+        loop {
+            if event::poll(std::time::Duration::from_millis(100))? {
+                match event::read()? {
+                    Event::Key(key_event) => {
+                        match key_event.code {
+                            KeyCode::Char('q') | KeyCode::Esc => {
+                                std::process::exit(0);
+                            }
+                            KeyCode::Enter => {
+                                break;
+                            }
+                            _ => {}
+                        }
+                    }
+                    Event::Resize(_, _) => {
+                        terminal.draw(|f| cpu.render(f))?;
+                    }
+                    _ => {}
+                }
+            }
+        }
     }
 }
