@@ -1,4 +1,4 @@
-mod ALU;
+pub mod ALU;
 pub mod ROB;
 pub mod RS;
 mod branch_predictor;

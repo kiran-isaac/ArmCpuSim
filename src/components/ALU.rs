@@ -34,6 +34,7 @@ pub enum ALUOperation {
     SXTH,
 }
 
+#[derive(Clone, Copy)]
 pub struct ASPRUpdate {
     pub n: Option<bool>,
     pub z: Option<bool>,
@@ -42,7 +43,7 @@ pub struct ASPRUpdate {
 }
 
 impl ASPRUpdate {
-    fn no_update() -> Self {
+    pub fn no_update() -> Self {
         ASPRUpdate {
             n: None,
             z: None,

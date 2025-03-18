@@ -1,9 +1,5 @@
 use crate::decode::{IssueType, I, IT::*};
 use crate::model::Registers;
-use ratatui::layout::Constraint::Fill;
-use ratatui::layout::Rect;
-use ratatui::prelude::{Layout, Widget};
-use ratatui::widgets::{Block, Borders, Paragraph};
 use std::fmt::Display;
 
 #[derive(Clone, Copy)]
@@ -35,7 +31,7 @@ pub struct RS {
     /// The ROB entry to write to after execution
     pub rob_dest: usize,
 
-    pub i_str: String,
+    pub i: I,
 
     setsflags: bool,
 }
@@ -49,7 +45,7 @@ impl RS {
             l: RSData::None,
             setsflags: false,
             rob_dest: 0,
-            i_str: String::new(),
+            i: I::undefined(),
         }
     }
 
@@ -67,7 +63,7 @@ impl RS {
 }
 
 pub struct RSSet {
-    pub buf: Vec<RS>,
+    pub vec: Vec<RS>,
     issue_type: IssueType,
     n: usize,
 }
@@ -76,7 +72,7 @@ impl RSSet {
     pub fn new(issue_type: IssueType, n: usize) -> RSSet {
         let vec = vec![RS::new(); n];
         RSSet {
-            buf: vec,
+            vec: vec,
             issue_type,
             n,
         }
@@ -97,7 +93,25 @@ impl RSSet {
 
     fn get_alloc(&self) -> Option<usize> {
         // get index of first one that's not empty
-        Some(self.buf.iter().enumerate().find(|(_, rs)| !rs.busy)?.0)
+        Some(self.vec.iter().enumerate().find(|(_, rs)| !rs.busy)?.0)
+    }
+
+    /// Get a ready to execute RS
+    pub fn get_ready(&self) -> Option<&RS> {
+        for entry in &self.vec {
+            if !entry.busy {
+                continue;
+            }
+
+            // Ignore this entry if any still pending results
+            match (entry.j, entry.k, entry.l) {
+                (RSData::ROB(_), _, _) | (_, RSData::ROB(_), _) | (_, _, RSData::ROB(_)) => {
+                    continue
+                }
+                _ => return Some(entry),
+            }
+        }
+        None
     }
 
     fn get_dependencies(
@@ -114,9 +128,17 @@ impl RSSet {
         match self.issue_type {
             IssueType::ALUSHIFT | IssueType::MUL => {
                 match i.it {
+                    // Dual register and carry {
+                    ADC | SBC => {
+                        j = Self::get_rs_data(i.rn, arf, register_status);
+                        k = Self::get_rs_data(i.rm, arf, register_status);
+                        // 18 is carry
+                        l = Self::get_rs_data(18, arf, register_status);
+                    }
+                    
                     // Dual register
-                    ADC | MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | LSLReg
-                    | LSRReg | MOVReg | ORR | ROR | SBC | SUBReg => {
+                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | LSLReg
+                    | LSRReg | MOVReg | ORR | ROR | SUBReg => {
                         j = Self::get_rs_data(i.rn, arf, register_status);
                         k = Self::get_rs_data(i.rm, arf, register_status);
                     }
@@ -244,13 +266,13 @@ impl RSSet {
 
         let (j, k, l) = self.get_dependencies(i, arf, register_status);
 
-        self.buf[alloc] = RS {
+        self.vec[alloc] = RS {
             busy: true,
             j,
             k,
             l,
             rob_dest: dest,
-            i_str: i.to_string(),
+            i: i.clone(),
             setsflags: i.setsflags,
         };
         Some(alloc)

@@ -11,13 +11,22 @@ use std::collections::{HashMap, VecDeque};
 use ratatui::layout::Margin;
 use ratatui::prelude::Alignment;
 use ratatui::widgets::{Borders, Padding, Paragraph};
-use ratatui::Viewport::Fixed;
 use ratatui::{
     layout::{Constraint, Layout},
-    style::{Color, Modifier, Style, Stylize},
     widgets::Block,
     Frame,
 };
+use crate::components::ALU::ASPRUpdate;
+
+const CDB_WIDTH: usize = 1;
+
+#[derive(Clone, Copy)]
+struct CDBRecord {
+    valid: bool,
+    rob_number: usize,
+    result: u32,
+    aspr_update: ASPRUpdate
+}
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug)]
 enum StallReason {
@@ -58,6 +67,8 @@ pub struct OoOSpeculative {
 
     fetch_pc: u32,
 
+    cdb: [CDBRecord; CDB_WIDTH],
+
     // Render Info
     stalls: Vec<StallReason>,
     epoch: usize,
@@ -82,6 +93,7 @@ impl CPU for OoOSpeculative {
             stalls: Vec::new(),
             epoch: 0,
             rs_current_display: IssueType::ALUSHIFT,
+            cdb: [CDBRecord {valid: false, rob_number: 0, result: 0, aspr_update: ASPRUpdate::no_update()}; CDB_WIDTH],
         }
     }
 
@@ -222,7 +234,7 @@ impl CPU for OoOSpeculative {
         ) -> Paragraph {
             Paragraph::new(
                 rs_to_display
-                    .buf
+                    .vec
                     .iter()
                     .map(|rs| {
                         if rs.busy {
@@ -249,7 +261,7 @@ impl CPU for OoOSpeculative {
         let l_para =
             make_block_from_property(rs_to_display, |rs: &RS| rs.l.to_string(), String::from("l"));
         let inst_para =
-            make_block_from_property(rs_to_display, |rs: &RS| rs.i_str.clone(), String::from("I"));
+            make_block_from_property(rs_to_display, |rs: &RS| rs.i.to_string(), String::from("I"));
 
         let index_block = Paragraph::new(
             (1..=rs_to_display.len())
@@ -282,5 +294,13 @@ impl CPU for OoOSpeculative {
 impl OoOSpeculative {
     fn stall(&mut self, reason: StallReason) {
         self.stalls.push(reason);
+    }
+    
+    fn get_cdb_issue_slot(&self) -> Option<usize> {
+        self.cdb.iter().position(|e| e.valid)
+    }
+    
+    fn wipe_cdb(&mut self) {
+        self.cdb = [CDBRecord {valid: false, rob_number: 0, result: 0, aspr_update: ASPRUpdate::no_update()}; CDB_WIDTH];
     }
 }

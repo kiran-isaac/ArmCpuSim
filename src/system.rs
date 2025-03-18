@@ -5,6 +5,7 @@ use crate::{ProcessorState, I};
 /// HALT = 0,
 /// PUTS = 1,
 /// GETS = 2,
+#[allow(unused)]
 pub fn syscall(i: &I, state: &mut ProcessorState) {
     match i.immu {
         0 => {
