@@ -114,14 +114,31 @@ impl CPU for OoOSpeculative {
         let [left_area, right_area] = horizontal.areas(main_area);
 
         frame.render_widget(Block::bordered().title("Stats"), left_area);
-        frame.render_widget(Block::bordered().title("Right"), right_area);
+        frame.render_widget(Block::bordered().title("Pipeline"), right_area);
 
         // Get the area in the boxes
         let left_area = left_area.inner(Margin { horizontal: 1, vertical: 1 });
         let right_area = right_area.inner(Margin { horizontal: 1, vertical: 1 });
+        let [fb_area, iq_area] = Layout::vertical([Length(1), Fill(1)]).areas(right_area);
+        let [epoch_area, _,  rs_area] = Layout::vertical([Length(1), Length(1), Fill(1)]).areas(left_area); 
+        // Render epoch num
+        frame.render_widget(Paragraph::new(format!("Epoch: {}", self.epoch)), epoch_area);
+        
+        let rs_str = self.rob.register_status.iter().enumerate().map(|(i, rob_entry)| match rob_entry {
+            Some(entry) => format!("{}: #{}", i, entry),
+            None => format!("{:02} : {:08X}", Registers::reg_id_to_str(i as u8), self.state.regs.get(i as u8)),
+        }).collect::<Vec<String>>().join("\n");
+        
+        frame.render_widget(Paragraph::new(format!("Register Status: \n{rs_str}")), rs_area);
 
-        let paragraph = Paragraph::new(format!("Epoch: {}", self.epoch).bold());
-        frame.render_widget(paragraph, left_area);
+        frame.render_widget(Paragraph::new(format!("Fetch Buffer: {}", match &self.fb {
+            Some(i) => format!("{:08X}", i.i),
+            None => "-".to_string(),
+        })), fb_area);
+
+        let i_strs = self.iq.iter().enumerate().map(| (i, iqe) | format!("  {}: {}", i, iqe.i)).collect::<Vec<String>>().join("\n");
+        
+        frame.render_widget(Paragraph::new(format!("IQ: \n{}", i_strs)), iq_area);
     }
 }
 

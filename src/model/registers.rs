@@ -90,7 +90,25 @@ impl Registers {
             13 => self.sp,
             14 => self.lr,
             15 => self.pc,
+            16 => self.apsr.n as u32,
+            17 => self.apsr.z as u32,
+            18 => self.apsr.c as u32,
+            19 => self.apsr.v as u32,
             _ => panic!("Invalid register index"),
+        }
+    }
+
+    pub fn reg_id_to_str(id: u8) -> String {
+        match id {
+            0..=12 => format!("{}", id),
+            13 => "SP".to_string(),
+            14 => "LR".to_string(),
+            15 => "PC".to_string(),
+            16 => "N".to_string(),
+            17 => "Z".to_string(),
+            18 => "C".to_string(),
+            19 => "V".to_string(),
+            _ => panic!("Invalid register index: {}", id),
         }
     }
 }

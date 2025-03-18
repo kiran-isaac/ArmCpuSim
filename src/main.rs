@@ -66,14 +66,20 @@ fn main() -> io::Result<()> {
     loop {
         cpu.tick();
         terminal.draw(|f| cpu.render(f))?;
-        
+
         // Wait for enter
         loop {
             if event::poll(std::time::Duration::from_millis(100))? {
                 match event::read()? {
                     Event::Key(key_event) => {
-                        if key_event.code == KeyCode::Enter {
-                            break;
+                        match key_event.code {
+                            KeyCode::Char('q') | KeyCode::Esc => {
+                                std::process::exit(0);
+                            }
+                            KeyCode::Enter => {
+                                break;
+                            }
+                            _ => {}
                         }
                     }
                     Event::Resize(_, _) => {

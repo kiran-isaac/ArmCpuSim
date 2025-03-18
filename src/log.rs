@@ -28,27 +28,17 @@ impl Tracer {
         }
     }
 
-    fn reg_id_to_str(id: u8) -> String {
-        match id {
-            0..=12 => format!("{}", id),
-            13 => "SP".to_string(),
-            14 => "LR".to_string(),
-            15 => "PC".to_string(),
-            _ => panic!("Invalid register index: {}", id),
-        }
-    }
-
     // Will log in order: IT, Rd, Rn, Rm, Rt, Rl, Immu, Imms
     fn instr_args_log(&self, i: I, new_regs: &Registers) -> String {
         format!(
             "{} {},{} {}   ,{} {},{} {},{} ,{} ,{}",
-            Self::reg_id_to_str(i.rd),
+            Registers::reg_id_to_str(i.rd),
             self.reg_change_log(i.rd, new_regs),
-            Self::reg_id_to_str(i.rn),
+            Registers::reg_id_to_str(i.rn),
             self.reg_change_log(i.rn, new_regs),
-            Self::reg_id_to_str(i.rm),
+            Registers::reg_id_to_str(i.rm),
             self.reg_change_log(i.rm, new_regs),
-            Self::reg_id_to_str(i.rt),
+            Registers::reg_id_to_str(i.rt),
             self.reg_change_log(i.rt, new_regs),
             Self::rl_to_string(i.rl),
             i.immu,
