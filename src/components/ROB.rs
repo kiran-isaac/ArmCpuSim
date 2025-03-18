@@ -43,6 +43,7 @@ enum ROBEntryDest {
 #[derive(Copy, Clone)]
 pub struct ROBEntry {
     pub pc: u32,
+    pub i: I,
     status: ROBStatus,
     pub value: u32,
     dest: ROBEntryDest,
@@ -55,6 +56,7 @@ impl ROBEntry {
             value: 0,
             status: ROBStatus::EMPTY,
             dest: ROBEntryDest::None,
+            i: I::undefined(),
         }
     }
 }
@@ -67,7 +69,7 @@ impl ROB {
             tail: 0,
             register_status: [None; 20],
             op: UNDEFINED,
-            
+
             will_issue: ROBEntry::new(),
             temp_register_status: [None; 20],
         }
@@ -107,7 +109,7 @@ impl ROB {
 
             _ => panic!("ROB cannot add {:?}", i),
         };
-        
+
         // If its gonna write to a register, add this to the register status
         self.temp_register_status = self.register_status.clone();
         match rob_dest {
@@ -152,18 +154,23 @@ impl ROB {
             }
             _ => {}
         }
-        
+
         self.will_issue = ROBEntry {
             pc,
             status: ROBStatus::Execute,
             value: 0,
+            i: i.clone(),
             dest: rob_dest,
         };
 
         // Return where it would go upon commit
         insert_point
     }
-    
+
+    pub fn get(&self, n: usize) -> &ROBEntry {
+        &self.queue[n]
+    }
+
     pub fn issue_commit(&mut self) {
         self.queue[self.tail] = self.will_issue;
         self.increment_tail();

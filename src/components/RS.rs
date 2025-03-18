@@ -1,5 +1,10 @@
 use crate::decode::{IssueType, I, IT::*};
 use crate::model::Registers;
+use ratatui::layout::Constraint::Fill;
+use ratatui::layout::Rect;
+use ratatui::prelude::{Layout, Widget};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use std::fmt::Display;
 
 #[derive(Clone, Copy)]
 pub enum RSData {
@@ -8,16 +13,29 @@ pub enum RSData {
     None,
 }
 
-#[derive(Clone, Copy)]
+impl Display for RSData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RSData::ROB(r) => write!(f, "#{:09}", r),
+            RSData::Data(r) => write!(f, "{:#010x}", r),
+            RSData::None => write!(f, "----------"),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct RS {
-    busy: bool,
+    pub busy: bool,
 
     // 3 needed as branch instructions can rely on up to 3 NZCV flags
-    j: RSData,
-    k: RSData,
-    l: RSData,
+    pub j: RSData,
+    pub k: RSData,
+    pub l: RSData,
+
     /// The ROB entry to write to after execution
-    rob_dest: usize,
+    pub rob_dest: usize,
+
+    pub i_str: String,
 
     setsflags: bool,
 }
@@ -31,6 +49,7 @@ impl RS {
             l: RSData::None,
             setsflags: false,
             rob_dest: 0,
+            i_str: String::new(),
         }
     }
 
@@ -47,23 +66,26 @@ impl RS {
     }
 }
 
-pub struct RSSet<const N: usize> {
-    buf: [RS; N],
+pub struct RSSet {
+    pub buf: Vec<RS>,
     issue_type: IssueType,
+    n: usize,
 }
 
-impl<const N: usize> RSSet<N> {
-    pub fn new(issue_type: IssueType) -> RSSet<N> {
-        let vec = [RS::new(); N];
+impl RSSet {
+    pub fn new(issue_type: IssueType, n: usize) -> RSSet {
+        let vec = vec![RS::new(); n];
         RSSet {
             buf: vec,
             issue_type,
+            n,
         }
     }
 
     pub fn len(&self) -> usize {
-        N
+        self.n
     }
+
     /// if RST shows ROB entry then this, else get data from ARF
     fn get_rs_data(rn: u8, arf: &Registers, register_status: &[Option<usize>; 20]) -> RSData {
         if let Some(rob_entry_num) = register_status[rn as usize] {
@@ -75,7 +97,7 @@ impl<const N: usize> RSSet<N> {
 
     fn get_alloc(&self) -> Option<usize> {
         // get index of first one that's not empty
-        Some(self.buf.iter().enumerate().find(|(i, rs)| !rs.busy)?.0)
+        Some(self.buf.iter().enumerate().find(|(_, rs)| !rs.busy)?.0)
     }
 
     fn get_dependencies(
@@ -90,7 +112,7 @@ impl<const N: usize> RSSet<N> {
 
         // Set dependencies
         match self.issue_type {
-            IssueType::ALU | IssueType::MUL | IssueType::Shift => {
+            IssueType::ALUSHIFT | IssueType::MUL => {
                 match i.it {
                     // Dual register
                     ADC | MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | LSLReg
@@ -121,7 +143,10 @@ impl<const N: usize> RSSet<N> {
                         k = RSData::Data(i.immu);
                     }
 
-                    _ => panic!("{:?} should not have been issued here. This is the res stations for {:?}", i, self.issue_type),
+                    _ => panic!(
+                        "{:?} should not have been issued here. This is the res stations for {:?}",
+                        i, self.issue_type
+                    ),
                 }
             }
             IssueType::LoadStore => match i.it {
@@ -196,7 +221,10 @@ impl<const N: usize> RSSet<N> {
                     SVC => {
                         j = Self::get_rs_data(0, arf, register_status);
                     }
-                    _ => panic!("{:?} should not have been issued here. This is the res stations for {:?}", i, self.issue_type),
+                    _ => panic!(
+                        "{:?} should not have been issued here. This is the res stations for {:?}",
+                        i, self.issue_type
+                    ),
                 };
             }
         }
@@ -222,6 +250,7 @@ impl<const N: usize> RSSet<N> {
             k,
             l,
             rob_dest: dest,
+            i_str: i.to_string(),
             setsflags: i.setsflags,
         };
         Some(alloc)

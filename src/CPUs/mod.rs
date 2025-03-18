@@ -13,6 +13,6 @@ pub trait CPU {
     fn new(state: ProcessorState, trace_file: &str, log_file: &str, stack_dump_file: &str) -> Self;
 
     fn tick(&mut self);
-    
+
     fn render(&self, frame: &mut Frame);
 }

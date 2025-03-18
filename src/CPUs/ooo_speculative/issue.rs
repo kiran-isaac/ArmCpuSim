@@ -14,7 +14,7 @@ impl OoOSpeculative {
             let issue_dest = get_issue_type(iqe.i.it.clone());
 
             let rs_insert = match issue_dest {
-                IssueType::ALU => self.rs_alu.issue_receive(
+                IssueType::ALUSHIFT => self.rs_alu_shift.issue_receive(
                     &iqe.i,
                     dest,
                     &self.state.regs,
@@ -33,12 +33,6 @@ impl OoOSpeculative {
                     &self.rob.register_status,
                 ),
                 IssueType::Control => self.rs_control.issue_receive(
-                    &iqe.i,
-                    dest,
-                    &self.state.regs,
-                    &self.rob.register_status,
-                ),
-                IssueType::Shift => self.rs_shift.issue_receive(
                     &iqe.i,
                     dest,
                     &self.state.regs,

@@ -1,6 +1,5 @@
 use super::*;
 
 impl OoOSpeculative {
-    pub(super) fn wb(&mut self) {
-    }
+    pub(super) fn wb(&mut self) {}
 }

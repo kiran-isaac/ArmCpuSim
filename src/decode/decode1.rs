@@ -288,7 +288,7 @@ impl I {
         }
     }
 
-    fn undefined() -> Self {
+    pub fn undefined() -> Self {
         I {
             it: IT::UNDEFINED,
             rd: 0,

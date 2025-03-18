@@ -1,5 +1,5 @@
-use std::fmt::Display;
 use super::{I, IT, IT::*};
+use std::fmt::Display;
 
 impl IT {
     fn to_string_no_type(&self) -> String {
@@ -13,24 +13,25 @@ impl IT {
 
 impl Display for I {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut str = self.it.to_string_no_type() + if self.setsflags {
-            "s "
-        } else {
-            " "
-        };
+        let mut str = self.it.to_string_no_type() + if self.setsflags { "s " } else { " " };
 
         let args = match self.it {
             // RD, RN RM register register
-            ADDReg | AND | ASRReg | BIC | EOR | LSLReg | LSRReg | ROR | MUL | ORR | SBC | SUBReg => format!("{} {} {}", self.rd, self.rn, self.rm),
+            ADDReg | AND | ASRReg | BIC | EOR | LSLReg | LSRReg | ROR | MUL | ORR | SBC
+            | SUBReg => format!("{} {} {}", self.rd, self.rn, self.rm),
 
             // RD RN immu
-            ADC | ADDImm | ADDSpImm | RSB | SUBImm => format!("{} {} #{}", self.rd, self.rn, self.immu),
+            ADC | ADDImm | ADDSpImm | RSB | SUBImm => {
+                format!("{} {} #{}", self.rd, self.rn, self.immu)
+            }
 
             // RD immu
             MOVImm => format!("{} #{}", self.rd, self.immu),
 
             // RD RM
-            MOVReg | MVN | REV | REV16 | REVSH | SXTB | SXTH | UXTB | UXTH => format!("{} {}", self.rd, self.rm),
+            MOVReg | MVN | REV | REV16 | REVSH | SXTB | SXTH | UXTB | UXTH => {
+                format!("{} {}", self.rd, self.rm)
+            }
 
             // RD RM immu
             ASRImm | LSRImm | LSLImm => format!("{} {} #{}", self.rd, self.rn, self.immu),
@@ -42,7 +43,9 @@ impl Display for I {
             LDRImm | LDRBImm | LDRHImm => format!("{} {} #{}", self.rt, self.rn, self.immu),
 
             // RT RN RM
-            LDRReg | LDRBReg | LDRHReg | LDRSH | LDRSB => format!("{} {} {}", self.rt, self.rn, self.rm),
+            LDRReg | LDRBReg | LDRHReg | LDRSH | LDRSB => {
+                format!("{} {} {}", self.rt, self.rn, self.rm)
+            }
 
             // RN RT RM
             STRBReg | STRHReg | STRReg => format!("{} {} {}", self.rn, self.rt, self.rm),
@@ -62,7 +65,7 @@ impl Display for I {
             // immu
             SVC => format!("#{}", self.immu),
 
-            _ => unimplemented!("tostring for {:?}", self.it)
+            _ => unimplemented!("tostring for {:?}", self.it),
         };
         str += args.as_str();
         write!(f, "{}", str)

@@ -20,6 +20,7 @@ pub struct Memory {
     functions: HashMap<u64, String>,
 }
 
+#[allow(unused)]
 impl Memory {
     pub fn from_elf(path: &str, regs: &mut Registers) -> Self {
         let path = PathBuf::from(path);
