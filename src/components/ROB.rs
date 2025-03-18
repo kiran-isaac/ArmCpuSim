@@ -1,6 +1,6 @@
-use std::collections::VecDeque;
 use crate::components::ROB::ROBEntryDest::{AwaitingAddress, Register};
 use crate::decode::{I, IT, IT::*};
+use std::collections::VecDeque;
 
 #[derive(Copy, Clone)]
 enum ROBStatus {
@@ -44,7 +44,6 @@ pub struct ROBEntry {
     pub dest: ROBEntryDest,
 }
 
-
 impl ROBEntry {
     fn new() -> Self {
         ROBEntry {
@@ -79,9 +78,10 @@ impl ROB {
             // All ALU instructions (+ mul) that write back to rd, and update CSPR
             ADC | ADDImm | ADDReg | ADDSpImm | AND | BIC | EOR | MOVImm | MOVReg | MVN | ORR
             | REVSH | REV16 | REV | RSB | SBC | ROR | SUBImm | SUBReg | SXTB | SXTH | UXTB
-            | UXTH | MUL | LSLImm | LSLReg | LSRReg | LSRImm | ASRReg | ASRImm => Register(i.rd, i.setsflags),
-            
-            
+            | UXTH | MUL | LSLImm | LSLReg | LSRReg | LSRImm | ASRReg | ASRImm => {
+                Register(i.rd, i.setsflags)
+            }
+
             // All ALU instructions that dont write back, as well as branches and system calls
             // Have none as a destination
             TST | CMPImm | CMN | CMPReg | B | BL | BLX | BX | SVC => ROBEntryDest::None,
@@ -117,16 +117,22 @@ impl ROB {
                     // Get what flags this updates
                     let (n, z, c, v) = match i.it {
                         // Adds and Subtracts: Sets all 4. All the add instructions pretty much
-                        ADC | ADDImm | ADDReg | CMN | CMPReg | CMPImm | SUBImm | SUBReg => (true, true, true, true),
+                        ADC | ADDImm | ADDReg | CMN | CMPReg | CMPImm | SUBImm | SUBReg => {
+                            (true, true, true, true)
+                        }
 
                         // Shifts: Sets all but v
-                        ASRImm | ASRReg | LSLReg | LSLImm | LSRImm | LSRReg | ROR  => (true, true, true, false),
+                        ASRImm | ASRReg | LSLReg | LSLImm | LSRImm | LSRReg | ROR => {
+                            (true, true, true, false)
+                        }
 
                         // Logical ops + mul: Sets n, z. Some of these say they
                         // update c in the spec but that's because the dummy shift
-                        AND | TST | BIC | MOVImm | MOVReg | MUL | MVN | EOR | ORR  => (true, true, false, false),
+                        AND | TST | BIC | MOVImm | MOVReg | MUL | MVN | EOR | ORR => {
+                            (true, true, false, false)
+                        }
 
-                        _ => panic!("{:?} shouldn't update NZCV flags", i)
+                        _ => panic!("{:?} shouldn't update NZCV flags", i),
                     };
                     // Update NZCV RS flags to point to this as the last update
                     if n {
@@ -142,7 +148,7 @@ impl ROB {
                         self.register_status[19] = Some(insert_point);
                     }
                 }
-            },
+            }
             _ => {}
         }
 

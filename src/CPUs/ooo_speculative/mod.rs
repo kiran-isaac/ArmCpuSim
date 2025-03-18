@@ -1,13 +1,28 @@
-mod fetch;
-mod decode;
-mod issue;
-mod execute;
-mod wb;
 mod commit;
+mod decode;
+mod execute;
+mod fetch;
+mod issue;
+mod stalls;
+mod wb;
 
 use super::*;
 use std::collections::VecDeque;
-use sdl2::libc::exit;
+
+use ratatui::{
+    layout::{Constraint, Layout},
+    widgets::Block,
+    Frame,
+    style::{Color, Modifier, Style, Stylize},
+};
+use ratatui::layout::Margin;
+use ratatui::Viewport::Fixed;
+use ratatui::widgets::Paragraph;
+
+enum StallReason {
+    IssueRobFull,
+    IssueRSFull,
+}
 
 struct InstructionQueueEntry {
     pub i: I,
@@ -43,6 +58,10 @@ pub struct OoOSpeculative {
     rs_control: RSSet<4>,
 
     fetch_pc: u32,
+
+    // Render Info
+    stalls: Vec<StallReason>,
+    epoch: usize,
 }
 
 impl CPU for OoOSpeculative {
@@ -60,6 +79,9 @@ impl CPU for OoOSpeculative {
             rs_mul: RSSet::new(IssueType::MUL),
             rs_control: RSSet::new(IssueType::Control),
             rs_ls: RSSet::new(IssueType::LoadStore),
+
+            stalls: Vec::new(),
+            epoch: 0,
         }
     }
 
@@ -79,5 +101,32 @@ impl CPU for OoOSpeculative {
         self.issue();
         self.decode();
         self.fetch();
+
+        self.epoch += 1;
+    }
+
+    fn render(&self, frame: &mut Frame) {
+        use Constraint::{Fill, Length, Min};
+
+        let vertical = Layout::vertical([Min(0)]);
+        let [main_area] = vertical.areas(frame.area());
+        let horizontal = Layout::horizontal([Length(20), Fill(1)]);
+        let [left_area, right_area] = horizontal.areas(main_area);
+
+        frame.render_widget(Block::bordered().title("Stats"), left_area);
+        frame.render_widget(Block::bordered().title("Right"), right_area);
+
+        // Get the area in the boxes
+        let left_area = left_area.inner(Margin { horizontal: 1, vertical: 1 });
+        let right_area = right_area.inner(Margin { horizontal: 1, vertical: 1 });
+
+        let paragraph = Paragraph::new(format!("Epoch: {}", self.epoch).bold());
+        frame.render_widget(paragraph, left_area);
+    }
+}
+
+impl OoOSpeculative {
+    fn stall(&mut self, reason: StallReason) {
+        self.stalls.push(reason);
     }
 }

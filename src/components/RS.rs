@@ -30,7 +30,7 @@ impl RS {
             k: RSData::None,
             l: RSData::None,
             setsflags: false,
-            rob_dest: 0
+            rob_dest: 0,
         }
     }
 
@@ -132,7 +132,7 @@ impl<const N: usize> RSSet<N> {
                 }
 
                 // rn + rm offset
-                STRReg | STRBReg | STRHReg | LDRReg | LDRBReg | LDRHReg | LDRSH | LDRSB  => {
+                STRReg | STRBReg | STRHReg | LDRReg | LDRBReg | LDRHReg | LDRSH | LDRSB => {
                     j = Self::get_rs_data(i.rn, arf, register_status);
                     k = Self::get_rs_data(i.rm, arf, register_status);
                 }
