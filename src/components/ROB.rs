@@ -99,16 +99,9 @@ impl ROB {
 
             _ => panic!("ROB cannot add {:?}", i.rt),
         };
-
-        let new_entry = ROBEntry {
-            pc,
-            status: ROBStatus::Execute,
-            value: 0,
-            dest: rob_dest,
-        };
-
+        
         // If its gonna write to a register, add this to the register status
-        match new_entry.dest {
+        match rob_dest {
             Register(rd, setsflags) => {
                 self.register_status[rd as usize] = Some(insert_point);
 
@@ -145,7 +138,12 @@ impl ROB {
             _ => {}
         }
 
-        self.queue[insert_point] = new_entry;
+        self.queue[insert_point] = ROBEntry {
+            pc,
+            status: ROBStatus::Execute,
+            value: 0,
+            dest: rob_dest,
+        };
         self.increment_tail();
         insert_point
     }

@@ -121,11 +121,11 @@ impl<const N: usize> RSSet<N> {
                         k = RSData::Data(i.immu);
                     }
 
-                    _ => panic!("{:?} should not have been issued here", i),
+                    _ => panic!("{:?} should not have been issued here. This is the res stations for {:?}", i, self.issue_type),
                 }
             }
             IssueType::LoadStore => match i.it {
-                _ => panic!("{:?} should not have been issued here", i),
+                _ => panic!("{:?} should not have been issued here. This is the res stations for {:?}", i, self.issue_type),
             },
             IssueType::Control => {
                 match i.it {
@@ -185,7 +185,7 @@ impl<const N: usize> RSSet<N> {
                     SVC => {
                         j = Self::get_rs_data(0, arf, register_status);
                     }
-                    _ => panic!("{:?} should not have been issued here", i),
+                    _ => panic!("{:?} should not have been issued here. This is the res stations for {:?}", i, self.issue_type),
                 };
             }
         }
