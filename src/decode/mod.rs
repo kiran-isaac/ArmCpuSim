@@ -27,7 +27,7 @@ pub fn get_issue_type(it: IT) -> (IssueType) {
 
         B | LoadPc | BL | BLX | BX | SVC => IssueType::Control,
 
-        STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg | LDRImm | LDRLit | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => IssueType::LoadStore,
+        STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg | LDRImm | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => IssueType::LoadStore,
 
         ASRImm | ASRReg | LSLImm | LSRImm | LSRReg | LSLReg => IssueType::Shift,
 

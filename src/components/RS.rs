@@ -64,7 +64,7 @@ impl<const N: usize> RSSet<N> {
     pub fn len(&self) -> usize {
         N
     }
-
+    /// if RST shows ROB entry then this, else get data from ARF
     fn get_rs_data(rn: u8, arf: &Registers, register_status: &[Option<usize>; 20]) -> RSData {
         if let Some(rob_entry_num) = register_status[rn as usize] {
             RSData::ROB(rob_entry_num as u32)
@@ -125,6 +125,17 @@ impl<const N: usize> RSSet<N> {
                 }
             }
             IssueType::LoadStore => match i.it {
+                // rn + imm offset
+                STRImm | STRBImm | STRHImm | LDRImm | LDRBImm | LDRHImm => {
+                    j = Self::get_rs_data(i.rn, arf, register_status);
+                    k = RSData::Data(i.immu);
+                }
+
+                // rn + rm offset
+                STRReg | STRBReg | STRHReg | LDRReg | LDRBReg | LDRHReg | LDRSH | LDRSB  => {
+                    j = Self::get_rs_data(i.rn, arf, register_status);
+                    k = Self::get_rs_data(i.rm, arf, register_status);
+                }
                 _ => panic!("{:?} should not have been issued here", i),
             },
             IssueType::Control => {

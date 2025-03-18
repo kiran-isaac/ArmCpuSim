@@ -79,8 +79,9 @@ impl ROB {
             // All ALU instructions (+ mul) that write back to rd, and update CSPR
             ADC | ADDImm | ADDReg | ADDSpImm | AND | BIC | EOR | MOVImm | MOVReg | MVN | ORR
             | REVSH | REV16 | REV | RSB | SBC | ROR | SUBImm | SUBReg | SXTB | SXTH | UXTB
-            | UXTH | MUL => Register(i.rd, i.setsflags),
-
+            | UXTH | MUL | LSLImm | LSLReg | LSRReg | LSRImm | ASRReg | ASRImm => Register(i.rd, i.setsflags),
+            
+            
             // All ALU instructions that dont write back, as well as branches and system calls
             // Have none as a destination
             TST | CMPImm | CMN | CMPReg | B | BL | BLX | BX | SVC => ROBEntryDest::None,
@@ -90,14 +91,14 @@ impl ROB {
 
             // All load instructions write back to rt, and do not update CSPR
             // (no clue why they differentiate between rd and rt)
-            LDRImm | LDRLit | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => {
+            LDRImm | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => {
                 Register(i.rt, false)
             }
 
             // Special case
             LoadPc => Register(15, false),
 
-            _ => panic!("ROB cannot add {:?}", i.rt),
+            _ => panic!("ROB cannot add {:?}", i),
         };
 
         let new_entry = ROBEntry {

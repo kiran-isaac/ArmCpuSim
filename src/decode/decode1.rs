@@ -91,7 +91,7 @@ pub enum IT {
     LDRImm,
     /// Load Register (literal) calculates an address from the PC value and an immediate offset, loads a word from memory,
     /// and writes it to a register. See Memory accesses on page A6-97 for information about memory accesses
-    LDRLit,
+    // LDRLit, encoded by LDRImm
     /// Load Register (register) calculates an address from a base register value and an offset register value, loads a word
     /// from memory, and writes it to a register. Offset addressing is used, see Memory accesses on page A6-97 for more
     /// information.
@@ -679,12 +679,12 @@ pub fn decode(i: u32) -> I {
                         let imm8 = briz(i, 0, 7) << 2;
 
                         return I {
-                            it: IT::LDRLit,
+                            it: IT::LDRImm,
                             rt,
                             immu: imm8,
                             imms: 0,
                             rd: 0,
-                            rn: 0,
+                            rn: 15,
                             rm: 0,
                             rl: 0,
                             setsflags: false,

@@ -103,7 +103,14 @@ impl CPU for OoOSpeculative {
                         &self.state.regs,
                         &self.rob.register_status,
                     ),
-                _ => unimplemented!("where to put shift"),
+                IssueType::Shift => self
+                    .rs_shift
+                    .issue_receive(
+                        &iqe.i,
+                        dest,
+                        &self.state.regs,
+                        &self.rob.register_status,
+                    ),
             };
         }
 
