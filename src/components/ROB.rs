@@ -25,6 +25,10 @@ pub struct ROB {
     // None means not busy
     // Some(n) means ROB entry n holds the result. 16 arch registers, then N Z C V
     pub register_status: [Option<usize>; 20],
+
+    // We don't know whether the res stations have space for this yet so put in temp buffers
+    will_issue: ROBEntry,
+    temp_register_status: [Option<usize>; 20],
 }
 
 #[derive(Copy, Clone)]
@@ -39,9 +43,9 @@ enum ROBEntryDest {
 #[derive(Copy, Clone)]
 pub struct ROBEntry {
     pub pc: u32,
-    pub status: ROBStatus,
+    status: ROBStatus,
     pub value: u32,
-    pub dest: ROBEntryDest,
+    dest: ROBEntryDest,
 }
 
 impl ROBEntry {
@@ -63,6 +67,9 @@ impl ROB {
             tail: 0,
             register_status: [None; 20],
             op: UNDEFINED,
+            
+            will_issue: ROBEntry::new(),
+            temp_register_status: [None; 20],
         }
     }
 
@@ -102,9 +109,10 @@ impl ROB {
         };
         
         // If its gonna write to a register, add this to the register status
+        self.temp_register_status = self.register_status.clone();
         match rob_dest {
             Register(rd, setsflags) => {
-                self.register_status[rd as usize] = Some(insert_point);
+                self.temp_register_status[rd as usize] = Some(insert_point);
 
                 if setsflags {
                     // Get what flags this updates
@@ -129,30 +137,36 @@ impl ROB {
                     };
                     // Update NZCV RS flags to point to this as the last update
                     if n {
-                        self.register_status[16] = Some(insert_point);
+                        self.temp_register_status[16] = Some(insert_point);
                     }
                     if z {
-                        self.register_status[17] = Some(insert_point);
+                        self.temp_register_status[17] = Some(insert_point);
                     }
                     if c {
-                        self.register_status[18] = Some(insert_point);
+                        self.temp_register_status[18] = Some(insert_point);
                     }
                     if v {
-                        self.register_status[19] = Some(insert_point);
+                        self.temp_register_status[19] = Some(insert_point);
                     }
                 }
             }
             _ => {}
         }
-
-        self.queue[insert_point] = ROBEntry {
+        
+        self.will_issue = ROBEntry {
             pc,
             status: ROBStatus::Execute,
             value: 0,
             dest: rob_dest,
         };
-        self.increment_tail();
+
+        // Return where it would go upon commit
         insert_point
+    }
+    
+    pub fn issue_commit(&mut self) {
+        self.queue[self.tail] = self.will_issue;
+        self.increment_tail();
     }
 
     /// Wrapping increment

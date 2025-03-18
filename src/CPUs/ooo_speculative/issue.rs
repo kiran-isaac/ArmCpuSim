@@ -48,6 +48,7 @@ impl OoOSpeculative {
 
             if rs_insert.is_some() {
                 self.iq.pop_front();
+                self.rob.is_full();
             } else {
                 self.stall(StallReason::IssueRSFull);
             }

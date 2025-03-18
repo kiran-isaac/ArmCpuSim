@@ -3,11 +3,10 @@ mod decode;
 mod execute;
 mod fetch;
 mod issue;
-mod stalls;
 mod wb;
 
 use super::*;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 use ratatui::{
     layout::{Constraint, Layout},
@@ -16,9 +15,11 @@ use ratatui::{
     style::{Color, Modifier, Style, Stylize},
 };
 use ratatui::layout::Margin;
+use ratatui::prelude::Alignment;
 use ratatui::Viewport::Fixed;
-use ratatui::widgets::Paragraph;
+use ratatui::widgets::{Borders, Padding, Paragraph};
 
+#[derive(PartialEq, Eq, Clone, Copy, Hash)]
 enum StallReason {
     IssueRobFull,
     IssueRSFull,
@@ -119,26 +120,40 @@ impl CPU for OoOSpeculative {
         // Get the area in the boxes
         let left_area = left_area.inner(Margin { horizontal: 1, vertical: 1 });
         let right_area = right_area.inner(Margin { horizontal: 1, vertical: 1 });
-        let [fb_area, iq_area] = Layout::vertical([Length(1), Fill(1)]).areas(right_area);
-        let [epoch_area, _,  rs_area] = Layout::vertical([Length(1), Length(1), Fill(1)]).areas(left_area); 
+        
+        let [fb_area,iq_area] = Layout::vertical([Length(3), Length(5)]).areas(right_area);
+        let [epoch_area, rs_area, stall_area] = Layout::vertical([Length(3), Length(22), Fill(1)]).areas(left_area);
+
+        let bottom_border = |name| Block::bordered()
+            .borders(Borders::BOTTOM).title(name).title_alignment(Alignment::Center).padding(Padding::left(2));
+        
         // Render epoch num
-        frame.render_widget(Paragraph::new(format!("Epoch: {}", self.epoch)), epoch_area);
+        frame.render_widget(Paragraph::new(format!("Epoch: {}", self.epoch)).block(bottom_border("")), epoch_area);
         
         let rs_str = self.rob.register_status.iter().enumerate().map(|(i, rob_entry)| match rob_entry {
             Some(entry) => format!("{}: #{}", i, entry),
             None => format!("{:02} : {:08X}", Registers::reg_id_to_str(i as u8), self.state.regs.get(i as u8)),
         }).collect::<Vec<String>>().join("\n");
         
-        frame.render_widget(Paragraph::new(format!("Register Status: \n{rs_str}")), rs_area);
+        frame.render_widget(Paragraph::new(format!("{rs_str}")).block(bottom_border("Register Status")), rs_area);
 
-        frame.render_widget(Paragraph::new(format!("Fetch Buffer: {}", match &self.fb {
+        frame.render_widget(Paragraph::new(format!("{}", match &self.fb {
             Some(i) => format!("{:08X}", i.i),
             None => "-".to_string(),
-        })), fb_area);
+        })).block(bottom_border("Fetch Buffer")), fb_area);
 
-        let i_strs = self.iq.iter().enumerate().map(| (i, iqe) | format!("  {}: {}", i, iqe.i)).collect::<Vec<String>>().join("\n");
-        
-        frame.render_widget(Paragraph::new(format!("IQ: \n{}", i_strs)), iq_area);
+        let i_strs = self.iq.iter().enumerate().map(| (i, iqe) | format!("{}: {}", i, iqe.i)).collect::<Vec<String>>().join("\n");
+
+        frame.render_widget(Paragraph::new(format!("{}", i_strs)).block(bottom_border("Instruction Queue")), iq_area);
+
+        let mut stall_count: HashMap<StallReason, usize> = HashMap::new();
+        for x in self.stalls.iter() {
+            *stall_count.entry(*x).or_default() += 1;
+        }
+
+        for entry in stall_count {
+            
+        }
     }
 }
 

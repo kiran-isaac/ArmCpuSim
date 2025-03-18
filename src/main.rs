@@ -66,6 +66,7 @@ fn main() -> io::Result<()> {
     loop {
         cpu.tick();
         terminal.draw(|f| cpu.render(f))?;
+        terminal.draw(|f| cpu.render(f))?;
 
         // Wait for enter
         loop {
