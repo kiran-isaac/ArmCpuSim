@@ -1,3 +1,5 @@
+use crate::components::ALU::{ASPRUpdate, CalcResult};
+
 #[allow(dead_code)]
 pub enum ShiftType {
     LSL,
@@ -12,8 +14,8 @@ pub fn ror(value: u32, shift: u8) -> u32 {
     (value >> shift) | (value << (32 - shift))
 }
 
-pub fn shift_with_carry(t: ShiftType, a: u32, b: u8, c: u8) -> (u32, bool) {
-    if b == 0 {
+pub fn shift_with_carry(t: ShiftType, a: u32, b: u8, c: u8) -> CalcResult {
+    let (result, c) = if b == 0 {
         return (a, c != 0);
     } else {
         match t {
@@ -39,6 +41,16 @@ pub fn shift_with_carry(t: ShiftType, a: u32, b: u8, c: u8) -> (u32, bool) {
                 let carry = (a & 1) != 0;
                 (result, carry)
             }
+        }
+    };
+    CalcResult {
+        delay: 1,
+        result,
+        aspr_update: ASPRUpdate {
+            n: None,
+            z: None,
+            c: Some(c),
+            v: None,
         }
     }
 }

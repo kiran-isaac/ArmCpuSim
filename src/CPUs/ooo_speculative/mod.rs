@@ -6,7 +6,7 @@ mod issue;
 mod wb;
 
 use super::*;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use ratatui::layout::Margin;
 use ratatui::prelude::Alignment;
@@ -16,7 +16,7 @@ use ratatui::{
     widgets::Block,
     Frame,
 };
-use crate::components::ALU::ASPRUpdate;
+use crate::components::ALU::{ASPRUpdate, CalcResult};
 
 const CDB_WIDTH: usize = 1;
 
@@ -68,6 +68,9 @@ pub struct OoOSpeculative {
     fetch_pc: u32,
 
     cdb: [CDBRecord; CDB_WIDTH],
+    // Holds all the simulated delays of simulated operations, and 
+    // when they should be broadcast onto CDB
+    to_broadcast: Vec<(u8, CDBRecord)>,
 
     // Render Info
     stalls: Vec<StallReason>,
@@ -93,6 +96,7 @@ impl CPU for OoOSpeculative {
             stalls: Vec::new(),
             epoch: 0,
             rs_current_display: IssueType::ALUSHIFT,
+            to_broadcast: Vec::new(),
             cdb: [CDBRecord {valid: false, rob_number: 0, result: 0, aspr_update: ASPRUpdate::no_update()}; CDB_WIDTH],
         }
     }
@@ -100,6 +104,21 @@ impl CPU for OoOSpeculative {
     fn tick(&mut self) {
         // 6 stage pipeline
         // The pipeline stages are simulated backwards to avoid instantaneous updates
+        
+        self.wipe_cdb();
+        // Broadcast stuff onto CDB that is ready in this turn
+        
+        /// TODO cdb broadcast
+        let free_slots = (0..CDB_WIDTH).into_iter().collect::<HashSet<_>>();
+        for (delay, record) in self.to_broadcast.iter_mut() {
+            let issue_slot = self.get_cdb_issue_slot();
+            if *delay == 0 {
+                
+            } else {
+                
+            }
+        }
+        
         self.commit();
         self.wb();
         self.execute();
@@ -110,6 +129,9 @@ impl CPU for OoOSpeculative {
         self.epoch += 1;
     }
 
+    
+    // -----------------------------------------------------------------
+    // Rendering stuff
     fn render(&self, frame: &mut Frame) {
         use Constraint::{Fill, Length, Min};
 
@@ -294,10 +316,6 @@ impl CPU for OoOSpeculative {
 impl OoOSpeculative {
     fn stall(&mut self, reason: StallReason) {
         self.stalls.push(reason);
-    }
-    
-    fn get_cdb_issue_slot(&self) -> Option<usize> {
-        self.cdb.iter().position(|e| e.valid)
     }
     
     fn wipe_cdb(&mut self) {

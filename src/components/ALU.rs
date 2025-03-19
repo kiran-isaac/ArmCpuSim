@@ -53,8 +53,14 @@ impl ASPRUpdate {
     }
 }
 
-pub fn ALU(op: ALUOperation, n: u32, m: u32, c: bool) -> (u32, ASPRUpdate) {
-    match op {
+pub struct CalcResult {
+    pub(crate) delay: u8,
+    pub(crate) result: u32,
+    pub(crate) aspr_update: ASPRUpdate,
+}
+
+pub fn ALU(op: ALUOperation, n: u32, m: u32, c: bool) -> CalcResult {
+    let x = match op {
         ALUOperation::ADD => {
             let (result, carry, overflow) = add_with_carry(n, m, c as u8);
             (
@@ -133,5 +139,11 @@ pub fn ALU(op: ALUOperation, n: u32, m: u32, c: bool) -> (u32, ASPRUpdate) {
             let sign = if bit_as_bool(n, 7) { 0x80000000 } else { 0 };
             (sign + briz(n, 0, 6), ASPRUpdate::no_update())
         }
+    };
+    // All ALU ops have a delay of 1
+    CalcResult {
+        delay: 1,
+        result: x.0,
+        aspr_update: x.1,
     }
 }
