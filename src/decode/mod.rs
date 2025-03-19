@@ -21,7 +21,8 @@ pub fn get_issue_type(it: IT) -> (IssueType) {
         ADC | ADDImm | ADDReg | ADDSpImm | AND | BIC
         | CMN | CMPImm | CMPReg | EOR | MOVImm | MOVReg | MVN
         | ORR | REVSH | REV16 | REV | RSB | SBC | ROR | SUBImm
-        | SUBReg | SXTB | SXTH | UXTB | UXTH | TST | ASRImm | ASRReg | LSLImm | LSRImm | LSRReg | LSLReg => IssueType::ALUSHIFT,
+        | SUBReg | SXTB | SXTH | UXTB | UXTH | TST | ASRImm | ASRReg 
+        | LSLImm | LSRImm | LSRReg | LSLReg | NOP => IssueType::ALUSHIFT,
 
         MUL => IssueType::MUL,
 

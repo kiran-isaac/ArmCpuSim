@@ -93,7 +93,7 @@ impl ROB {
 
             // All ALU instructions that dont write back, as well as branches and system calls
             // Have none as a destination
-            TST | CMPImm | CMN | CMPReg | B | BL | BLX | BX | SVC => ROBEntryDest::None,
+            TST | CMPImm | CMN | CMPReg | B | BL | BLX | BX | SVC | NOP => ROBEntryDest::None,
 
             // All store instructions will be pending address calculation
             STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => AwaitingAddress,
