@@ -21,6 +21,14 @@ pub fn briz(i: u32, low: u32, high: u32) -> u32 {
     (i >> low) & n_ones(high - low + 1)
 }
 
+pub fn unsigned_to_signed_bitcast(n: u32) -> i32 {
+    i32::from_ne_bytes(n.to_ne_bytes())
+}
+
+pub fn signed_to_unsigned_bitcast(n: i32) -> u32 {
+    u32::from_ne_bytes(n.to_ne_bytes())
+}
+
 #[inline(always)]
 pub fn bit_as_bool(i: u32, bit_index: u32) -> bool {
     (i >> bit_index) & 1 == 1

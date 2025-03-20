@@ -57,6 +57,8 @@ pub struct OoOSpeculative {
     fb: Option<FetchBufferEntry>,
     iq: VecDeque<InstructionQueueEntry>,
     rob: ROB,
+    
+    load_queue: 
 
     // Reservation stations
     rs_mul: RSSet,
@@ -105,19 +107,27 @@ impl CPU for OoOSpeculative {
         // 6 stage pipeline
         // The pipeline stages are simulated backwards to avoid instantaneous updates
         
+        // Broadcast ready stuff onto CDB
         self.wipe_cdb();
-        // Broadcast stuff onto CDB that is ready in this turn
-        
-        /// TODO cdb broadcast
-        let free_slots = (0..CDB_WIDTH).into_iter().collect::<HashSet<_>>();
+        let mut free_slots = (0..CDB_WIDTH).into_iter().collect::<HashSet<_>>();
         for (delay, record) in self.to_broadcast.iter_mut() {
-            let issue_slot = self.get_cdb_issue_slot();
+            if free_slots.is_empty() {
+                break;
+            }
             if *delay == 0 {
-                
+                let slot = free_slots.iter().next().unwrap().clone();
+                assert!(free_slots.remove(&slot));
+                self.cdb[slot] = CDBRecord {
+                    valid: true,
+                    result: record.result,
+                    aspr_update: record.aspr_update,
+                    rob_number: record.rob_number,
+                }
             } else {
-                
+                *delay -= 1;
             }
         }
+        self.to_broadcast.retain(|(delay, _)| *delay > 0);
         
         self.commit();
         self.wb();

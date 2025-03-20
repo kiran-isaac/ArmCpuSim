@@ -1,3 +1,4 @@
+use std::cmp::min;
 use crate::components::ROB::ROBEntryDest::{AwaitingAddress, Register};
 use crate::decode::{I, IT, IT::*};
 use std::collections::VecDeque;
@@ -198,5 +199,39 @@ impl ROB {
 
     pub fn is_full(&self) -> bool {
         self.head == self.tail + 1
+    }
+    
+    pub fn get_first_entry(&self, e1: usize, e2: usize) -> usize {
+        #[cfg(debug_assertions)]
+        assert!(self.head < ROB_ENTRIES);
+        
+        let mut e1s = e1 as i32 - self.head as i32;
+        let mut e2s = e2 as i32 - self.head as i32;
+        if e1s < 0 {e1s += 64};
+        if e2s < 0 {e2s += 64};
+        
+        if e1s < e2s {e1} else {e2}
+    }
+}
+
+#[cfg(test)]
+mod ROBTests {
+    use super::*;
+
+    #[test]
+    fn get_first_entry() {
+        let mut rob = ROB::new();
+        rob.head = 10;
+        
+        // if the head is at 10 then 9 is much later than 10
+        assert_eq!(rob.get_first_entry(9, 10), 10);
+        assert_eq!(rob.get_first_entry(10, 11), 10);
+        
+        rob.head = 0;
+        assert_eq!(rob.get_first_entry(0, 63), 0);
+
+        rob.head = 63;
+        assert_eq!(rob.get_first_entry(9, 10), 9);
+        assert_eq!(rob.get_first_entry(62, 0), 0);
     }
 }

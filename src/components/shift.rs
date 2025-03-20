@@ -16,7 +16,7 @@ pub fn ror(value: u32, shift: u8) -> u32 {
 
 pub fn shift_with_carry(t: ShiftType, a: u32, b: u8, c: u8) -> CalcResult {
     let (result, c) = if b == 0 {
-        return (a, c != 0);
+        (a, c != 0)
     } else {
         match t {
             ShiftType::LSL => {
