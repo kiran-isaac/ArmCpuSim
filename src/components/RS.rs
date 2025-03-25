@@ -1,6 +1,9 @@
+use std::cmp::Ordering;
+use std::collections::HashSet;
 use crate::decode::{IssueType, I, IT::*};
 use crate::model::Registers;
 use std::fmt::Display;
+use crate::components::ROB::ROB;
 
 #[derive(Clone, Copy)]
 pub enum RSData {
@@ -95,9 +98,8 @@ impl RSSet {
         // get index of first one that's not empty
         Some(self.vec.iter().enumerate().find(|(_, rs)| !rs.busy)?.0)
     }
-
-    /// Get a ready to execute RS
-    pub fn get_ready(&self) -> Option<&RS> {
+    
+    pub fn get_one_ready(&self) -> Option<&RS> {
         for entry in &self.vec {
             if !entry.busy {
                 continue;
@@ -112,6 +114,30 @@ impl RSSet {
             }
         }
         None
+    }
+
+    /// Get a ready to execute RS
+    pub fn get_all_ready(&self, rob: &ROB) -> Vec<&RS> {
+        let mut set = Vec::new();
+        for entry in &self.vec {
+            if !entry.busy {
+                continue;
+            }
+
+            // Ignore this entry if any still pending results
+            match (entry.j, entry.k, entry.l) {
+                (RSData::ROB(_), _, _) | (_, RSData::ROB(_), _) | (_, _, RSData::ROB(_)) => {
+                    continue
+                }
+                _ => set.push(entry),
+            }
+        }
+        set.sort_by(|a, b| if rob.entry_is_before(a.rob_dest, b.rob_dest) {
+            Ordering::Greater
+        } else {
+            Ordering::Less
+        });
+        set
     }
 
     fn get_dependencies(
