@@ -20,6 +20,7 @@ pub struct Memory {
     functions: HashMap<u64, String>,
 }
 
+#[derive(Debug)]
 pub enum MemError {
     SetOOB,
     LoadOOB,
@@ -225,10 +226,7 @@ impl Memory {
         }
     }
 
-    pub fn get_word(
-        &self,
-        vaddr: u32,
-    ) -> Result<u32, MemError> {
+    pub fn get_word(&self, vaddr: u32) -> Result<u32, MemError> {
         let addr = self.mm(vaddr) as usize;
         if addr >= self.memory.len() {
             Err(MemError::LoadOOB)
@@ -247,16 +245,22 @@ impl Memory {
                     self.memory[addr + 2],
                     self.memory[addr + 3],
                 ]))
-            }   
+            }
         }
     }
 
-    pub fn set_word(&mut self, vaddr: u32, value: u32, info: &str, event_log: &mut String) -> Result<(), MemError> {
+    pub fn set_word(
+        &mut self,
+        vaddr: u32,
+        value: u32,
+        info: &str,
+        event_log: &mut String,
+    ) -> Result<(), MemError> {
         let addr = self.mm(vaddr) as usize;
         if (addr as u32) < (self.flash_start + self.flash_size) {
             Err(MemError::SetRO)
         } else if addr >= self.memory.len() - 3 {
-            Err(MemError::SetOOB)        
+            Err(MemError::SetOOB)
         } else {
             let bytes = if self.is_little_endian {
                 value.to_le_bytes()
@@ -267,11 +271,17 @@ impl Memory {
             self.memory[addr + 1] = bytes[1];
             self.memory[addr + 2] = bytes[2];
             self.memory[addr + 3] = bytes[3];
-            Ok(())   
+            Ok(())
         }
     }
 
-    pub fn set_halfword(&mut self, vaddr: u32, value: u16, info: &str, event_log: &mut String) -> Result<(), MemError> {
+    pub fn set_halfword(
+        &mut self,
+        vaddr: u32,
+        value: u16,
+        info: &str,
+        event_log: &mut String,
+    ) -> Result<(), MemError> {
         let addr = self.mm(vaddr) as usize;
         if (addr as u32) < (self.flash_start + self.flash_size) {
             Err(MemError::SetRO)

@@ -43,41 +43,58 @@ impl OoOSpeculative {
         // - LQ insertion.
         // - Executing head of LQ
         // The pipeline is simulated backwards to stop instant propagation
-        
+
         if let Some(lqe_head) = self.load_queue.front() {
             if let Some(load_address) = lqe_head.address {
-                let result = match lqe_head.load_type {
-                    LDRBImm | LDRBReg => match self.state.mem.get_byte(load_address) {
-                        Ok(byte) => Ok(byte as u32),
-                        Err(e) => Err(e),
-                    },
-                    LDRHReg | LDRHImm => match self.state.mem.get_halfword(load_address) {
-                        Ok(byte) => Ok(byte as u32),
-                        Err(e) => Err(e),
-                    },
-                    LDRImm | LDRReg => self.state.mem.get_word(load_address),
-                    LDRSB => {
-                        match self.state.mem.get_byte(load_address) {
-                            Ok(byte) => Ok(briz(byte as u32, 0, 6) + (if bit_as_bool(byte as u32, 7) {
-                                0x80000000
-                            } else {
-                                0
-                            })),
-                            Err(e) => Err(e),   
-                        }
-                    },
-                    LDRSH => {
-                        match self.state.mem.get_halfword(load_address) {
-                            Ok(byte) => Ok(briz(byte as u32, 0, 14) + (if bit_as_bool(byte as u32, 15) {
+                if self.rob.load_can_go(lqe_head) {
+                    let result = match lqe_head.load_type {
+                        LDRBImm | LDRBReg => match self.state.mem.get_byte(load_address) {
+                            Ok(byte) => Ok(byte as u32),
+                            Err(e) => Err(e),
+                        },
+                        LDRHReg | LDRHImm => match self.state.mem.get_halfword(load_address) {
+                            Ok(byte) => Ok(byte as u32),
+                            Err(e) => Err(e),
+                        },
+                        LDRImm | LDRReg => self.state.mem.get_word(load_address),
+                        LDRSB => match self.state.mem.get_byte(load_address) {
+                            Ok(byte) => Ok(briz(byte as u32, 0, 6)
+                                + (if bit_as_bool(byte as u32, 7) {
                                 0x80000000
                             } else {
                                 0
                             })),
                             Err(e) => Err(e),
-                        }
-                    }
-                    _ => unreachable!()
-                };
+                        },
+                        LDRSH => match self.state.mem.get_halfword(load_address) {
+                            Ok(byte) => Ok(briz(byte as u32, 0, 14)
+                                + (if bit_as_bool(byte as u32, 15) {
+                                0x80000000
+                            } else {
+                                0
+                            })),
+                            Err(e) => Err(e),
+                        },
+                        _ => unreachable!(),
+                    };
+                    
+                    let result = match result {
+                        Ok(result) => result,
+                        Err(e) => panic!("Memory error {:?}, rs {:?}", e, rs),
+                    };
+                    
+                    // Load store has a delay of 1 cycles on top of the 1 cycle for addr calc
+                    self.to_broadcast.push((
+                        2,
+                        CDBRecord {
+                            valid: false,
+                            result,
+                            aspr_update: ASPRUpdate::no_update(),
+                            rob_number: rs.rob_dest,
+                        },
+                    ));
+                    self.num_broadcast += 1;
+                }
             }
         }
 

@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fmt::Display;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum RSData {
     ROB(u32),
     Data(u32),
@@ -22,7 +22,7 @@ impl Display for RSData {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RS {
     pub busy: bool,
 
