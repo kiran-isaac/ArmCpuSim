@@ -13,7 +13,6 @@ mod test;
 
 extern crate ratatui;
 
-use binary::is_32_bit;
 use decode::*;
 use model::*;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};

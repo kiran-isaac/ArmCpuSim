@@ -1,7 +1,7 @@
 use std::cmp::min;
 use crate::components::ROB::ROBEntryDest::{AwaitingAddress, Register};
 use crate::decode::{I, IT, IT::*};
-use std::collections::VecDeque;
+use crate::CPUs::LoadQueueEntry;
 
 #[derive(Copy, Clone)]
 enum ROBStatus {
@@ -200,17 +200,44 @@ impl ROB {
     pub fn is_full(&self) -> bool {
         self.head == self.tail + 1
     }
-    
-    pub fn get_first_entry(&self, e1: usize, e2: usize) -> usize {
+
+    /// True if e1 is first, false otherwise
+    pub fn entry_is_before(&self, e1: usize, e2: usize) -> bool {
         #[cfg(debug_assertions)]
         assert!(self.head < ROB_ENTRIES);
-        
+
         let mut e1s = e1 as i32 - self.head as i32;
         let mut e2s = e2 as i32 - self.head as i32;
         if e1s < 0 {e1s += 64};
         if e2s < 0 {e2s += 64};
-        
-        if e1s < e2s {e1} else {e2}
+
+        e1s < e2s
+    }
+    
+    pub fn load_can_go(&self, load: &LoadQueueEntry) -> bool {
+        let mut i = self.head;
+        while self.entry_is_before(i, load.rob_entry) {
+            i += 1;
+            if i >= ROB_ENTRIES {
+                i = 0
+            }
+            let thingy = self.queue[i];
+            match thingy.status {
+                ROBStatus::EMPTY => break, // we must have exceded tail?
+                _ => match thingy.dest {
+                    // If the address has not been calculated yet
+                    AwaitingAddress => return false,
+                    // If the address is within a word of this one
+                    ROBEntryDest::Address(store_addr) => {
+                        if store_addr.abs_diff(load.address) <= 4 {
+                            return false;
+                        }
+                    }
+                    _ => continue,
+                }
+            }
+        }
+        true
     }
 }
 
@@ -224,14 +251,14 @@ mod ROBTests {
         rob.head = 10;
         
         // if the head is at 10 then 9 is much later than 10
-        assert_eq!(rob.get_first_entry(9, 10), 10);
-        assert_eq!(rob.get_first_entry(10, 11), 10);
+        assert_eq!(rob.entry_is_before(9, 10), false);
+        assert_eq!(rob.entry_is_before(10, 11), true);
         
         rob.head = 0;
-        assert_eq!(rob.get_first_entry(0, 63), 0);
+        assert_eq!(rob.entry_is_before(0, 63), true);
 
         rob.head = 63;
-        assert_eq!(rob.get_first_entry(9, 10), 9);
-        assert_eq!(rob.get_first_entry(62, 0), 0);
+        assert_eq!(rob.entry_is_before(9, 10), true);
+        assert_eq!(rob.entry_is_before(62, 0), false);
     }
 }

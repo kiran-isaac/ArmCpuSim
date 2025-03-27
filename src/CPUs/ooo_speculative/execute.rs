@@ -3,15 +3,20 @@ use crate::components::ALU::{ALUOperation, CalcResult, ALU};
 use crate::components::shift::{shift_with_carry, ShiftType};
 use super::*;
 use crate::IT::*;
+use crate::model::Memory;
 
 impl OoOSpeculative {
     pub(super) fn execute(&mut self) {
-        if let Some(rs) = self.rs_alu_shift.get_ready() {
+        if let Some(rs) = self.rs_alu_shift.get_one_ready() {
             self.execute_alu_shift(&rs.clone());
         }
 
-        if let Some(rs) = self.rs_mul.get_ready() {
-            self.execute_mul(&rs.clone());
+        if let Some(rs) = self.rs_mul.get_one_ready() {
+            self.execute_alu_shift(&rs.clone());
+        }
+        
+        for rs in self.rs_ls.get_all_ready(&self.rob) {
+            
         }
     }
     
@@ -37,6 +42,10 @@ impl OoOSpeculative {
             aspr_update,
             rob_number: rs.rob_dest
         }))
+    }
+    
+    fn execute_load_store(&mut self, rs: &RS) {
+        
     }
 
     fn execute_alu_shift(&mut self, rs: &RS) {

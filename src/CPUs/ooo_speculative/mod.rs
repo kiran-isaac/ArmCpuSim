@@ -6,8 +6,10 @@ mod issue;
 mod wb;
 
 use super::*;
-use std::collections::{HashMap, HashSet, VecDeque};
-
+use crate::{
+    components::ALU::ASPRUpdate,
+    components::ROB::ROB
+};
 use ratatui::layout::Margin;
 use ratatui::prelude::Alignment;
 use ratatui::widgets::{Borders, Padding, Paragraph};
@@ -16,9 +18,10 @@ use ratatui::{
     widgets::Block,
     Frame,
 };
-use crate::components::ALU::{ASPRUpdate, CalcResult};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 const CDB_WIDTH: usize = 1;
+const LQ_SIZE: usize = 8;
 
 #[derive(Clone, Copy)]
 struct CDBRecord {
@@ -28,10 +31,17 @@ struct CDBRecord {
     aspr_update: ASPRUpdate
 }
 
+#[derive(Clone, Copy)]
+pub struct LoadQueueEntry {
+    pub address: usize,
+    pub rob_entry: usize,
+}
+
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug)]
 enum StallReason {
     IssueRobFull,
     IssueRSFull,
+    ExecuteLSQFull,
 }
 
 struct InstructionQueueEntry {
@@ -58,7 +68,7 @@ pub struct OoOSpeculative {
     iq: VecDeque<InstructionQueueEntry>,
     rob: ROB,
     
-    load_queue: 
+    load_queue: VecDeque<LoadQueueEntry>,
 
     // Reservation stations
     rs_mul: RSSet,
@@ -94,6 +104,8 @@ impl CPU for OoOSpeculative {
             rs_mul: RSSet::new(IssueType::MUL, 4),
             rs_control: RSSet::new(IssueType::Control, 4),
             rs_ls: RSSet::new(IssueType::LoadStore, 8),
+            
+            load_queue: VecDeque::with_capacity(LQ_SIZE),
 
             stalls: Vec::new(),
             epoch: 0,
