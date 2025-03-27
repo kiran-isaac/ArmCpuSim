@@ -44,16 +44,16 @@ use crate::binary::{bit_as_bool, hamming_weight};
 pub fn decode2(i: I) -> Vec<I> {
     let mut vec = Vec::new();
     match i.it {
-        IT::PUSH | IT::STMIA => {
+        PUSH | STMIA => {
             let n = hamming_weight(i.rl as u32);
             let target = match i.it {
-                IT::PUSH => 13,
-                IT::STMIA => i.rn as u32,
+                PUSH => 13,
+                STMIA => i.rn as u32,
                 _ => unreachable!(),
             } as u8;
             // SP subtraction
             vec.push(I {
-                it: IT::SUBImm,
+                it: SUBImm,
                 rd: target,
                 immu: n << 2,
                 imms: 0,
@@ -67,7 +67,7 @@ pub fn decode2(i: I) -> Vec<I> {
             for r in 0..15 {
                 if bit_as_bool(i.rl as u32, r) {
                     vec.push(I {
-                        it: IT::STRImm,
+                        it: STRImm,
                         rt: r as u8,
                         immu: sp_offset,
                         imms: 0,
@@ -81,11 +81,11 @@ pub fn decode2(i: I) -> Vec<I> {
                 }
             }
         }
-        IT::POP | IT::LDMIA => {
+        POP | LDMIA => {
             let n = hamming_weight(i.rl as u32);
             let target = match i.it {
-                IT::POP => 13,
-                IT::STMIA => i.rn as u32,
+                POP => 13,
+                LDMIA => i.rn as u32,
                 _ => unreachable!(),
             } as u8;
             let mut sp_offset = 0;
@@ -93,10 +93,10 @@ pub fn decode2(i: I) -> Vec<I> {
                 if bit_as_bool(i.rl as u32, r) {
                     vec.push(I {
                         it: IT::LDRImm,
-                        rt: target,
+                        rt: r as u8,
                         immu: sp_offset,
                         imms: 0,
-                        rn: 13,
+                        rn: target,
                         rd: 0,
                         rl: 0,
                         rm: 0,
@@ -107,10 +107,21 @@ pub fn decode2(i: I) -> Vec<I> {
             }
             if bit_as_bool(i.rl as u32, 15) {
                 vec.push(I {
-                    it: IT::LoadPc,
-                    rn: target,
-                    rt: 15,
+                    it: IT::LDRImm,
+                    rt: 9,
                     immu: sp_offset,
+                    imms: 0,
+                    rn: target,
+                    rd: 0,
+                    rl: 0,
+                    rm: 0,
+                    setsflags: false,
+                });
+                vec.push(I {
+                    it: IT::SetPC,
+                    rn: 9,
+                    rt: 15,
+                    immu: 0,
                     imms: 0,
                     rl: 0,
                     rm: 0,

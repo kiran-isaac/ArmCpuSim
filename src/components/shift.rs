@@ -51,6 +51,6 @@ pub fn shift_with_carry(t: ShiftType, a: u32, b: u8, c: u8) -> CalcResult {
             z: None,
             c: Some(c),
             v: None,
-        }
+        },
     }
 }

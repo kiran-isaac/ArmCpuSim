@@ -256,7 +256,7 @@ pub enum IT {
     /// Not a real architectural instruction. This is to ensure that loads to PC are treated specially.
     /// Rn is addr
     /// immu is offset
-    LoadPc,
+    SetPC,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]

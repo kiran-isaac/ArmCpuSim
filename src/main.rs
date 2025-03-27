@@ -19,19 +19,6 @@ use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use std::io;
 use CPUs::*;
 
-fn handle_events() -> std::io::Result<bool> {
-    match event::read()? {
-        Event::Key(key) if key.kind == KeyEventKind::Press => match key.code {
-            KeyCode::Char('q') => return Ok(true),
-            // handle other key events
-            _ => {}
-        },
-        // handle other events
-        _ => {}
-    }
-    Ok(false)
-}
-
 fn main() -> io::Result<()> {
     // let sdl_context = sdl2::init().unwrap();
     // let video_subsystem = sdl_context.video().unwrap();

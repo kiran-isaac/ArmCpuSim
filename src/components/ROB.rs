@@ -1,7 +1,7 @@
-use std::cmp::min;
 use crate::components::ROB::ROBEntryDest::{AwaitingAddress, Register};
 use crate::decode::{I, IT, IT::*};
 use crate::CPUs::LoadQueueEntry;
+use std::cmp::min;
 
 #[derive(Copy, Clone)]
 enum ROBStatus {
@@ -36,7 +36,7 @@ pub struct ROB {
 enum ROBEntryDest {
     None,
     AwaitingAddress,
-    Address(usize),
+    Address(u32),
 
     /// Boolean for if it updates cspr
     Register(u8, bool),
@@ -106,7 +106,7 @@ impl ROB {
             }
 
             // Special case
-            LoadPc => Register(15, false),
+            SetPC => Register(15, false),
 
             _ => panic!("ROB cannot add {:?}", i),
         };
@@ -164,7 +164,8 @@ impl ROB {
             dest: rob_dest,
         };
 
-        // Return where it would go upon commit
+        // Return where it would go upon issue commit
+        // Cant insert now because RS might be full
         insert_point
     }
 
@@ -174,23 +175,12 @@ impl ROB {
 
     pub fn issue_commit(&mut self) {
         self.queue[self.tail] = self.will_issue;
-        self.increment_tail();
+        self.tail = self.increment_index(self.tail);
     }
 
     /// Wrapping increment
-    fn increment_tail(&mut self) {
-        self.tail += 1;
-        if self.tail == ROB_ENTRIES {
-            self.tail = 0;
-        }
-    }
-
-    /// Wrapping increment
-    fn increment_head(&mut self) {
-        self.head += 1;
-        if self.head == ROB_ENTRIES {
-            self.head = 0;
-        }
+    fn increment_index(&self, index: usize) -> usize {
+        (index + 1) % ROB_ENTRIES
     }
 
     pub fn is_empty(&self) -> bool {
@@ -198,7 +188,7 @@ impl ROB {
     }
 
     pub fn is_full(&self) -> bool {
-        self.head == self.tail + 1
+        self.head == self.increment_index(self.tail)
     }
 
     /// True if e1 is first, false otherwise
@@ -208,13 +198,18 @@ impl ROB {
 
         let mut e1s = e1 as i32 - self.head as i32;
         let mut e2s = e2 as i32 - self.head as i32;
-        if e1s < 0 {e1s += 64};
-        if e2s < 0 {e2s += 64};
+        if e1s < 0 {
+            e1s += 64
+        };
+        if e2s < 0 {
+            e2s += 64
+        };
 
         e1s < e2s
     }
-    
+
     pub fn load_can_go(&self, load: &LoadQueueEntry) -> bool {
+        assert!(load.address.is_some());
         let mut i = self.head;
         while self.entry_is_before(i, load.rob_entry) {
             i += 1;
@@ -229,12 +224,12 @@ impl ROB {
                     AwaitingAddress => return false,
                     // If the address is within a word of this one
                     ROBEntryDest::Address(store_addr) => {
-                        if store_addr.abs_diff(load.address) <= 4 {
+                        if store_addr.abs_diff(load.address.unwrap()) <= 4 {
                             return false;
                         }
                     }
                     _ => continue,
-                }
+                },
             }
         }
         true
@@ -249,11 +244,11 @@ mod ROBTests {
     fn get_first_entry() {
         let mut rob = ROB::new();
         rob.head = 10;
-        
+
         // if the head is at 10 then 9 is much later than 10
         assert_eq!(rob.entry_is_before(9, 10), false);
         assert_eq!(rob.entry_is_before(10, 11), true);
-        
+
         rob.head = 0;
         assert_eq!(rob.entry_is_before(0, 63), true);
 

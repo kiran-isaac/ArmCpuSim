@@ -1,31 +1,115 @@
-use crate::binary::{signed_to_unsigned_bitcast, unsigned_to_signed_bitcast};
-use crate::components::ALU::{ALUOperation, CalcResult, ALU};
-use crate::components::shift::{shift_with_carry, ShiftType};
 use super::*;
-use crate::IT::*;
+use crate::binary::{bit_as_bool, briz, signed_to_unsigned_bitcast, unsigned_to_signed_bitcast};
+use crate::components::shift::{shift_with_carry, ShiftType};
+use crate::components::ALU::{ALUOperation, CalcResult, ALU};
 use crate::model::Memory;
+use crate::IT::*;
 
 impl OoOSpeculative {
     pub(super) fn execute(&mut self) {
-        if let Some(rs) = self.rs_alu_shift.get_one_ready() {
-            self.execute_alu_shift(&rs.clone());
+        if let Some(rs_index) = self.rs_alu_shift.get_one_ready() {
+            self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone());
+            self.rs_alu_shift.vec[rs_index].busy = false;
         }
 
-        if let Some(rs) = self.rs_mul.get_one_ready() {
-            self.execute_alu_shift(&rs.clone());
+        if self.num_broadcast >= CDB_WIDTH {
+            return;
         }
-        
-        for rs in self.rs_ls.get_all_ready(&self.rob) {
-            
+
+        if let Some(rs_index) = self.rs_mul.get_one_ready() {
+            self.execute_mul(&self.rs_mul.vec[rs_index].clone());
+            self.rs_mul.vec[rs_index].busy = false;
+        }
+
+        if self.num_broadcast >= CDB_WIDTH {
+            return;
+        }
+
+        if self.load_queue.len() >= LQ_SIZE - 1 {
+            if let Some(rs_index) = self.rs_ls.get_one_ready() {
+                self.execute_load_store(&self.rs_ls.vec[rs_index].clone());
+                self.rs_ls.vec[rs_index].busy = false;
+            }
+        }
+
+        if self.num_broadcast >= CDB_WIDTH {
+            return;
         }
     }
-    
+
+    fn execute_load_store(&mut self, rs: &RS) {
+        // The pipeline is
+        // - Address calc
+        // - LQ insertion.
+        // - Executing head of LQ
+        // The pipeline is simulated backwards to stop instant propagation
+        
+        if let Some(lqe_head) = self.load_queue.front() {
+            if let Some(load_address) = lqe_head.address {
+                let result = match lqe_head.load_type {
+                    LDRBImm | LDRBReg => match self.state.mem.get_byte(load_address) {
+                        Ok(byte) => Ok(byte as u32),
+                        Err(e) => Err(e),
+                    },
+                    LDRHReg | LDRHImm => match self.state.mem.get_halfword(load_address) {
+                        Ok(byte) => Ok(byte as u32),
+                        Err(e) => Err(e),
+                    },
+                    LDRImm | LDRReg => self.state.mem.get_word(load_address),
+                    LDRSB => {
+                        match self.state.mem.get_byte(load_address) {
+                            Ok(byte) => Ok(briz(byte as u32, 0, 6) + (if bit_as_bool(byte as u32, 7) {
+                                0x80000000
+                            } else {
+                                0
+                            })),
+                            Err(e) => Err(e),   
+                        }
+                    },
+                    LDRSH => {
+                        match self.state.mem.get_halfword(load_address) {
+                            Ok(byte) => Ok(briz(byte as u32, 0, 14) + (if bit_as_bool(byte as u32, 15) {
+                                0x80000000
+                            } else {
+                                0
+                            })),
+                            Err(e) => Err(e),
+                        }
+                    }
+                    _ => unreachable!()
+                };
+            }
+        }
+
+        // Update the load queue with the last calculated address
+        if let Some(address_calc_result) = self.ls_pipeline_addr_calc {
+            if let Some(lqe) = self.load_queue.back_mut() {
+                assert_eq!(lqe.address, None);
+                lqe.address = Some(address_calc_result)
+            }
+        }
+
+        let lqe = LoadQueueEntry {
+            address: None,
+            rob_entry: rs.rob_dest,
+            load_type: rs.i.it,
+        };
+
+        self.load_queue.push_back(lqe);
+
+        // Address calc
+        let j = Self::get_data(rs.j).unwrap();
+        let k = Self::get_data(rs.k).unwrap();
+
+        self.ls_pipeline_addr_calc = Some(j.wrapping_add(k))
+    }
+
     fn execute_mul(&mut self, rs: &RS) {
         let j = unsigned_to_signed_bitcast(Self::get_data(rs.j).unwrap());
         let k = unsigned_to_signed_bitcast(Self::get_data(rs.k).unwrap());
-        
+
         assert_eq!(rs.i.it, MUL);
-        
+
         let result = j * k;
         let aspr_update = ASPRUpdate {
             n: Some(result < 1),
@@ -34,18 +118,18 @@ impl OoOSpeculative {
             v: None,
         };
         let result = signed_to_unsigned_bitcast(j * k);
-        
+
         // Multiplier has a delay of 2 cycles
-        self.to_broadcast.push((2, CDBRecord {
-            valid: false,
-            result,
-            aspr_update,
-            rob_number: rs.rob_dest
-        }))
-    }
-    
-    fn execute_load_store(&mut self, rs: &RS) {
-        
+        self.to_broadcast.push((
+            2,
+            CDBRecord {
+                valid: false,
+                result,
+                aspr_update,
+                rob_number: rs.rob_dest,
+            },
+        ));
+        self.num_broadcast += 1;
     }
 
     fn execute_alu_shift(&mut self, rs: &RS) {
@@ -63,18 +147,58 @@ impl OoOSpeculative {
             // j = arg 1
             // k = arg 2
             // l = aspr carry
-            ADC => (ALU_Shift::ALU_OP(ALUOperation::ADD), j.unwrap(), k.unwrap(), l.unwrap()),
-            SBC => (ALU_Shift::ALU_OP(ALUOperation::ADD), j.unwrap(), !k.unwrap(), l.unwrap()),
+            ADC => (
+                ALU_Shift::ALU_OP(ALUOperation::ADD),
+                j.unwrap(),
+                k.unwrap(),
+                l.unwrap(),
+            ),
+            SBC => (
+                ALU_Shift::ALU_OP(ALUOperation::ADD),
+                j.unwrap(),
+                !k.unwrap(),
+                l.unwrap(),
+            ),
             // All the adds that dont require aspr c
-            ADDReg | ADDImm | ADDSpImm | CMN => (ALU_Shift::ALU_OP(ALUOperation::ADD), j.unwrap(), k.unwrap(), 0),
+            ADDReg | ADDImm | ADDSpImm | CMN => (
+                ALU_Shift::ALU_OP(ALUOperation::ADD),
+                j.unwrap(),
+                k.unwrap(),
+                0,
+            ),
 
             // All the subs that dont require aspr c
-            SUBReg | SUBImm | CMPImm | CMPReg => (ALU_Shift::ALU_OP(ALUOperation::ADD), j.unwrap(), !k.unwrap(), 1),
-            RSB => (ALU_Shift::ALU_OP(ALUOperation::ADD), !j.unwrap(), k.unwrap(), 1),
+            SUBReg | SUBImm | CMPImm | CMPReg => (
+                ALU_Shift::ALU_OP(ALUOperation::ADD),
+                j.unwrap(),
+                !k.unwrap(),
+                1,
+            ),
+            RSB => (
+                ALU_Shift::ALU_OP(ALUOperation::ADD),
+                !j.unwrap(),
+                k.unwrap(),
+                1,
+            ),
 
-            AND | TST => (ALU_Shift::ALU_OP(ALUOperation::AND), j.unwrap(), k.unwrap(), 0),
-            ORR => (ALU_Shift::ALU_OP(ALUOperation::OR), j.unwrap(), !k.unwrap(), 0),
-            EOR => (ALU_Shift::ALU_OP(ALUOperation::EOR), j.unwrap(), !k.unwrap(), 0),
+            AND | TST => (
+                ALU_Shift::ALU_OP(ALUOperation::AND),
+                j.unwrap(),
+                k.unwrap(),
+                0,
+            ),
+            ORR => (
+                ALU_Shift::ALU_OP(ALUOperation::OR),
+                j.unwrap(),
+                !k.unwrap(),
+                0,
+            ),
+            EOR => (
+                ALU_Shift::ALU_OP(ALUOperation::EOR),
+                j.unwrap(),
+                !k.unwrap(),
+                0,
+            ),
 
             // Rev (unary)
             REV => (ALU_Shift::ALU_OP(ALUOperation::REV), j.unwrap(), 0, 0),
@@ -86,10 +210,30 @@ impl OoOSpeculative {
             MVN => (ALU_Shift::ALU_OP(ALUOperation::ADD), !j.unwrap(), 0, 0),
 
             // The shifts all take ASPR C
-            ASRReg | ASRImm => (ALU_Shift::SHIFT_OP(ShiftType::ASR), j.unwrap(), k.unwrap(), l.unwrap()),
-            LSLImm | LSLReg => (ALU_Shift::SHIFT_OP(ShiftType::LSL), j.unwrap(), k.unwrap(), l.unwrap()),
-            LSRReg | LSRImm => (ALU_Shift::SHIFT_OP(ShiftType::LSR), j.unwrap(), k.unwrap(), l.unwrap()),
-            ROR => (ALU_Shift::SHIFT_OP(ShiftType::ROR), j.unwrap(), k.unwrap(), l.unwrap()),
+            ASRReg | ASRImm => (
+                ALU_Shift::SHIFT_OP(ShiftType::ASR),
+                j.unwrap(),
+                k.unwrap(),
+                l.unwrap(),
+            ),
+            LSLImm | LSLReg => (
+                ALU_Shift::SHIFT_OP(ShiftType::LSL),
+                j.unwrap(),
+                k.unwrap(),
+                l.unwrap(),
+            ),
+            LSRReg | LSRImm => (
+                ALU_Shift::SHIFT_OP(ShiftType::LSR),
+                j.unwrap(),
+                k.unwrap(),
+                l.unwrap(),
+            ),
+            ROR => (
+                ALU_Shift::SHIFT_OP(ShiftType::ROR),
+                j.unwrap(),
+                k.unwrap(),
+                l.unwrap(),
+            ),
 
             SXTB => (ALU_Shift::ALU_OP(ALUOperation::SXTB), j.unwrap(), 0, 0),
             SXTH => (ALU_Shift::ALU_OP(ALUOperation::SXTH), j.unwrap(), 0, 0),
@@ -101,19 +245,27 @@ impl OoOSpeculative {
             _ => unreachable!(),
         };
 
-        let CalcResult {delay, result, aspr_update} = match op {
+        let CalcResult {
+            delay,
+            result,
+            aspr_update,
+        } = match op {
             ALU_Shift::ALU_OP(op) => ALU(op, n, m, c != 0),
             ALU_Shift::SHIFT_OP(op) => shift_with_carry(op, n, m as u8, c as u8),
         };
         // The delay should always be 1 for this bit
         assert_eq!(delay, 1);
 
-        self.to_broadcast.push((delay, CDBRecord {
-            valid: false,
-            result,
-            aspr_update,
-            rob_number: rs.rob_dest
-        }))
+        self.to_broadcast.push((
+            delay,
+            CDBRecord {
+                valid: false,
+                result,
+                aspr_update,
+                rob_number: rs.rob_dest,
+            },
+        ));
+        self.num_broadcast += 1;
     }
 
     fn get_data(x: RSData) -> Option<u32> {

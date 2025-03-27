@@ -6,10 +6,9 @@ mod issue;
 mod wb;
 
 use super::*;
-use crate::{
-    components::ALU::ASPRUpdate,
-    components::ROB::ROB
-};
+use crate::components::ALU::CalcResult;
+use crate::decode::IT;
+use crate::{components::ALU::ASPRUpdate, components::ROB::ROB};
 use ratatui::layout::Margin;
 use ratatui::prelude::Alignment;
 use ratatui::widgets::{Borders, Padding, Paragraph};
@@ -28,13 +27,14 @@ struct CDBRecord {
     valid: bool,
     rob_number: usize,
     result: u32,
-    aspr_update: ASPRUpdate
+    aspr_update: ASPRUpdate,
 }
 
 #[derive(Clone, Copy)]
 pub struct LoadQueueEntry {
-    pub address: usize,
+    pub address: Option<u32>,
     pub rob_entry: usize,
+    pub load_type: IT,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug)]
@@ -67,7 +67,7 @@ pub struct OoOSpeculative {
     fb: Option<FetchBufferEntry>,
     iq: VecDeque<InstructionQueueEntry>,
     rob: ROB,
-    
+
     load_queue: VecDeque<LoadQueueEntry>,
 
     // Reservation stations
@@ -77,12 +77,15 @@ pub struct OoOSpeculative {
     rs_ls: RSSet,
     rs_control: RSSet,
 
+    ls_pipeline_addr_calc: Option<u32>,
+
     fetch_pc: u32,
 
     cdb: [CDBRecord; CDB_WIDTH],
-    // Holds all the simulated delays of simulated operations, and 
+    // Holds all the simulated delays of simulated operations, and
     // when they should be broadcast onto CDB
     to_broadcast: Vec<(u8, CDBRecord)>,
+    num_broadcast: usize,
 
     // Render Info
     stalls: Vec<StallReason>,
@@ -104,43 +107,49 @@ impl CPU for OoOSpeculative {
             rs_mul: RSSet::new(IssueType::MUL, 4),
             rs_control: RSSet::new(IssueType::Control, 4),
             rs_ls: RSSet::new(IssueType::LoadStore, 8),
-            
+
             load_queue: VecDeque::with_capacity(LQ_SIZE),
+            ls_pipeline_addr_calc: None,
 
             stalls: Vec::new(),
             epoch: 0,
             rs_current_display: IssueType::ALUSHIFT,
             to_broadcast: Vec::new(),
-            cdb: [CDBRecord {valid: false, rob_number: 0, result: 0, aspr_update: ASPRUpdate::no_update()}; CDB_WIDTH],
+            num_broadcast: 0,
+            cdb: [CDBRecord {
+                valid: false,
+                rob_number: 0,
+                result: 0,
+                aspr_update: ASPRUpdate::no_update(),
+            }; CDB_WIDTH],
         }
     }
 
     fn tick(&mut self) {
         // 6 stage pipeline
         // The pipeline stages are simulated backwards to avoid instantaneous updates
-        
+
         // Broadcast ready stuff onto CDB
         self.wipe_cdb();
         let mut free_slots = (0..CDB_WIDTH).into_iter().collect::<HashSet<_>>();
+        let mut new_to_broadcast = Vec::new();
         for (delay, record) in self.to_broadcast.iter_mut() {
-            if free_slots.is_empty() {
-                break;
-            }
-            if *delay == 0 {
-                let slot = free_slots.iter().next().unwrap().clone();
+            if free_slots.is_empty() || *delay > 0 {
+                *delay -= 1;
+                new_to_broadcast.push((*delay, record.clone()));
+            } else {
+                let slot = *free_slots.iter().next().unwrap();
                 assert!(free_slots.remove(&slot));
                 self.cdb[slot] = CDBRecord {
                     valid: true,
                     result: record.result,
                     aspr_update: record.aspr_update,
                     rob_number: record.rob_number,
-                }
-            } else {
-                *delay -= 1;
+                };
             }
         }
-        self.to_broadcast.retain(|(delay, _)| *delay > 0);
-        
+        self.to_broadcast = new_to_broadcast;
+
         self.commit();
         self.wb();
         self.execute();
@@ -151,7 +160,6 @@ impl CPU for OoOSpeculative {
         self.epoch += 1;
     }
 
-    
     // -----------------------------------------------------------------
     // Rendering stuff
     fn render(&self, frame: &mut Frame) {
@@ -339,8 +347,13 @@ impl OoOSpeculative {
     fn stall(&mut self, reason: StallReason) {
         self.stalls.push(reason);
     }
-    
+
     fn wipe_cdb(&mut self) {
-        self.cdb = [CDBRecord {valid: false, rob_number: 0, result: 0, aspr_update: ASPRUpdate::no_update()}; CDB_WIDTH];
+        self.cdb = [CDBRecord {
+            valid: false,
+            rob_number: 0,
+            result: 0,
+            aspr_update: ASPRUpdate::no_update(),
+        }; CDB_WIDTH];
     }
 }

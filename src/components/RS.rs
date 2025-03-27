@@ -1,9 +1,9 @@
-use std::cmp::Ordering;
-use std::collections::HashSet;
+use crate::components::ROB::ROB;
 use crate::decode::{IssueType, I, IT::*};
 use crate::model::Registers;
+use std::cmp::Ordering;
+use std::collections::HashSet;
 use std::fmt::Display;
-use crate::components::ROB::ROB;
 
 #[derive(Clone, Copy)]
 pub enum RSData {
@@ -98,9 +98,9 @@ impl RSSet {
         // get index of first one that's not empty
         Some(self.vec.iter().enumerate().find(|(_, rs)| !rs.busy)?.0)
     }
-    
-    pub fn get_one_ready(&self) -> Option<&RS> {
-        for entry in &self.vec {
+
+    pub fn get_one_ready(&self) -> Option<usize> {
+        for (index, entry) in self.vec.iter().enumerate() {
             if !entry.busy {
                 continue;
             }
@@ -110,7 +110,7 @@ impl RSSet {
                 (RSData::ROB(_), _, _) | (_, RSData::ROB(_), _) | (_, _, RSData::ROB(_)) => {
                     continue
                 }
-                _ => return Some(entry),
+                _ => return Some(index),
             }
         }
         None
@@ -132,10 +132,12 @@ impl RSSet {
                 _ => set.push(entry),
             }
         }
-        set.sort_by(|a, b| if rob.entry_is_before(a.rob_dest, b.rob_dest) {
-            Ordering::Greater
-        } else {
-            Ordering::Less
+        set.sort_by(|a, b| {
+            if rob.entry_is_before(a.rob_dest, b.rob_dest) {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }
         });
         set
     }
@@ -161,10 +163,10 @@ impl RSSet {
                         // 18 is carry
                         l = Self::get_rs_data(18, arf, register_status);
                     }
-                    
+
                     // Dual register
-                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | LSLReg
-                    | LSRReg | MOVReg | ORR | ROR | SUBReg => {
+                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | LSLReg | LSRReg
+                    | MOVReg | ORR | ROR | SUBReg => {
                         j = Self::get_rs_data(i.rn, arf, register_status);
                         k = Self::get_rs_data(i.rm, arf, register_status);
                     }
@@ -265,6 +267,10 @@ impl RSSet {
                         }
                     }
                     BL | BX | BLX => {}
+                    // Sets PC from register value
+                    SetPC => {
+                        j = Self::get_rs_data(i.rn, arf, register_status);
+                    }
                     // Supervisor calls always read from r0
                     SVC => {
                         j = Self::get_rs_data(0, arf, register_status);

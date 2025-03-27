@@ -26,7 +26,7 @@ pub fn get_issue_type(it: IT) -> (IssueType) {
 
         MUL => IssueType::MUL,
 
-        B | LoadPc | BL | BLX | BX | SVC => IssueType::Control,
+        B | SetPC | BL | BLX | BX | SVC => IssueType::Control,
 
         STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg | LDRImm | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => IssueType::LoadStore,
         
