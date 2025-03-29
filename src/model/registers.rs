@@ -53,6 +53,8 @@ impl ASPR {
             0b1101 => self.z == true || self.n != self.v,
             // AL
             0b1110 => true,
+            // NV
+            0b1111 => false,
             _ => panic!("Invalid condition code"),
         }
     }

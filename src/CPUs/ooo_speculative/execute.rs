@@ -6,35 +6,81 @@ use crate::IT::*;
 
 impl OoOSpeculative {
     pub(super) fn execute(&mut self) {
-        let mut num_broadcast = 0;
         if let Some(rs_index) = self.rs_alu_shift.get_one_ready() {
-            self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut num_broadcast);
+            self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut 0);
             self.rs_alu_shift.vec[rs_index].busy = false;
         }
 
-        if num_broadcast >= CDB_WIDTH {
-            return;
-        }
-
         if let Some(rs_index) = self.rs_mul.get_one_ready() {
-            self.execute_mul(&self.rs_mul.vec[rs_index].clone(), &mut num_broadcast);
+            self.execute_mul(&self.rs_mul.vec[rs_index].clone(), &mut 0);
             self.rs_mul.vec[rs_index].busy = false;
-        }
-
-        if num_broadcast >= CDB_WIDTH {
-            return;
         }
 
         if self.load_queue.len() >= LQ_SIZE - 1 {
             if let Some(rs_index) = self.rs_ls.get_one_ready() {
-                self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut num_broadcast);
+                self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
                 self.rs_ls.vec[rs_index].busy = false;
             }
         }
 
-        if num_broadcast >= CDB_WIDTH {
-            return;
+        if let Some(rs_index) = self.rs_control.get_one_ready() {
+            self.execute_control(&self.rs_control.vec[rs_index].clone(), &mut 0);
+            self.rs_control.vec[rs_index].busy = false;
         }
+    }
+
+    fn execute_control(&mut self, rs: &RS, num_broadcast: &mut usize) {
+        // BX, BLX and SetPc require RM
+        // SetPC, BX and BLX are absolute
+        // B and BL are relative, and require an immediate
+        let mut target= match rs.i.it {
+            SetPC | BX | BLX => Self::get_data(rs.j).unwrap(),
+            BL | B => rs.i.immu,
+            _ => unreachable!(),
+        };
+        
+        let taken = match rs.i.it {
+            SetPC | BX | BL | BLX => true,
+            B => {
+                let j = Self::get_data(rs.j).map(|x| x != 0);
+                let k = Self::get_data(rs.k).map(|x| x != 0);
+                let l = Self::get_data(rs.l).map(|x| x != 0);
+                match rs.i.rn {
+                    // These all just require one flag that should be in j
+                    // EQ | NE | CS | CC | MI | PL | VS | VC
+                    0b0000 | 0b0001 | 0b0010 | 0b0011 | 0b0100 | 0b0101 | 0b0110 | 0b0111 => j.unwrap(),
+                    // HI | LS
+                    0b1000 | 0b1001 => k.unwrap() == true && j.unwrap() == false,
+                    // GE | LT
+                    0b1010 | 0b1011 => j.unwrap() == k.unwrap(),
+                    // GT | LE
+                    0b1100 | 0b1101 => k.unwrap() == false && j.unwrap() == l.unwrap(),
+                    // AL
+                    0b1110 => true,
+                    // NV
+                    0b1111 => false,
+                    _ => panic!("Invalid condition code"),
+                }
+            }
+            _ => unreachable!(),
+        };
+        
+        // since B can only reach an even address, we may use the bottom bit for taken or untaken
+        if rs.i.it == B {
+            assert_eq!(target % 2, 0);
+            target += taken as u32;
+        }
+        
+        self.to_broadcast.push((
+            1,
+            CDBRecord {
+                valid: false,
+                result: target,
+                aspr_update: ASPRUpdate::no_update(),
+                rob_number: rs.rob_dest,
+            },
+        ));
+        *num_broadcast += 1;
     }
 
     fn execute_load_store(&mut self, rs: &RS, num_broadcast: &mut usize) {
@@ -60,29 +106,29 @@ impl OoOSpeculative {
                         LDRSB => match self.state.mem.get_byte(load_address) {
                             Ok(byte) => Ok(briz(byte as u32, 0, 6)
                                 + (if bit_as_bool(byte as u32, 7) {
-                                0x80000000
-                            } else {
-                                0
-                            })),
+                                    0x80000000
+                                } else {
+                                    0
+                                })),
                             Err(e) => Err(e),
                         },
                         LDRSH => match self.state.mem.get_halfword(load_address) {
                             Ok(byte) => Ok(briz(byte as u32, 0, 14)
                                 + (if bit_as_bool(byte as u32, 15) {
-                                0x80000000
-                            } else {
-                                0
-                            })),
+                                    0x80000000
+                                } else {
+                                    0
+                                })),
                             Err(e) => Err(e),
                         },
                         _ => unreachable!(),
                     };
-                    
+
                     let result = match result {
                         Ok(result) => result,
                         Err(e) => panic!("Memory error {:?}, rs {:?}", e, rs),
                     };
-                    
+
                     // Load store has a delay of 1 cycles on top of the 1 cycle for addr calc
                     self.to_broadcast.push((
                         2,

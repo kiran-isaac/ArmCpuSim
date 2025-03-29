@@ -3,8 +3,8 @@ use crate::decode::{I, IT, IT::*};
 use crate::CPUs::LoadQueueEntry;
 use std::cmp::min;
 
-#[derive(Copy, Clone)]
-enum ROBStatus {
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+pub enum ROBStatus {
     EMPTY,
     Pending,
     Execute,
@@ -33,7 +33,7 @@ pub struct ROB {
 }
 
 #[derive(Copy, Clone)]
-enum ROBEntryDest {
+pub enum ROBEntryDest {
     None,
     AwaitingAddress,
     Address(u32),
@@ -45,9 +45,9 @@ enum ROBEntryDest {
 pub struct ROBEntry {
     pub pc: u32,
     pub i: I,
-    status: ROBStatus,
+    pub status: ROBStatus,
     pub value: u32,
-    dest: ROBEntryDest,
+    pub dest: ROBEntryDest,
 }
 
 impl ROBEntry {

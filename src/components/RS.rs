@@ -7,7 +7,7 @@ use std::fmt::Display;
 
 #[derive(Clone, Copy, Debug)]
 pub enum RSData {
-    ROB(u32),
+    ROB(usize, u8),
     Data(u32),
     None,
 }
@@ -15,7 +15,7 @@ pub enum RSData {
 impl Display for RSData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RSData::ROB(r) => write!(f, "#{:09}", r),
+            RSData::ROB(rob, r) => write!(f, "#{:09}:{}", rob, Registers::reg_id_to_str(*r)),
             RSData::Data(r) => write!(f, "{:#010x}", r),
             RSData::None => write!(f, "----------"),
         }
@@ -58,9 +58,57 @@ impl RS {
         } else {
             // if either is waiting for ROB then not ready
             match (&self.j, &self.k) {
-                (RSData::ROB(_), _) | (_, RSData::ROB(_)) => false,
+                (RSData::ROB(_, _), _) | (_, RSData::ROB(_, _)) => false,
                 _ => true,
             }
+        }
+    }
+
+    fn receive_cdb_broadcast(&mut self, rob_entry: usize, rn: u8, result: u32) {
+        match self.j {
+            RSData::ROB(rob_entry_2, rn_2) => {
+                if rn == rn_2 && rob_entry_2 == rob_entry {
+                    self.j = RSData::Data(result);
+                }
+            }
+            _ => {}
+        }
+        match self.k {
+            RSData::ROB(rob_entry_2, rn_2) => {
+                if rn == rn_2 && rob_entry_2 == rob_entry {
+                    self.k = RSData::Data(result);
+                }
+            }
+            _ => {}
+        }
+        match self.l {
+            RSData::ROB(rob_entry_2, rn_2) => {
+                if rn == rn_2 && rob_entry_2 == rob_entry {
+                    self.l = RSData::Data(result);
+                }
+            }
+            _ => {}
+        }
+    }
+    
+    fn assert_not_waiting_for_rob(&self, rob_entry: usize) {
+        match self.j {
+            RSData::ROB(rob_entry_2, _) => {
+                assert_ne!(rob_entry_2, rob_entry);
+            }
+            _ => {}
+        }
+        match self.k {
+            RSData::ROB(rob_entry_2, _) => {
+                assert_ne!(rob_entry_2, rob_entry);
+            }
+            _ => {}
+        }
+        match self.l {
+            RSData::ROB(rob_entry_2, _) => {
+                assert_ne!(rob_entry_2, rob_entry);
+            }
+            _ => {}
         }
     }
 }
@@ -75,9 +123,21 @@ impl RSSet {
     pub fn new(issue_type: IssueType, n: usize) -> RSSet {
         let vec = vec![RS::new(); n];
         RSSet {
-            vec: vec,
+            vec,
             issue_type,
             n,
+        }
+    }
+
+    pub fn receive_cdb_broadcast(&mut self, rob_entry: usize, rn: u8, result: u32) {
+        for rs in self.vec.iter_mut() {
+            rs.receive_cdb_broadcast(rob_entry, rn, result);
+        }
+    }
+    
+    pub fn assert_none_waiting_for_rob(&self, rob_entry: usize) {
+        for rs in self.vec.iter() {
+            rs.assert_not_waiting_for_rob(rob_entry);
         }
     }
 
@@ -88,7 +148,7 @@ impl RSSet {
     /// if RST shows ROB entry then this, else get data from ARF
     fn get_rs_data(rn: u8, arf: &Registers, register_status: &[Option<usize>; 20]) -> RSData {
         if let Some(rob_entry_num) = register_status[rn as usize] {
-            RSData::ROB(rob_entry_num as u32)
+            RSData::ROB(rob_entry_num, rn)
         } else {
             RSData::Data(arf.get(rn))
         }
@@ -107,7 +167,7 @@ impl RSSet {
 
             // Ignore this entry if any still pending results
             match (entry.j, entry.k, entry.l) {
-                (RSData::ROB(_), _, _) | (_, RSData::ROB(_), _) | (_, _, RSData::ROB(_)) => {
+                (RSData::ROB(_, _), _, _) | (_, RSData::ROB(_, _), _) | (_, _, RSData::ROB(_, _)) => {
                     continue
                 }
                 _ => return Some(index),
@@ -126,7 +186,7 @@ impl RSSet {
 
             // Ignore this entry if any still pending results
             match (entry.j, entry.k, entry.l) {
-                (RSData::ROB(_), _, _) | (_, RSData::ROB(_), _) | (_, _, RSData::ROB(_)) => {
+                (RSData::ROB(_, _), _, _) | (_, RSData::ROB(_, _), _) | (_, _, RSData::ROB(_, _)) => {
                     continue
                 }
                 _ => set.push(entry),
@@ -229,33 +289,39 @@ impl RSSet {
                             }
                             // CS | CC
                             0b0010 | 0b0011 => {
-                                //(false, false, true, false),
+                                // (n, z, c, v)
+                                // (false, false, true, false),
                                 j = Self::get_rs_data(18, arf, register_status);
                             }
                             // MI | PL
                             0b0100 | 0b0101 => {
+                                // (n, z, c, v)
                                 // (true, false, false, false)
                                 j = Self::get_rs_data(16, arf, register_status);
                             }
                             // VS | VC
                             0b0110 | 0b0111 => {
+                                // (n, z, c, v)
                                 // (false, false, false, true)
                                 j = Self::get_rs_data(19, arf, register_status);
                             }
                             // HI | LS
                             0b1000 | 0b1001 => {
+                                // (n, z, c, v)
                                 // (false, true, true, false)
                                 j = Self::get_rs_data(17, arf, register_status);
                                 k = Self::get_rs_data(18, arf, register_status);
                             }
                             // GE | LT
                             0b1010 | 0b1011 => {
+                                // (n, z, c, v)
                                 // (true, false, false, true)
                                 j = Self::get_rs_data(16, arf, register_status);
                                 k = Self::get_rs_data(19, arf, register_status);
                             }
                             // GT | LE
                             0b1100 | 0b1101 => {
+                                // (n, z, c, v)
                                 // (true, true, false, true),
                                 j = Self::get_rs_data(16, arf, register_status);
                                 k = Self::get_rs_data(17, arf, register_status);
@@ -266,7 +332,10 @@ impl RSSet {
                             _ => unreachable!("invalid cond code"),
                         }
                     }
-                    BL | BX | BLX => {}
+                    BL => {}
+                    BX | BLX => {
+                        j = Self::get_rs_data(i.rm, arf, register_status);
+                    }
                     // Sets PC from register value
                     SetPC => {
                         j = Self::get_rs_data(i.rn, arf, register_status);

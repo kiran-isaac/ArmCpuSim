@@ -492,7 +492,7 @@ pub fn decode(i: u32) -> I {
                             let rdn = briz(i, 8, 10) as u8;
                             let imm8 = briz(i, 0, 7);
 
-                            return I {
+                            I {
                                 it: IT::SUBImm,
                                 rd: rdn,
                                 rn: rdn,
@@ -502,7 +502,7 @@ pub fn decode(i: u32) -> I {
                                 rm: 0,
                                 rt: 0,
                                 rl: 0,
-                            };
+                            }
                         }
                         _ => unreachable!("BRI issue: Invalid instr: {i}"),
                     }
@@ -564,7 +564,7 @@ pub fn decode(i: u32) -> I {
                             _ => unreachable!("BRI issue: Invalid instr: {i}"),
                         };
 
-                        return I {
+                        I {
                             it,
                             rd: lowreg,
                             rn: lowreg,
@@ -574,7 +574,7 @@ pub fn decode(i: u32) -> I {
                             rt: 0,
                             rl: 0,
                             setsflags: true,
-                        };
+                        }
                     }
                     // Special data instructions, branch and exchange
                     0b0001 => match briz(i, 6, 9) {
@@ -584,7 +584,7 @@ pub fn decode(i: u32) -> I {
                             let rm = briz(i, 3, 6);
                             let rdn = briz(i, 0, 2) + (n << 3);
 
-                            return I {
+                            I {
                                 it: IT::ADDReg,
                                 rn: rdn as u8,
                                 rm: rm as u8,
@@ -594,7 +594,7 @@ pub fn decode(i: u32) -> I {
                                 imms: 0,
                                 rt: 0,
                                 rl: 0,
-                            };
+                            }
                         }
                         0b0100 => return I::unpredictable(),
                         // CMPReg (T2)
@@ -603,7 +603,7 @@ pub fn decode(i: u32) -> I {
                             let rm = briz(i, 3, 6);
                             let rn = briz(i, 0, 2) + (n << 3);
 
-                            return I {
+                            I {
                                 it: IT::CMPReg,
                                 rn: rn as u8,
                                 rm: rm as u8,
@@ -613,7 +613,7 @@ pub fn decode(i: u32) -> I {
                                 rl: 0,
                                 immu: 0,
                                 imms: 0,
-                            };
+                            }
                         }
                         // MOVReg (T1)
                         0b1000..=0b1011 => {
@@ -622,7 +622,7 @@ pub fn decode(i: u32) -> I {
                             let rd = briz(i, 0, 2);
                             let rd = rd + (d << 3);
 
-                            return I {
+                            I {
                                 it: IT::MOVReg,
                                 rd: rd as u8,
                                 rm: rm as u8,
@@ -632,7 +632,7 @@ pub fn decode(i: u32) -> I {
                                 rl: 0,
                                 immu: 0,
                                 imms: 0,
-                            };
+                            }
                         }
                         // BX
                         0b1100 | 0b1101 => {
@@ -641,7 +641,7 @@ pub fn decode(i: u32) -> I {
                                 return I::unpredictable();
                             }
 
-                            return I {
+                            I {
                                 it: IT::BX,
                                 rm,
                                 setsflags: false,
@@ -651,7 +651,7 @@ pub fn decode(i: u32) -> I {
                                 rl: 0,
                                 immu: 0,
                                 imms: 0,
-                            };
+                            }
                         }
                         0b1110 | 0b1111 => {
                             let rm = briz(i, 3, 6) as u8;
@@ -659,7 +659,7 @@ pub fn decode(i: u32) -> I {
                                 return I::unpredictable();
                             }
 
-                            return I {
+                            I {
                                 it: IT::BLX,
                                 rm,
                                 setsflags: false,
@@ -669,7 +669,7 @@ pub fn decode(i: u32) -> I {
                                 imms: 0,
                                 rt: 0,
                                 rl: 0,
-                            };
+                            }
                         }
                         _ => unreachable!("BRI issue: Invalid instr: {i}"),
                     },

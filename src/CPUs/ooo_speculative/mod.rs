@@ -18,6 +18,7 @@ use ratatui::{
     Frame,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
+use crate::components::ROB::{ROBEntryDest, ROBStatus};
 
 const CDB_WIDTH: usize = 1;
 const LQ_SIZE: usize = 8;
@@ -144,6 +145,23 @@ impl CPU for OoOSpeculative {
                     aspr_update: record.aspr_update,
                     rob_number: record.rob_number,
                 };
+                let rob_entry = self.rob.get(record.rob_number);
+                assert_eq!(rob_entry.status, ROBStatus::Execute);
+                
+                match rob_entry.dest {
+                    ROBEntryDest::Address(_) => {
+                        // There should be no reservation stations waiting on this thing
+                        self.rs_control.assert_none_waiting_for_rob(record.rob_number);
+                        self.rs_mul.assert_none_waiting_for_rob(record.rob_number);
+                        self.rs_control.assert_none_waiting_for_rob(record.rob_number);
+                        self.rs_ls.assert_none_waiting_for_rob(record.rob_number);
+                    },
+                    // There may be RS waiting on this thing (this could be cmp so we're waiting for flags)
+                    // We will deal with flags after this
+                    ROBEntryDest::None => {},
+                    ROBEntryDest::AwaitingAddress => panic!("Broadcast recieved for STORE rob entry?"),
+                    ROBEntryDest::Register()
+                }
             }
         }
         self.to_broadcast = new_to_broadcast;

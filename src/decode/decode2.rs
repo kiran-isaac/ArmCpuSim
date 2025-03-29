@@ -119,12 +119,12 @@ pub fn decode2(i: I) -> Vec<I> {
                 });
                 vec.push(I {
                     it: IT::SetPC,
-                    rn: 9,
+                    rn: 0,
                     rt: 15,
                     immu: 0,
                     imms: 0,
                     rl: 0,
-                    rm: 0,
+                    rm: 9,
                     rd: 0,
                     setsflags: false,
                 })
