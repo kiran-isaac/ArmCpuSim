@@ -85,7 +85,6 @@ pub struct OoOSpeculative {
     // Holds all the simulated delays of simulated operations, and
     // when they should be broadcast onto CDB
     to_broadcast: Vec<(u8, CDBRecord)>,
-    num_broadcast: usize,
 
     // Render Info
     stalls: Vec<StallReason>,
@@ -115,7 +114,6 @@ impl CPU for OoOSpeculative {
             epoch: 0,
             rs_current_display: IssueType::ALUSHIFT,
             to_broadcast: Vec::new(),
-            num_broadcast: 0,
             cdb: [CDBRecord {
                 valid: false,
                 rob_number: 0,

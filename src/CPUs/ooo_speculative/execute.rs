@@ -2,42 +2,42 @@ use super::*;
 use crate::binary::{bit_as_bool, briz, signed_to_unsigned_bitcast, unsigned_to_signed_bitcast};
 use crate::components::shift::{shift_with_carry, ShiftType};
 use crate::components::ALU::{ALUOperation, CalcResult, ALU};
-use crate::model::Memory;
 use crate::IT::*;
 
 impl OoOSpeculative {
     pub(super) fn execute(&mut self) {
+        let mut num_broadcast = 0;
         if let Some(rs_index) = self.rs_alu_shift.get_one_ready() {
-            self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone());
+            self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut num_broadcast);
             self.rs_alu_shift.vec[rs_index].busy = false;
         }
 
-        if self.num_broadcast >= CDB_WIDTH {
+        if num_broadcast >= CDB_WIDTH {
             return;
         }
 
         if let Some(rs_index) = self.rs_mul.get_one_ready() {
-            self.execute_mul(&self.rs_mul.vec[rs_index].clone());
+            self.execute_mul(&self.rs_mul.vec[rs_index].clone(), &mut num_broadcast);
             self.rs_mul.vec[rs_index].busy = false;
         }
 
-        if self.num_broadcast >= CDB_WIDTH {
+        if num_broadcast >= CDB_WIDTH {
             return;
         }
 
         if self.load_queue.len() >= LQ_SIZE - 1 {
             if let Some(rs_index) = self.rs_ls.get_one_ready() {
-                self.execute_load_store(&self.rs_ls.vec[rs_index].clone());
+                self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut num_broadcast);
                 self.rs_ls.vec[rs_index].busy = false;
             }
         }
 
-        if self.num_broadcast >= CDB_WIDTH {
+        if num_broadcast >= CDB_WIDTH {
             return;
         }
     }
 
-    fn execute_load_store(&mut self, rs: &RS) {
+    fn execute_load_store(&mut self, rs: &RS, num_broadcast: &mut usize) {
         // The pipeline is
         // - Address calc
         // - LQ insertion.
@@ -93,7 +93,7 @@ impl OoOSpeculative {
                             rob_number: rs.rob_dest,
                         },
                     ));
-                    self.num_broadcast += 1;
+                    *num_broadcast += 1;
                 }
             }
         }
@@ -121,7 +121,7 @@ impl OoOSpeculative {
         self.ls_pipeline_addr_calc = Some(j.wrapping_add(k))
     }
 
-    fn execute_mul(&mut self, rs: &RS) {
+    fn execute_mul(&mut self, rs: &RS, num_broadcast: &mut usize) {
         let j = unsigned_to_signed_bitcast(Self::get_data(rs.j).unwrap());
         let k = unsigned_to_signed_bitcast(Self::get_data(rs.k).unwrap());
 
@@ -146,10 +146,10 @@ impl OoOSpeculative {
                 rob_number: rs.rob_dest,
             },
         ));
-        self.num_broadcast += 1;
+        *num_broadcast += 1;
     }
 
-    fn execute_alu_shift(&mut self, rs: &RS) {
+    fn execute_alu_shift(&mut self, rs: &RS, num_broadcast: &mut usize) {
         let j = Self::get_data(rs.j);
         let k = Self::get_data(rs.k);
         let l = Self::get_data(rs.l);
@@ -282,7 +282,7 @@ impl OoOSpeculative {
                 rob_number: rs.rob_dest,
             },
         ));
-        self.num_broadcast += 1;
+        *num_broadcast += 1;
     }
 
     fn get_data(x: RSData) -> Option<u32> {
