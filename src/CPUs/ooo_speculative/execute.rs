@@ -66,6 +66,7 @@ impl OoOSpeculative {
         };
         
         // since B can only reach an even address, we may use the bottom bit for taken or untaken
+        // All the other control instrs are always taken
         if rs.i.it == B {
             assert_eq!(target % 2, 0);
             target += taken as u32;
@@ -126,7 +127,7 @@ impl OoOSpeculative {
 
                     let result = match result {
                         Ok(result) => result,
-                        Err(e) => panic!("Memory error {:?}, rs {:?}", e, rs),
+                        Err(e) => panic!("Memory error {:?}", e),
                     };
 
                     // Load store has a delay of 1 cycles on top of the 1 cycle for addr calc

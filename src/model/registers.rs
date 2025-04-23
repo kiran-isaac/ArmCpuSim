@@ -102,7 +102,7 @@ impl Registers {
 
     pub fn reg_id_to_str(id: u8) -> String {
         match id {
-            0..=12 => format!("{}", id),
+            0..=12 => format!("r{}", id),
             13 => "SP".to_string(),
             14 => "LR".to_string(),
             15 => "PC".to_string(),

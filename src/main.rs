@@ -15,10 +15,9 @@ extern crate ratatui;
 
 use decode::*;
 use model::*;
-use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use ratatui::crossterm::event::{self, Event, KeyCode};
 use std::io;
 use CPUs::*;
-use crate::components::ROB::ROB_ENTRIES;
 
 fn main() -> io::Result<()> {
     // let sdl_context = sdl2::init().unwrap();
@@ -42,9 +41,7 @@ fn main() -> io::Result<()> {
     };
 
     state.regs.pc = state.mem.entrypoint as u32;
-
-    let mut frame = terminal.get_frame();
-
+    
     let mut cpu = OoOSpeculative::new(
         state,
         "traces/trace.csv",

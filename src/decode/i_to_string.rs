@@ -64,6 +64,8 @@ impl Display for I {
 
             // immu
             SVC => format!("#{}", self.immu),
+            
+            SetPC => "".to_string(),
 
             _ => unimplemented!("tostring for {:?}", self.it),
         };

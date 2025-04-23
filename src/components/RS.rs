@@ -2,7 +2,6 @@ use crate::components::ROB::ROB;
 use crate::decode::{IssueType, I, IT::*};
 use crate::model::Registers;
 use std::cmp::Ordering;
-use std::collections::HashSet;
 use std::fmt::Display;
 
 #[derive(Clone, Copy, Debug)]
@@ -22,7 +21,7 @@ impl Display for RSData {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct RS {
     pub busy: bool,
 
@@ -119,7 +118,7 @@ pub struct RSSet {
     n: usize,
 }
 
-impl RSSet {
+impl<'a> RSSet {
     pub fn new(issue_type: IssueType, n: usize) -> RSSet {
         let vec = vec![RS::new(); n];
         RSSet {
@@ -146,9 +145,14 @@ impl RSSet {
     }
 
     /// if RST shows ROB entry then this, else get data from ARF
-    fn get_rs_data(rn: u8, arf: &Registers, register_status: &[Option<usize>; 20]) -> RSData {
+    fn get_rs_data(rn: u8, arf: &Registers, register_status: &[Option<usize>; 20], rob: &'a ROB) -> RSData {
         if let Some(rob_entry_num) = register_status[rn as usize] {
-            RSData::ROB(rob_entry_num, rn)
+            let rob_entry = rob.get(rob_entry_num);
+            if rob_entry.ready {
+                RSData::Data(rob_entry.value)
+            } else {
+                RSData::ROB(rob_entry_num, rn)
+            }
         } else {
             RSData::Data(arf.get(rn))
         }
@@ -207,6 +211,7 @@ impl RSSet {
         i: &I,
         arf: &Registers,
         register_status: &[Option<usize>; 20],
+        rob: &'a ROB
     ) -> (RSData, RSData, RSData) {
         let mut j = RSData::None;
         let mut k = RSData::None;
@@ -218,22 +223,22 @@ impl RSSet {
                 match i.it {
                     // Dual register and carry {
                     ADC | SBC => {
-                        j = Self::get_rs_data(i.rn, arf, register_status);
-                        k = Self::get_rs_data(i.rm, arf, register_status);
+                        j = Self::get_rs_data(i.rn, arf, register_status, rob);
+                        k = Self::get_rs_data(i.rm, arf, register_status, rob);
                         // 18 is carry
-                        l = Self::get_rs_data(18, arf, register_status);
+                        l = Self::get_rs_data(18, arf, register_status, rob);
                     }
 
                     // Dual register
                     MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | LSLReg | LSRReg
                     | MOVReg | ORR | ROR | SUBReg => {
-                        j = Self::get_rs_data(i.rn, arf, register_status);
-                        k = Self::get_rs_data(i.rm, arf, register_status);
+                        j = Self::get_rs_data(i.rn, arf, register_status, rob);
+                        k = Self::get_rs_data(i.rm, arf, register_status, rob);
                     }
 
                     // register immediate (rn)
                     ADDImm | ADDSpImm | CMPImm | SUBImm => {
-                        j = Self::get_rs_data(i.rn, arf, register_status);
+                        j = Self::get_rs_data(i.rn, arf, register_status, rob);
                         k = RSData::Data(i.immu);
                     }
 
@@ -244,12 +249,12 @@ impl RSSet {
 
                     // Single Register (rm)
                     MVN | REV | REV16 | REVSH | SXTB | SXTH | UXTB | UXTH => {
-                        j = Self::get_rs_data(i.rm, arf, register_status);
+                        j = Self::get_rs_data(i.rm, arf, register_status, rob);
                     }
 
                     // Shift (rm is used as 1st operator not rn???)
                     ASRImm | LSLImm | LSRImm => {
-                        j = Self::get_rs_data(i.rm, arf, register_status);
+                        j = Self::get_rs_data(i.rm, arf, register_status, rob);
                         k = RSData::Data(i.immu);
                     }
 
@@ -262,14 +267,14 @@ impl RSSet {
             IssueType::LoadStore => match i.it {
                 // rn + imm offset
                 STRImm | STRBImm | STRHImm | LDRImm | LDRBImm | LDRHImm => {
-                    j = Self::get_rs_data(i.rn, arf, register_status);
+                    j = Self::get_rs_data(i.rn, arf, register_status, rob);
                     k = RSData::Data(i.immu);
                 }
 
                 // rn + rm offset
                 STRReg | STRBReg | STRHReg | LDRReg | LDRBReg | LDRHReg | LDRSH | LDRSB => {
-                    j = Self::get_rs_data(i.rn, arf, register_status);
-                    k = Self::get_rs_data(i.rm, arf, register_status);
+                    j = Self::get_rs_data(i.rn, arf, register_status, rob);
+                    k = Self::get_rs_data(i.rm, arf, register_status, rob);
                 }
                 _ => panic!("{:?} should not have been issued here", i),
             },
@@ -285,47 +290,47 @@ impl RSSet {
                             // EQ | NE
                             0b0000 | 0b0001 => {
                                 // (false, true, false, false),
-                                j = Self::get_rs_data(17, arf, register_status);
+                                j = Self::get_rs_data(17, arf, register_status, rob);
                             }
                             // CS | CC
                             0b0010 | 0b0011 => {
                                 // (n, z, c, v)
                                 // (false, false, true, false),
-                                j = Self::get_rs_data(18, arf, register_status);
+                                j = Self::get_rs_data(18, arf, register_status, rob);
                             }
                             // MI | PL
                             0b0100 | 0b0101 => {
                                 // (n, z, c, v)
                                 // (true, false, false, false)
-                                j = Self::get_rs_data(16, arf, register_status);
+                                j = Self::get_rs_data(16, arf, register_status, rob);
                             }
                             // VS | VC
                             0b0110 | 0b0111 => {
                                 // (n, z, c, v)
                                 // (false, false, false, true)
-                                j = Self::get_rs_data(19, arf, register_status);
+                                j = Self::get_rs_data(19, arf, register_status, rob);
                             }
                             // HI | LS
                             0b1000 | 0b1001 => {
                                 // (n, z, c, v)
                                 // (false, true, true, false)
-                                j = Self::get_rs_data(17, arf, register_status);
-                                k = Self::get_rs_data(18, arf, register_status);
+                                j = Self::get_rs_data(17, arf, register_status, rob);
+                                k = Self::get_rs_data(18, arf, register_status, rob);
                             }
                             // GE | LT
                             0b1010 | 0b1011 => {
                                 // (n, z, c, v)
                                 // (true, false, false, true)
-                                j = Self::get_rs_data(16, arf, register_status);
-                                k = Self::get_rs_data(19, arf, register_status);
+                                j = Self::get_rs_data(16, arf, register_status, rob);
+                                k = Self::get_rs_data(19, arf, register_status, rob);
                             }
                             // GT | LE
                             0b1100 | 0b1101 => {
                                 // (n, z, c, v)
                                 // (true, true, false, true),
-                                j = Self::get_rs_data(16, arf, register_status);
-                                k = Self::get_rs_data(17, arf, register_status);
-                                l = Self::get_rs_data(19, arf, register_status);
+                                j = Self::get_rs_data(16, arf, register_status, rob);
+                                k = Self::get_rs_data(17, arf, register_status, rob);
+                                l = Self::get_rs_data(19, arf, register_status, rob);
                             }
                             // AL | NV
                             0b1110 | 0b1111 => {}
@@ -334,15 +339,15 @@ impl RSSet {
                     }
                     BL => {}
                     BX | BLX => {
-                        j = Self::get_rs_data(i.rm, arf, register_status);
+                        j = Self::get_rs_data(i.rm, arf, register_status, rob);
                     }
                     // Sets PC from register value
                     SetPC => {
-                        j = Self::get_rs_data(i.rn, arf, register_status);
+                        j = Self::get_rs_data(i.rn, arf, register_status, rob);
                     }
                     // Supervisor calls always read from r0
                     SVC => {
-                        j = Self::get_rs_data(0, arf, register_status);
+                        j = Self::get_rs_data(0, arf, register_status, rob);
                     }
                     _ => panic!(
                         "{:?} should not have been issued here. This is the res stations for {:?}",
@@ -361,11 +366,12 @@ impl RSSet {
         dest: usize,
         arf: &Registers,
         register_status: &[Option<usize>; 20],
+        rob: &'a ROB
     ) -> Option<usize> {
         // will return none if it cannot allocate
         let alloc = self.get_alloc()?;
 
-        let (j, k, l) = self.get_dependencies(i, arf, register_status);
+        let (j, k, l) = self.get_dependencies(i, arf, register_status, rob);
 
         self.vec[alloc] = RS {
             busy: true,

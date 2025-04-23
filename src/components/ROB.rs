@@ -16,7 +16,7 @@ pub enum ROBStatus {
     Exception(u8),
 }
 
-pub const ROB_ENTRIES: usize = 64;
+pub const ROB_ENTRIES: usize = 20;
 
 pub struct ROB {
     queue: [ROBEntry; ROB_ENTRIES],
@@ -48,6 +48,7 @@ pub struct ROBEntry {
     pub i: I,
     pub status: ROBStatus,
     pub value: u32,
+    pub ready: bool,
     pub dest: ROBEntryDest,
 }
 
@@ -59,6 +60,7 @@ impl ROBEntry {
             status: ROBStatus::EMPTY,
             dest: ROBEntryDest::None,
             i: I::undefined(),
+            ready: false,
         }
     }
 }
@@ -163,6 +165,7 @@ impl ROB {
             value: 0,
             i: i.clone(),
             dest: rob_dest,
+            ready: false
         };
 
         // Return where it would go upon issue commit

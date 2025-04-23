@@ -16,8 +16,9 @@ use ratatui::{
     widgets::Block,
     Frame,
 };
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 use crate::components::ROB::{ROBEntryDest, ROBStatus, ROB_ENTRIES};
+use crate::model::Registers;
 
 const CDB_WIDTH: usize = 1;
 const LQ_SIZE: usize = 8;
@@ -48,15 +49,7 @@ struct InstructionQueueEntry {
     pub i: I,
     /// the pc value fetched from
     pub pc: u32,
-    /// how the pc should be updated after this instruction commits
-    pub pc_increment: u8,
 }
-
-struct FetchBufferEntry {
-    pub i: u32,
-    pub pc: u32,
-}
-
 pub struct OoOSpeculative {
     state: ProcessorState,
 
@@ -64,7 +57,7 @@ pub struct OoOSpeculative {
 
     // Only single fetch buffer space needed, as decode buffer will always produce
     // same or more num of mops, so fetch is never limiting factor
-    fb: Option<FetchBufferEntry>,
+    fb: Option<u32>,
     iq: VecDeque<InstructionQueueEntry>,
     rob: ROB,
 
@@ -79,7 +72,7 @@ pub struct OoOSpeculative {
 
     ls_pipeline_addr_calc: Option<u32>,
 
-    fetch_pc: u32,
+    spec_pc: u32,
 
     // only the first {CDB_WIDTH} are currently being broadcasted
     cdb: VecDeque<CDBRecord>,
@@ -96,18 +89,20 @@ pub struct OoOSpeculative {
 
 impl CPU for OoOSpeculative {
     fn new(state: ProcessorState, trace_file: &str, log_file: &str, stack_dump_file: &str) -> Self {
+        let rob = ROB::new();
         Self {
             tracer: Tracer::new(trace_file, &state.regs),
-            fetch_pc: state.regs.pc,
+            spec_pc: state.regs.pc,
             state,
             fb: None,
             iq: VecDeque::new(),
-            rob: ROB::new(),
 
             rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 8),
             rs_mul: RSSet::new(IssueType::MUL, 4),
             rs_control: RSSet::new(IssueType::Control, 4),
             rs_ls: RSSet::new(IssueType::LoadStore, 8),
+
+            rob,
 
             load_queue: VecDeque::with_capacity(LQ_SIZE),
             ls_pipeline_addr_calc: None,
@@ -124,86 +119,6 @@ impl CPU for OoOSpeculative {
     fn tick(&mut self) {
         // 6 stage pipeline
         // The pipeline stages are simulated backwards to avoid instantaneous updates
-
-        // Decrease all delays, and add to ready queue if they are 0
-        let mut free_slots = CDB_WIDTH;
-        let mut new_to_broadcast = Vec::new();
-        for (delay, record) in self.to_broadcast.iter_mut() {
-            if free_slots <= 0 {break;}
-            if *delay > 1 {
-                *delay -= 1;
-                new_to_broadcast.push((*delay, record.clone()));
-            } else {
-                self.cdb.push_back(CDBRecord {
-                    valid: true,
-                    result: record.result,
-                    aspr_update: record.aspr_update,
-                    rob_number: record.rob_number,
-                });
-                free_slots -= 1;
-            }
-        }
-        self.to_broadcast = new_to_broadcast;
-        
-        
-        // Broadcast the first {CDB_WIDTH} cdb records to everything that needs it
-        for _ in 0..CDB_WIDTH {
-            if let Some(record) = self.cdb.pop_front() {
-                let rob_entry = self.rob.get(record.rob_number).clone();
-                self.rob.set_value(record.rob_number, record.result);
-                assert_eq!(rob_entry.status, ROBStatus::Execute);
-
-                match rob_entry.dest {
-                    ROBEntryDest::Address(_) => {
-                        // There should be no reservation stations waiting on this thing
-                        self.rs_control.assert_none_waiting_for_rob(record.rob_number);
-                        self.rs_mul.assert_none_waiting_for_rob(record.rob_number);
-                        self.rs_alu_shift.assert_none_waiting_for_rob(record.rob_number);
-                        self.rs_ls.assert_none_waiting_for_rob(record.rob_number);
-                    },
-                    // There may be RS waiting on this thing (this could be cmp so we're waiting for flags)
-                    // We will deal with flags after this
-                    ROBEntryDest::None => {},
-                    ROBEntryDest::AwaitingAddress => {
-                        let address = record.result;
-                        self.rob.set_address(record.rob_number, address);
-                    }
-                    ROBEntryDest::Register(n, cspr) => {
-                        self.rs_control.receive_cdb_broadcast(record.rob_number, n, record.result);
-                        self.rs_mul.receive_cdb_broadcast(record.rob_number, n, record.result);
-                        self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, n, record.result);
-                        self.rs_ls.receive_cdb_broadcast(record.rob_number, n, record.result);
-
-                        if cspr {
-                            if let Some(n) = record.aspr_update.n {
-                                self.rs_control.receive_cdb_broadcast(record.rob_number, 16, n as u32);
-                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 16, n as u32);
-                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 16, n as u32);
-                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 16, n as u32);
-                            }
-                            if let Some(n) = record.aspr_update.z {
-                                self.rs_control.receive_cdb_broadcast(record.rob_number, 17, n as u32);
-                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 17, n as u32);
-                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 17, n as u32);
-                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 17, n as u32);
-                            }
-                            if let Some(n) = record.aspr_update.c {
-                                self.rs_control.receive_cdb_broadcast(record.rob_number, 18, n as u32);
-                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 18, n as u32);
-                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 18, n as u32);
-                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 18, n as u32);
-                            }
-                            if let Some(n) = record.aspr_update.v {
-                                self.rs_control.receive_cdb_broadcast(record.rob_number, 19, n as u32);
-                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 19, n as u32);
-                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 19, n as u32);
-                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 19, n as u32);
-                            }
-                        }
-                    }
-                }
-            }
-        }
 
         self.commit();
         self.wb();
@@ -222,8 +137,8 @@ impl CPU for OoOSpeculative {
 
         let vertical = Layout::vertical([Min(0)]);
         let [main_area] = vertical.areas(frame.area());
-        let horizontal = Layout::horizontal([Length(30), Fill(20)]);
-        let [left_area, right_area] = horizontal.areas(main_area);
+        let horizontal = Layout::horizontal([Length(20), Length(30), Fill(20)]);
+        let [left_area, rob_area, right_area] = horizontal.areas(main_area);
 
         let (rs_to_display, rs_to_display_n, rs_to_display_name) = match self.rs_current_display {
             IssueType::ALUSHIFT => (&self.rs_alu_shift, 1, "ALU/Shift"),
@@ -264,33 +179,39 @@ impl CPU for OoOSpeculative {
             epoch_area,
         );
 
-        let rs_str = self.rob.render(self.rob_focus);
-            // self
-            // .rob
-            // .register_status
-            // .iter()
-            // .enumerate()
-            // .map(|(i, rob_entry)| match rob_entry {
-            //     Some(entry) => format!("{}: #{}", i, entry),
-            //     None => format!(
-            //         "{:02} : {:08X}",
-            //         Registers::reg_id_to_str(i as u8),
-            //         self.state.regs.get(i as u8)
-            //     ),
-            // })
-            // .collect::<Vec<String>>()
-            // .join("\n");
+        let rs_str = self
+            .rob
+            .register_status
+            .iter()
+            .enumerate()
+            .map(|(i, rob_entry)| match rob_entry {
+                Some(entry) => format!("{:03} : #{}", Registers::reg_id_to_str(i as u8), entry),
+                None => format!(
+                    "{:03} : {:08X}",
+                    Registers::reg_id_to_str(i as u8),
+                    self.state.regs.get(i as u8)
+                ),
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
 
         frame.render_widget(
-            Paragraph::new(format!("{rs_str}")).block(bottom_border("Register Status")),
+            Paragraph::new(rs_str).block(bottom_border("Register Status")),
             rst_area,
+        );
+        
+        let rob_str = self.rob.render(self.rob_focus);
+
+        frame.render_widget(
+            Paragraph::new(rob_str).block(Block::bordered().title("ROB")),
+            rob_area,
         );
 
         frame.render_widget(
             Paragraph::new(format!(
                 "{}",
                 match &self.fb {
-                    Some(i) => format!("{:08X}", i.i),
+                    Some(i) => format!("{:08X}", i),
                     None => "-".to_string(),
                 }
             ))
@@ -335,11 +256,11 @@ impl CPU for OoOSpeculative {
             Layout::horizontal([Length(3), Length(11), Length(11), Length(11), Fill(1)])
                 .areas(rs_area_inner);
 
-        fn make_block_from_property(
+        fn make_block_from_property<'a>(
             rs_to_display: &RSSet,
             property_getter: fn(&RS) -> String,
             name: String,
-        ) -> Paragraph {
+        ) -> Paragraph<'a> {
             Paragraph::new(
                 rs_to_display
                     .vec

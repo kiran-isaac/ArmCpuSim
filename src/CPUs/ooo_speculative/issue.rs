@@ -19,21 +19,23 @@ impl OoOSpeculative {
                 &iqe.i,
                 dest,
                 &self.state.regs,
-                &self.rob.register_status,
+                &self.rob.register_status, 
+                &self.rob
             ),
             IssueType::MUL => {
                 self.rs_mul
-                    .issue_receive(&iqe.i, dest, &self.state.regs, &self.rob.register_status)
+                    .issue_receive(&iqe.i, dest, &self.state.regs, &self.rob.register_status, &self.rob)
             }
             IssueType::LoadStore => {
                 self.rs_ls
-                    .issue_receive(&iqe.i, dest, &self.state.regs, &self.rob.register_status)
+                    .issue_receive(&iqe.i, dest, &self.state.regs, &self.rob.register_status, &self.rob)
             }
             IssueType::Control => self.rs_control.issue_receive(
                 &iqe.i,
                 dest,
                 &self.state.regs,
-                &self.rob.register_status,
+                &self.rob.register_status, 
+                &self.rob
             ),
         };
 
