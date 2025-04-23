@@ -16,7 +16,7 @@ impl OoOSpeculative {
             self.rs_mul.vec[rs_index].busy = false;
         }
 
-        if self.load_queue.len() >= LQ_SIZE - 1 {
+        if self.load_queue.len() < LQ_SIZE - 1 {
             if let Some(rs_index) = self.rs_ls.get_one_ready() {
                 self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
                 self.rs_ls.vec[rs_index].busy = false;
@@ -151,20 +151,36 @@ impl OoOSpeculative {
                 lqe.address = Some(address_calc_result)
             }
         }
-
-        let lqe = LoadQueueEntry {
-            address: None,
-            rob_entry: rs.rob_dest,
-            load_type: rs.i.it,
-        };
-
-        self.load_queue.push_back(lqe);
-
+        
         // Address calc
         let j = Self::get_data(rs.j).unwrap();
         let k = Self::get_data(rs.k).unwrap();
 
-        self.ls_pipeline_addr_calc = Some(j.wrapping_add(k))
+        let address = j.wrapping_add(k);
+    
+        match rs.i.it {
+            LDRBImm | LDRBReg | LDRHReg | LDRHImm | LDRImm | LDRReg | LDRSB | LDRSH => {
+                self.load_queue.push_back(LoadQueueEntry {
+                    address: None,
+                    rob_entry: rs.rob_dest,
+                    load_type: rs.i.it,
+                });
+                // Will be moved into load queue next cycle
+                self.ls_pipeline_addr_calc = Some(address);
+            }
+            STRBImm | STRBReg | STRHImm | STRHReg | STRImm | STRReg => {
+                self.to_broadcast.push((1, 
+                    CDBRecord {
+                        valid: true,
+                        rob_number: rs.rob_dest,
+                        result: address,
+                        aspr_update: ASPRUpdate::no_update(),
+                    })
+                )
+            }
+            _ => unreachable!()
+        }
+
     }
 
     fn execute_mul(&mut self, rs: &RS, num_broadcast: &mut usize) {

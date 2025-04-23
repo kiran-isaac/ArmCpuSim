@@ -1,7 +1,8 @@
-use crate::components::ROB::ROBEntryDest::{AwaitingAddress, Register};
 use crate::decode::{I, IT, IT::*};
 use crate::CPUs::LoadQueueEntry;
-use std::cmp::min;
+use std::fmt::Formatter;
+use crate::components::ROB::ROBStatus::EMPTY;
+use crate::model::Registers;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum ROBStatus {
@@ -15,7 +16,7 @@ pub enum ROBStatus {
     Exception(u8),
 }
 
-const ROB_ENTRIES: usize = 64;
+pub const ROB_ENTRIES: usize = 64;
 
 pub struct ROB {
     queue: [ROBEntry; ROB_ENTRIES],
@@ -32,7 +33,7 @@ pub struct ROB {
     temp_register_status: [Option<usize>; 20],
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ROBEntryDest {
     None,
     AwaitingAddress,
@@ -89,7 +90,7 @@ impl ROB {
             ADC | ADDImm | ADDReg | ADDSpImm | AND | BIC | EOR | MOVImm | MOVReg | MVN | ORR
             | REVSH | REV16 | REV | RSB | SBC | ROR | SUBImm | SUBReg | SXTB | SXTH | UXTB
             | UXTH | MUL | LSLImm | LSLReg | LSRReg | LSRImm | ASRReg | ASRImm => {
-                Register(i.rd, i.setsflags)
+                ROBEntryDest::Register(i.rd, i.setsflags)
             }
 
             // All ALU instructions that dont write back, as well as branches and system calls
@@ -97,16 +98,16 @@ impl ROB {
             TST | CMPImm | CMN | CMPReg | B | BL | BLX | BX | SVC | NOP => ROBEntryDest::None,
 
             // All store instructions will be pending address calculation
-            STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => AwaitingAddress,
+            STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => ROBEntryDest::AwaitingAddress,
 
             // All load instructions write back to rt, and do not update CSPR
             // (no clue why they differentiate between rd and rt)
             LDRImm | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => {
-                Register(i.rt, false)
+                ROBEntryDest::Register(i.rt, false)
             }
 
             // Special case
-            SetPC => Register(15, false),
+            SetPC => ROBEntryDest::Register(15, false),
 
             _ => panic!("ROB cannot add {:?}", i),
         };
@@ -114,7 +115,7 @@ impl ROB {
         // If its gonna write to a register, add this to the register status
         self.temp_register_status = self.register_status.clone();
         match rob_dest {
-            Register(rd, setsflags) => {
+            ROBEntryDest::Register(rd, setsflags) => {
                 self.temp_register_status[rd as usize] = Some(insert_point);
 
                 if setsflags {
@@ -173,8 +174,19 @@ impl ROB {
         &self.queue[n]
     }
 
+    pub fn set_value(&mut self, n: usize, value: u32) {
+        self.queue[n].value = value;
+    }
+
+    pub fn set_address(&mut self, n: usize, address: u32) {
+        if self.queue[n].dest != ROBEntryDest::AwaitingAddress {unreachable!()}
+        
+        self.queue[n].dest = ROBEntryDest::Address(address);
+    }
+
     pub fn issue_commit(&mut self) {
         self.queue[self.tail] = self.will_issue;
+        self.register_status = self.temp_register_status;
         self.tail = self.increment_index(self.tail);
     }
 
@@ -221,7 +233,7 @@ impl ROB {
                 ROBStatus::EMPTY => break, // we must have exceded tail?
                 _ => match thingy.dest {
                     // If the address has not been calculated yet
-                    AwaitingAddress => return false,
+                    ROBEntryDest::AwaitingAddress => return false,
                     // If the address is within a word of this one
                     ROBEntryDest::Address(store_addr) => {
                         if store_addr.abs_diff(load.address.unwrap()) <= 4 {
@@ -234,8 +246,42 @@ impl ROB {
         }
         true
     }
+    
+    pub fn render(&self, focus: usize) -> String {
+        let mut string = format!("head: {}\ntail: {}\n", self.head, self.tail);
+        let mut looking_at = focus;
+        for i in 0..ROB_ENTRIES {
+            string = format!("{string} {looking_at}: {}", self.queue[looking_at]);
+            if i < ROB_ENTRIES - 1 {
+                string.push_str("\n");
+            }
+            looking_at += 1;
+            if looking_at >= ROB_ENTRIES {
+                looking_at = 0;
+            }
+        }
+        string
+    }
 }
 
+impl std::fmt::Display for ROBEntryDest {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            ROBEntryDest::Register(rn, _) => Registers::reg_id_to_str(*rn),
+            ROBEntryDest::AwaitingAddress => "AA".to_string(),
+            ROBEntryDest::Address(addr) => format!("{:08X?}", addr),
+            ROBEntryDest::None => "None".to_string(),
+        })
+    }
+}
+impl std::fmt::Display for ROBEntry {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        if self.status == EMPTY {
+            return write!(f, "EMPTY");
+        }
+        write!(f, "{:?}, {}", self.status, self.dest)
+    }
+}
 #[cfg(test)]
 mod ROBTests {
     use super::*;

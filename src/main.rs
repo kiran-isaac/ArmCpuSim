@@ -18,6 +18,7 @@ use model::*;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use std::io;
 use CPUs::*;
+use crate::components::ROB::ROB_ENTRIES;
 
 fn main() -> io::Result<()> {
     // let sdl_context = sdl2::init().unwrap();
@@ -65,6 +66,14 @@ fn main() -> io::Result<()> {
                         }
                         KeyCode::Enter => {
                             break;
+                        }
+                        KeyCode::Up => {
+                            cpu.rob_focus_down();
+                            terminal.draw(|f| cpu.render(f))?;
+                        }
+                        KeyCode::Down => {
+                            cpu.rob_focus_up();
+                            terminal.draw(|f| cpu.render(f))?;
                         }
                         KeyCode::Char(c) => {
                             match c {

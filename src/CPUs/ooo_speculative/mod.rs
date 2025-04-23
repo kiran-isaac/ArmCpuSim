@@ -6,7 +6,6 @@ mod issue;
 mod wb;
 
 use super::*;
-use crate::components::ALU::CalcResult;
 use crate::decode::IT;
 use crate::{components::ALU::ASPRUpdate, components::ROB::ROB};
 use ratatui::layout::Margin;
@@ -18,7 +17,7 @@ use ratatui::{
     Frame,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
-use crate::components::ROB::{ROBEntryDest, ROBStatus};
+use crate::components::ROB::{ROBEntryDest, ROBStatus, ROB_ENTRIES};
 
 const CDB_WIDTH: usize = 1;
 const LQ_SIZE: usize = 8;
@@ -82,7 +81,8 @@ pub struct OoOSpeculative {
 
     fetch_pc: u32,
 
-    cdb: [CDBRecord; CDB_WIDTH],
+    // only the first {CDB_WIDTH} are currently being broadcasted
+    cdb: VecDeque<CDBRecord>,
     // Holds all the simulated delays of simulated operations, and
     // when they should be broadcast onto CDB
     to_broadcast: Vec<(u8, CDBRecord)>,
@@ -91,6 +91,7 @@ pub struct OoOSpeculative {
     stalls: Vec<StallReason>,
     epoch: usize,
     pub rs_current_display: IssueType,
+    pub rob_focus: usize
 }
 
 impl CPU for OoOSpeculative {
@@ -114,13 +115,9 @@ impl CPU for OoOSpeculative {
             stalls: Vec::new(),
             epoch: 0,
             rs_current_display: IssueType::ALUSHIFT,
+            rob_focus: 0,
             to_broadcast: Vec::new(),
-            cdb: [CDBRecord {
-                valid: false,
-                rob_number: 0,
-                result: 0,
-                aspr_update: ASPRUpdate::no_update(),
-            }; CDB_WIDTH],
+            cdb: VecDeque::new()
         }
     }
 
@@ -128,43 +125,85 @@ impl CPU for OoOSpeculative {
         // 6 stage pipeline
         // The pipeline stages are simulated backwards to avoid instantaneous updates
 
-        // Broadcast ready stuff onto CDB
-        self.wipe_cdb();
-        let mut free_slots = (0..CDB_WIDTH).into_iter().collect::<HashSet<_>>();
+        // Decrease all delays, and add to ready queue if they are 0
+        let mut free_slots = CDB_WIDTH;
         let mut new_to_broadcast = Vec::new();
         for (delay, record) in self.to_broadcast.iter_mut() {
-            if free_slots.is_empty() || *delay > 0 {
+            if free_slots <= 0 {break;}
+            if *delay > 1 {
                 *delay -= 1;
                 new_to_broadcast.push((*delay, record.clone()));
             } else {
-                let slot = *free_slots.iter().next().unwrap();
-                assert!(free_slots.remove(&slot));
-                self.cdb[slot] = CDBRecord {
+                self.cdb.push_back(CDBRecord {
                     valid: true,
                     result: record.result,
                     aspr_update: record.aspr_update,
                     rob_number: record.rob_number,
-                };
-                let rob_entry = self.rob.get(record.rob_number);
+                });
+                free_slots -= 1;
+            }
+        }
+        self.to_broadcast = new_to_broadcast;
+        
+        
+        // Broadcast the first {CDB_WIDTH} cdb records to everything that needs it
+        for _ in 0..CDB_WIDTH {
+            if let Some(record) = self.cdb.pop_front() {
+                let rob_entry = self.rob.get(record.rob_number).clone();
+                self.rob.set_value(record.rob_number, record.result);
                 assert_eq!(rob_entry.status, ROBStatus::Execute);
-                
+
                 match rob_entry.dest {
                     ROBEntryDest::Address(_) => {
                         // There should be no reservation stations waiting on this thing
                         self.rs_control.assert_none_waiting_for_rob(record.rob_number);
                         self.rs_mul.assert_none_waiting_for_rob(record.rob_number);
-                        self.rs_control.assert_none_waiting_for_rob(record.rob_number);
+                        self.rs_alu_shift.assert_none_waiting_for_rob(record.rob_number);
                         self.rs_ls.assert_none_waiting_for_rob(record.rob_number);
                     },
                     // There may be RS waiting on this thing (this could be cmp so we're waiting for flags)
                     // We will deal with flags after this
                     ROBEntryDest::None => {},
-                    ROBEntryDest::AwaitingAddress => panic!("Broadcast recieved for STORE rob entry?"),
-                    ROBEntryDest::Register()
+                    ROBEntryDest::AwaitingAddress => {
+                        let address = record.result;
+                        self.rob.set_address(record.rob_number, address);
+                    }
+                    ROBEntryDest::Register(n, cspr) => {
+                        self.rs_control.receive_cdb_broadcast(record.rob_number, n, record.result);
+                        self.rs_mul.receive_cdb_broadcast(record.rob_number, n, record.result);
+                        self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, n, record.result);
+                        self.rs_ls.receive_cdb_broadcast(record.rob_number, n, record.result);
+
+                        if cspr {
+                            if let Some(n) = record.aspr_update.n {
+                                self.rs_control.receive_cdb_broadcast(record.rob_number, 16, n as u32);
+                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 16, n as u32);
+                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 16, n as u32);
+                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 16, n as u32);
+                            }
+                            if let Some(n) = record.aspr_update.z {
+                                self.rs_control.receive_cdb_broadcast(record.rob_number, 17, n as u32);
+                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 17, n as u32);
+                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 17, n as u32);
+                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 17, n as u32);
+                            }
+                            if let Some(n) = record.aspr_update.c {
+                                self.rs_control.receive_cdb_broadcast(record.rob_number, 18, n as u32);
+                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 18, n as u32);
+                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 18, n as u32);
+                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 18, n as u32);
+                            }
+                            if let Some(n) = record.aspr_update.v {
+                                self.rs_control.receive_cdb_broadcast(record.rob_number, 19, n as u32);
+                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 19, n as u32);
+                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 19, n as u32);
+                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 19, n as u32);
+                            }
+                        }
+                    }
                 }
             }
         }
-        self.to_broadcast = new_to_broadcast;
 
         self.commit();
         self.wb();
@@ -183,7 +222,7 @@ impl CPU for OoOSpeculative {
 
         let vertical = Layout::vertical([Min(0)]);
         let [main_area] = vertical.areas(frame.area());
-        let horizontal = Layout::horizontal([Length(20), Fill(20)]);
+        let horizontal = Layout::horizontal([Length(30), Fill(20)]);
         let [left_area, right_area] = horizontal.areas(main_area);
 
         let (rs_to_display, rs_to_display_n, rs_to_display_name) = match self.rs_current_display {
@@ -225,21 +264,22 @@ impl CPU for OoOSpeculative {
             epoch_area,
         );
 
-        let rs_str = self
-            .rob
-            .register_status
-            .iter()
-            .enumerate()
-            .map(|(i, rob_entry)| match rob_entry {
-                Some(entry) => format!("{}: #{}", i, entry),
-                None => format!(
-                    "{:02} : {:08X}",
-                    Registers::reg_id_to_str(i as u8),
-                    self.state.regs.get(i as u8)
-                ),
-            })
-            .collect::<Vec<String>>()
-            .join("\n");
+        let rs_str = self.rob.render(self.rob_focus);
+            // self
+            // .rob
+            // .register_status
+            // .iter()
+            // .enumerate()
+            // .map(|(i, rob_entry)| match rob_entry {
+            //     Some(entry) => format!("{}: #{}", i, entry),
+            //     None => format!(
+            //         "{:02} : {:08X}",
+            //         Registers::reg_id_to_str(i as u8),
+            //         self.state.regs.get(i as u8)
+            //     ),
+            // })
+            // .collect::<Vec<String>>()
+            // .join("\n");
 
         frame.render_widget(
             Paragraph::new(format!("{rs_str}")).block(bottom_border("Register Status")),
@@ -363,13 +403,19 @@ impl OoOSpeculative {
     fn stall(&mut self, reason: StallReason) {
         self.stalls.push(reason);
     }
+    
+    pub fn rob_focus_up(&mut self) {
+        self.rob_focus += 1;
+        if self.rob_focus >= ROB_ENTRIES {
+            self.rob_focus = 0;
+        }
+    }
 
-    fn wipe_cdb(&mut self) {
-        self.cdb = [CDBRecord {
-            valid: false,
-            rob_number: 0,
-            result: 0,
-            aspr_update: ASPRUpdate::no_update(),
-        }; CDB_WIDTH];
+    pub fn rob_focus_down(&mut self) {
+        if self.rob_focus == 0 {
+            self.rob_focus =  ROB_ENTRIES;
+        }
+        self.rob_focus -= 1;
+
     }
 }
