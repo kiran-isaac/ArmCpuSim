@@ -35,7 +35,6 @@ pub struct ROB {
     queue: [ROBEntry; ROB_ENTRIES],
     head: usize,
     tail: usize,
-    op: IT,
 
     // None means not busy
     // Some(n) means ROB entry n holds the result. 16 arch registers, then N Z C V
@@ -58,6 +57,7 @@ pub enum ROBEntryDest {
 #[derive(Copy, Clone)]
 pub struct ROBEntry {
     pub pc: u32,
+    pub halt: bool,
     pub i: I,
     pub status: ROBStatus,
     pub value: u32,
@@ -71,11 +71,19 @@ impl ROBEntry {
         ROBEntry {
             pc: 0,
             value: 0,
+            halt: false,
             status: ROBStatus::EMPTY,
             dest: ROBEntryDest::None,
             i: I::undefined(),
             asprupdate: ASPRUpdate::no_update(),
             ready: false,
+        }
+    }
+    
+    pub fn is_serializing(&self) -> bool {
+        match self.i.it {
+            SVC => true,
+            _ => false,
         }
     }
 }
@@ -87,7 +95,6 @@ impl ROB {
             head: 0,
             tail: 0,
             register_status: [None; 20],
-            op: UNDEFINED,
 
             will_issue: ROBEntry::new(),
             temp_register_status: [None; 20],
@@ -179,6 +186,7 @@ impl ROB {
             status: ROBStatus::Execute,
             value: 0,
             i: i.clone(),
+            halt: false,
             dest: rob_dest,
             ready: false,
             asprupdate: ASPRUpdate::no_update(),
@@ -196,7 +204,20 @@ impl ROB {
     pub fn get_head(&self) -> &ROBEntry {
         &self.queue[self.head]
     }
+    
+    pub fn get_last_issued(&self) -> Option<&ROBEntry> {
+        let last_issued = &self.queue[Self::decrement_index(self.tail)];
+        if last_issued.status == ROBStatus::EMPTY {
+            None
+        } else {
+            Some(last_issued)
+        }
+    }
 
+    pub fn set_halt(&mut self, n: usize) {
+        self.queue[n].halt = true;
+    }
+    
     pub fn set_value_and_ready(&mut self, n: usize, value: u32) {
         self.queue[n].value = value;
         self.queue[n].ready = true;
@@ -222,6 +243,15 @@ impl ROB {
     /// Wrapping increment
     fn increment_index(index: usize) -> usize {
         (index + 1) % ROB_ENTRIES
+    }
+
+    /// Wrapping increment
+    fn decrement_index(index: usize) -> usize {
+        if index == 0 {
+            ROB_ENTRIES - 1
+        } else {
+            (index - 1) % ROB_ENTRIES
+        }
     }
 
     pub fn is_empty(&self) -> bool {

@@ -30,6 +30,7 @@ struct CDBRecord {
     rob_number: usize,
     result: u32,
     aspr_update: ASPRUpdate,
+    halt:  bool,
 }
 
 #[derive(Clone, Copy)]
@@ -44,6 +45,7 @@ enum StallReason {
     IssueRobFull,
     IssueRSFull,
     ExecuteLSQFull,
+    SerializingInstr
 }
 
 struct InstructionQueueEntry {
@@ -89,6 +91,7 @@ pub struct OoOSpeculative {
     pub rs_current_display: IssueType,
     pub rob_focus: usize,
     pub mem_bottom_offset: usize,
+    pub display_focus: usize,
 }
 
 impl CPU for OoOSpeculative {
@@ -120,6 +123,7 @@ impl CPU for OoOSpeculative {
             to_broadcast: Vec::new(),
             cdb: VecDeque::new(),
             mem_bottom_offset: 0,
+            display_focus: 0,
         }
     }
 
@@ -218,9 +222,22 @@ impl CPU for OoOSpeculative {
         let rob_str = self.rob.render(self.rob_focus);
 
         frame.render_widget(
-            Paragraph::new(rob_str).block(Block::bordered().title("ROB")),
+            Paragraph::new(rob_str).block(Block::bordered().title(if self.display_focus == 0 {"#ROB#"} else {"ROB"})),
             rob_area,
         );
+
+        let mem_string = self.state.mem.dump(mem_area.width.into(), (mem_area.height - 2).into(), self.state.regs.sp as usize, self.mem_bottom_offset);
+        frame.render_widget(
+            Block::new().borders(Borders::BOTTOM),
+            mem_top_border,
+        );
+        frame.render_widget(
+            Paragraph::new(mem_string).block(Block::new()
+                .title(if self.display_focus == 1 {"#Mem#"} else {"Mem"})
+                .title_alignment(Alignment::Center)),
+            mem_area,
+        );
+
 
         frame.render_widget(
             Paragraph::new(format!(
@@ -271,18 +288,6 @@ impl CPU for OoOSpeculative {
             Layout::horizontal([Length(3), Length(11), Length(11), Length(11), Fill(1)])
                 .areas(rs_area_inner);
         
-        let mem_string = self.state.mem.dump(mem_area.width.into(), (mem_area.height - 2).into(), self.state.regs.sp as usize, self.mem_bottom_offset);
-        frame.render_widget(
-            Block::new().borders(Borders::BOTTOM),
-            mem_top_border,
-        );
-        frame.render_widget(
-            Paragraph::new(mem_string).block(Block::new()
-                .title("Mem")
-                .title_alignment(Alignment::Center)),
-            mem_area,
-        );
-
         fn make_block_from_property<'a>(
             rs_to_display: &RSSet,
             property_getter: fn(&RS) -> String,

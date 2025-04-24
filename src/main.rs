@@ -52,10 +52,6 @@ fn main() -> io::Result<()> {
     loop {
         cpu.tick();
         terminal.draw(|f| cpu.render(f))?;
-        
-        // 0: scroll rob
-        // 1: scroll mem
-        let mut focus = 0;
 
         // Wait for enter
         loop {
@@ -69,17 +65,17 @@ fn main() -> io::Result<()> {
                             break;
                         }
                         KeyCode::Up => {
-                            if focus == 0 {
+                            if cpu.display_focus == 0 {
                                 cpu.rob_focus_down();
-                            } else if focus == 1 {
+                            } else if cpu.display_focus == 1 {
                                 cpu.mem_bottom_offset += 1;
                             }
                             terminal.draw(|f| cpu.render(f))?;
                         }
                         KeyCode::Down => {
-                            if focus == 0 {
+                            if cpu.display_focus == 0 {
                                 cpu.rob_focus_up();
-                            } else if focus == 1 {
+                            } else if cpu.display_focus == 1 {
                                 if cpu.mem_bottom_offset > 0 {
                                     cpu.mem_bottom_offset -= 1;
                                 }
@@ -94,12 +90,12 @@ fn main() -> io::Result<()> {
                                 '4' => cpu.rs_current_display = IssueType::Control,
                                 'r' => {},
                                 'f' => {
-                                    let new_focus = if focus == 0 {
+                                    let new_focus = if cpu.display_focus == 0 {
                                         1
                                     } else {
                                         0
                                     };
-                                    focus = new_focus
+                                    cpu.display_focus = new_focus
                                 },
                                 _ => continue,
                             }

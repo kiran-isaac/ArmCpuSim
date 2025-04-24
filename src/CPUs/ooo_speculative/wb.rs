@@ -11,12 +11,8 @@ impl OoOSpeculative {
                 *delay -= 1;
                 new_to_broadcast.push((*delay, record.clone()));
             } else {
-                self.cdb.push_back(CDBRecord {
-                    valid: true,
-                    result: record.result,
-                    aspr_update: record.aspr_update,
-                    rob_number: record.rob_number,
-                });
+                record.valid = true;
+                self.cdb.push_back(record.clone());
                 free_slots -= 1;
             }
         }
@@ -28,6 +24,9 @@ impl OoOSpeculative {
             if let Some(record) = self.cdb.pop_front() {
                 let rob_entry = self.rob.get(record.rob_number).clone();
                 self.rob.set_value_and_ready(record.rob_number, record.result);
+                if record.halt {
+                    self.rob.set_halt(record.rob_number);
+                }
                 assert_eq!(rob_entry.status, ROBStatus::Execute);
 
                 match rob_entry.dest {

@@ -1,3 +1,5 @@
+use std::process::exit;
+use crate::binary::unsigned_to_signed_bitcast;
 use crate::decode::IT::{STRBImm, STRBReg, STRHImm, STRHReg, STRImm, STRReg, SetPC, B, BL, BLX, BX};
 use super::*;
 
@@ -5,6 +7,10 @@ impl OoOSpeculative{
     pub(super) fn commit(&mut self) {
         let head = self.rob.get_head();
         if !head.ready {return;}
+        if head.halt {
+            // r0 is the exit code, must have been committed by now
+            exit(unsigned_to_signed_bitcast(self.state.regs.gp[0]))
+        }
         
         match head.i.it {
             // Maybe taken
@@ -45,7 +51,7 @@ impl OoOSpeculative{
                 if aspr_update {
                     self.state.regs.apply_aspr_update(&head.asprupdate)
                 }
-                
+
                 self.rob.register_status[rn as usize] = None
             }
             _ => {}

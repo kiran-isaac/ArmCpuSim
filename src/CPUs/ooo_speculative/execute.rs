@@ -1,8 +1,10 @@
+use std::io::{Read, Write};
 use super::*;
 use crate::binary::{bit_as_bool, briz, signed_to_unsigned_bitcast, unsigned_to_signed_bitcast};
 use crate::components::shift::{shift_with_carry, ShiftType};
 use crate::components::ALU::{ALUOperation, CalcResult, ALU};
 use crate::IT::*;
+use crate::system::syscall;
 
 impl OoOSpeculative {
     pub(super) fn execute(&mut self) {
@@ -30,6 +32,26 @@ impl OoOSpeculative {
     }
 
     fn execute_control(&mut self, rs: &RS, num_broadcast: &mut usize) {
+        if rs.i.it == SVC {
+            let svc_num = Self::get_data(rs.j).unwrap();
+            match svc_num {
+                0 => {
+                    self.to_broadcast.push((
+                        1,
+                        CDBRecord {
+                            valid: false,
+                            result: 0,
+                            aspr_update: ASPRUpdate::no_update(),
+                            rob_number: rs.rob_dest,
+                            halt: true,
+                        },
+                    ));
+                    *num_broadcast += 1;
+                    return;
+                }
+                _ => panic!("Invalid svc"),
+            }
+        }
         // BX, BLX and SetPc require RM
         // SetPC, BX and BLX are absolute
         // B and BL are relative, and require an immediate
@@ -79,6 +101,7 @@ impl OoOSpeculative {
                 result: target,
                 aspr_update: ASPRUpdate::no_update(),
                 rob_number: rs.rob_dest,
+                halt: false,
             },
         ));
         *num_broadcast += 1;
@@ -138,6 +161,7 @@ impl OoOSpeculative {
                             result,
                             aspr_update: ASPRUpdate::no_update(),
                             rob_number: rs.rob_dest,
+                            halt: false,
                         },
                     ));
                     *num_broadcast += 1;
@@ -176,6 +200,7 @@ impl OoOSpeculative {
                         rob_number: rs.rob_dest,
                         result: address,
                         aspr_update: ASPRUpdate::no_update(),
+                        halt: false,
                     })
                 )
             }
@@ -207,6 +232,7 @@ impl OoOSpeculative {
                 result,
                 aspr_update,
                 rob_number: rs.rob_dest,
+                halt: false,
             },
         ));
         *num_broadcast += 1;
@@ -343,6 +369,7 @@ impl OoOSpeculative {
                 result,
                 aspr_update,
                 rob_number: rs.rob_dest,
+                halt: false,
             },
         ));
         *num_broadcast += 1;

@@ -1,3 +1,4 @@
+use crate::binary::briz;
 use super::*;
 
 impl OoOSpeculative {

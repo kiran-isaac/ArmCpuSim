@@ -6,6 +6,12 @@ impl OoOSpeculative {
             self.stall(StallReason::IssueRobFull);
             return;
         }
+        if let Some(last_issued) = self.rob.get_last_issued() {
+            if last_issued.is_serializing() {
+                self.stall(StallReason::SerializingInstr);
+                return;
+            }
+        }
         if self.iq.len() <= 0 {
             return;
         }
