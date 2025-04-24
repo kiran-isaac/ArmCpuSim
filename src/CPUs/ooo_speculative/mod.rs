@@ -22,6 +22,7 @@ use crate::model::Registers;
 
 const CDB_WIDTH: usize = 1;
 const LQ_SIZE: usize = 8;
+const MISPREDICT_FLUSH_DELAY: u32 = 2;
 
 #[derive(Clone, Copy)]
 struct CDBRecord {
@@ -72,6 +73,8 @@ pub struct OoOSpeculative {
 
     ls_pipeline_addr_calc: Option<u32>,
 
+    flush_delay: u32,
+    flushing: bool,
     spec_pc: u32,
 
     // only the first {CDB_WIDTH} are currently being broadcasted
@@ -103,7 +106,8 @@ impl CPU for OoOSpeculative {
             rs_ls: RSSet::new(IssueType::LoadStore, 8),
 
             rob,
-
+            flush_delay: 0,
+            flushing: false,
             load_queue: VecDeque::with_capacity(LQ_SIZE),
             ls_pipeline_addr_calc: None,
 
@@ -119,6 +123,14 @@ impl CPU for OoOSpeculative {
     fn tick(&mut self) {
         // 6 stage pipeline
         // The pipeline stages are simulated backwards to avoid instantaneous updates
+        
+        if self.flushing {
+            if self.flush_delay != 0 {
+                self.flush_delay -= 1;
+            } else { 
+                
+            }    
+        }
 
         self.commit();
         self.wb();
@@ -199,7 +211,7 @@ impl CPU for OoOSpeculative {
             Paragraph::new(rs_str).block(bottom_border("Register Status")),
             rst_area,
         );
-        
+
         let rob_str = self.rob.render(self.rob_focus);
 
         frame.render_widget(
@@ -338,5 +350,10 @@ impl OoOSpeculative {
         }
         self.rob_focus -= 1;
 
+    }
+
+    fn start_flush(&mut self) {
+        self.flushing = true;
+        self.flush_delay = MISPREDICT_FLUSH_DELAY;
     }
 }

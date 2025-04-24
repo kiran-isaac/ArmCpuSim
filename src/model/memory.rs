@@ -253,8 +253,6 @@ impl Memory {
         &mut self,
         vaddr: u32,
         value: u32,
-        info: &str,
-        event_log: &mut String,
     ) -> Result<(), MemError> {
         let addr = self.mm(vaddr) as usize;
         if (addr as u32) < (self.flash_start + self.flash_size) {
@@ -279,8 +277,6 @@ impl Memory {
         &mut self,
         vaddr: u32,
         value: u16,
-        info: &str,
-        event_log: &mut String,
     ) -> Result<(), MemError> {
         let addr = self.mm(vaddr) as usize;
         if (addr as u32) < (self.flash_start + self.flash_size) {

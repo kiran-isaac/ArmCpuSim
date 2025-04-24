@@ -1,6 +1,7 @@
 use crate::decode::{I, IT, IT::*};
 use crate::CPUs::LoadQueueEntry;
 use std::fmt::Formatter;
+use crate::components::ALU::ASPRUpdate;
 use crate::components::ROB::ROBStatus::EMPTY;
 use crate::model::Registers;
 
@@ -48,6 +49,7 @@ pub struct ROBEntry {
     pub i: I,
     pub status: ROBStatus,
     pub value: u32,
+    pub asprupdate: ASPRUpdate,
     pub ready: bool,
     pub dest: ROBEntryDest,
 }
@@ -60,6 +62,7 @@ impl ROBEntry {
             status: ROBStatus::EMPTY,
             dest: ROBEntryDest::None,
             i: I::undefined(),
+            asprupdate: ASPRUpdate::no_update(),
             ready: false,
         }
     }
@@ -165,7 +168,8 @@ impl ROB {
             value: 0,
             i: i.clone(),
             dest: rob_dest,
-            ready: false
+            ready: false,
+            asprupdate: ASPRUpdate::no_update(),
         };
 
         // Return where it would go upon issue commit
@@ -177,13 +181,17 @@ impl ROB {
         &self.queue[n]
     }
 
+    pub fn get_head(&self) -> &ROBEntry {
+        &self.queue[self.head]
+    }
+
     pub fn set_value(&mut self, n: usize, value: u32) {
         self.queue[n].value = value;
     }
 
     pub fn set_address(&mut self, n: usize, address: u32) {
         if self.queue[n].dest != ROBEntryDest::AwaitingAddress {unreachable!()}
-        
+
         self.queue[n].dest = ROBEntryDest::Address(address);
     }
 
@@ -249,7 +257,7 @@ impl ROB {
         }
         true
     }
-    
+
     pub fn render(&self, focus: usize) -> String {
         let mut string = format!("head: {}\ntail: {}\n", self.head, self.tail);
         let mut looking_at = focus;
