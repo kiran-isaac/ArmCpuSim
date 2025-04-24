@@ -1,5 +1,7 @@
 use super::{I, IT, IT::*};
 use std::fmt::Display;
+use crate::components::ROB::ROBEntryDest::Register;
+use crate::model::Registers;
 
 impl IT {
     fn to_string_no_type(&self) -> String {
@@ -15,52 +17,57 @@ impl Display for I {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut str = self.it.to_string_no_type() + if self.setsflags { "s " } else { " " };
 
+        let rd = Registers::reg_id_to_str(self.rd);
+        let rn  = Registers::reg_id_to_str(self.rn);
+        let rm = Registers::reg_id_to_str(self.rm);
+        let rt  = Registers::reg_id_to_str(self.rt);
+        
         let args = match self.it {
             // RD, RN RM register register
             ADDReg | AND | ASRReg | BIC | EOR | LSLReg | LSRReg | ROR | MUL | ORR | SBC
-            | SUBReg => format!("{} {} {}", self.rd, self.rn, self.rm),
+            | SUBReg => format!("{} {} {}", rd, rn, rm),
 
             // RD RN immu
             ADC | ADDImm | ADDSpImm | RSB | SUBImm => {
-                format!("{} {} #{}", self.rd, self.rn, self.immu)
+                format!("{} {} #{}", rd, rn, self.immu)
             }
 
             // RD immu
-            MOVImm => format!("{} #{}", self.rd, self.immu),
+            MOVImm => format!("{} #{}", rd, self.immu),
 
             // RD RM
             MOVReg | MVN | REV | REV16 | REVSH | SXTB | SXTH | UXTB | UXTH => {
-                format!("{} {}", self.rd, self.rm)
+                format!("{} {}", rd, rm)
             }
 
             // RD RM immu
-            ASRImm | LSRImm | LSLImm => format!("{} {} #{}", self.rd, self.rn, self.immu),
+            ASRImm | LSRImm | LSLImm => format!("{} {} #{}", rd, rn, self.immu),
 
             // RN RM
-            CMN | CMPReg | TST => format!("{} {}", self.rn, self.rm),
+            CMN | CMPReg | TST => format!("{} {}", rn, rm),
 
             // RT RN immu
-            LDRImm | LDRBImm | LDRHImm => format!("{} {} #{}", self.rt, self.rn, self.immu),
+            LDRImm | LDRBImm | LDRHImm => format!("{} {} #{}", rt, rn, self.immu),
 
             // RT RN RM
             LDRReg | LDRBReg | LDRHReg | LDRSH | LDRSB => {
-                format!("{} {} {}", self.rt, self.rn, self.rm)
+                format!("{} {} {}", rt, rn, rm)
             }
 
             // RN RT RM
-            STRBReg | STRHReg | STRReg => format!("{} {} {}", self.rn, self.rt, self.rm),
+            STRBReg | STRHReg | STRReg => format!("{} {} {}", rn, rt, rm),
 
             // RN RT immu
-            STRImm | STRHImm | STRBImm => format!("{} {} #{}", self.rn, self.rt, self.immu),
+            STRImm | STRHImm | STRBImm => format!("{} {} #{}", rn, rt, self.immu),
 
             // RN immu
-            CMPImm => format!("{} {}", self.rn, self.immu),
+            CMPImm => format!("{} {}", rn, self.immu),
 
             // B PC + imms
             BL | B => format!("#{}", self.imms),
 
             // BX RM
-            BX | BLX => format!("{}", self.rm),
+            BX | BLX => format!("{}", rm),
 
             // immu
             SVC => format!("#{}", self.immu),

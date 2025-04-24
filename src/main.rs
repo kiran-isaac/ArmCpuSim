@@ -78,6 +78,7 @@ fn main() -> io::Result<()> {
                                 '2' => cpu.rs_current_display = IssueType::MUL,
                                 '3' => cpu.rs_current_display = IssueType::LoadStore,
                                 '4' => cpu.rs_current_display = IssueType::Control,
+                                'r' => {}
                                 _ => continue,
                             }
                             terminal.draw(|f| cpu.render(f))?;

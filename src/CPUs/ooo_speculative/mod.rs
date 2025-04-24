@@ -149,7 +149,7 @@ impl CPU for OoOSpeculative {
 
         let vertical = Layout::vertical([Min(0)]);
         let [main_area] = vertical.areas(frame.area());
-        let horizontal = Layout::horizontal([Length(20), Length(30), Fill(20)]);
+        let horizontal = Layout::horizontal([Length(20), Length(40), Fill(20)]);
         let [left_area, rob_area, right_area] = horizontal.areas(main_area);
 
         let (rs_to_display, rs_to_display_n, rs_to_display_name) = match self.rs_current_display {

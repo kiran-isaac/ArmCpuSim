@@ -1,3 +1,5 @@
+use crate::components::ALU::ASPRUpdate;
+
 #[derive(Clone, Copy)]
 pub struct Registers {
     // R0-R12
@@ -58,6 +60,21 @@ impl ASPR {
             _ => panic!("Invalid condition code"),
         }
     }
+    
+    fn apply_aspr_update(&mut self, update: &ASPRUpdate) {
+        if let Some(update) = update.n {
+            self.n = update;
+        }
+        if let Some(update) = update.z {
+            self.z = update;
+        }
+        if let Some(update) = update.c {
+            self.c = update;
+        }
+        if let Some(update) = update.v {
+            self.v = update;
+        }
+    }
 }
 
 impl Registers {
@@ -112,6 +129,10 @@ impl Registers {
             19 => "V".to_string(),
             _ => panic!("Invalid register index: {}", id),
         }
+    }
+    
+    pub fn apply_aspr_update(&mut self, ASPR: &ASPRUpdate) {
+        self.apsr.apply_aspr_update(ASPR);
     }
 }
 

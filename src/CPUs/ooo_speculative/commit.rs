@@ -39,11 +39,18 @@ impl OoOSpeculative{
                 }
             }
             ROBEntryDest::AwaitingAddress => unreachable!(),
-            ROBEntryDest::Register(rn, bool) => {
+            ROBEntryDest::Register(rn, aspr_update) => {
                 self.state.regs.set(rn, head.value);
-                // TODO finish this
-                if 
+
+                if aspr_update {
+                    self.state.regs.apply_aspr_update(&head.asprupdate)
+                }
+                
+                self.rob.register_status[rn as usize] = None
             }
+            _ => {}
         }
+
+        self.rob.clear_head_and_increment()
     }
 }

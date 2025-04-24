@@ -2,7 +2,6 @@ use crate::decode::{I, IT, IT::*};
 use crate::CPUs::LoadQueueEntry;
 use std::fmt::Formatter;
 use crate::components::ALU::ASPRUpdate;
-use crate::components::ROB::ROBStatus::EMPTY;
 use crate::model::Registers;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -17,7 +16,20 @@ pub enum ROBStatus {
     Exception(u8),
 }
 
-pub const ROB_ENTRIES: usize = 20;
+impl std::fmt::Display for ROBStatus {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ROBStatus::EMPTY => write!(f, "__"),
+            ROBStatus::Execute => write!(f, "EX"),
+            ROBStatus::Pending => write!(f, "PN"),
+            ROBStatus::Commit => write!(f, "CO"),
+            ROBStatus::Write => write!(f, "WP"),
+            ROBStatus::Exception(v) => write!(f, "V{}", v),
+        }
+    }
+}
+
+pub const ROB_ENTRIES: usize = 32;
 
 pub struct ROB {
     queue: [ROBEntry; ROB_ENTRIES],
@@ -185,8 +197,9 @@ impl ROB {
         &self.queue[self.head]
     }
 
-    pub fn set_value(&mut self, n: usize, value: u32) {
+    pub fn set_value_and_ready(&mut self, n: usize, value: u32) {
         self.queue[n].value = value;
+        self.queue[n].ready = true;
     }
 
     pub fn set_address(&mut self, n: usize, address: u32) {
@@ -194,15 +207,20 @@ impl ROB {
 
         self.queue[n].dest = ROBEntryDest::Address(address);
     }
+    
+    pub fn clear_head_and_increment(&mut self) {
+        self.queue[self.head].status = ROBStatus::EMPTY;
+        self.head = Self::increment_index(self.head);
+    }
 
     pub fn issue_commit(&mut self) {
         self.queue[self.tail] = self.will_issue;
         self.register_status = self.temp_register_status;
-        self.tail = self.increment_index(self.tail);
+        self.tail = Self::increment_index(self.tail);
     }
 
     /// Wrapping increment
-    fn increment_index(&self, index: usize) -> usize {
+    fn increment_index(index: usize) -> usize {
         (index + 1) % ROB_ENTRIES
     }
 
@@ -211,7 +229,7 @@ impl ROB {
     }
 
     pub fn is_full(&self) -> bool {
-        self.head == self.increment_index(self.tail)
+        self.head == Self::increment_index(self.tail)
     }
 
     /// True if e1 is first, false otherwise
@@ -262,7 +280,7 @@ impl ROB {
         let mut string = format!("head: {}\ntail: {}\n", self.head, self.tail);
         let mut looking_at = focus;
         for i in 0..ROB_ENTRIES {
-            string = format!("{string} {looking_at}: {}", self.queue[looking_at]);
+            string = format!("{string} {looking_at:02}: {}", self.queue[looking_at]);
             if i < ROB_ENTRIES - 1 {
                 string.push_str("\n");
             }
@@ -287,10 +305,10 @@ impl std::fmt::Display for ROBEntryDest {
 }
 impl std::fmt::Display for ROBEntry {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        if self.status == EMPTY {
-            return write!(f, "EMPTY");
+        if self.status == ROBStatus::EMPTY {
+            return write!(f, "__");
         }
-        write!(f, "{:?}, {}", self.status, self.dest)
+        write!(f, "{}, {}, {}", self.status.to_string(), self.dest, self.i.to_string())
     }
 }
 #[cfg(test)]

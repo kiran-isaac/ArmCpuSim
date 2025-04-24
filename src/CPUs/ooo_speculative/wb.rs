@@ -27,7 +27,7 @@ impl OoOSpeculative {
         for _ in 0..CDB_WIDTH {
             if let Some(record) = self.cdb.pop_front() {
                 let rob_entry = self.rob.get(record.rob_number).clone();
-                self.rob.set_value(record.rob_number, record.result);
+                self.rob.set_value_and_ready(record.rob_number, record.result);
                 assert_eq!(rob_entry.status, ROBStatus::Execute);
 
                 match rob_entry.dest {
