@@ -87,12 +87,14 @@ pub struct OoOSpeculative {
     stalls: Vec<StallReason>,
     epoch: usize,
     pub rs_current_display: IssueType,
-    pub rob_focus: usize
+    pub rob_focus: usize,
+    pub mem_bottom_offset: usize,
 }
 
 impl CPU for OoOSpeculative {
     fn new(state: ProcessorState, trace_file: &str, log_file: &str, stack_dump_file: &str) -> Self {
         let rob = ROB::new();
+        let sp = state.regs.sp as usize;
         Self {
             tracer: Tracer::new(trace_file, &state.regs),
             spec_pc: state.regs.pc,
@@ -116,7 +118,8 @@ impl CPU for OoOSpeculative {
             rs_current_display: IssueType::ALUSHIFT,
             rob_focus: 0,
             to_broadcast: Vec::new(),
-            cdb: VecDeque::new()
+            cdb: VecDeque::new(),
+            mem_bottom_offset: 0,
         }
     }
 
@@ -172,8 +175,8 @@ impl CPU for OoOSpeculative {
             vertical: 1,
         });
 
-        let [fb_area, iq_area, rs_area] =
-            Layout::vertical([Length(3), Length(5), Length(10)]).areas(right_area);
+        let [fb_area, iq_area, rs_area, mem_top_border, mem_area] =
+            Layout::vertical([Length(3), Length(5), Length(10), Length(1), Fill(1)]).areas(right_area);
         let [epoch_area, rst_area, stall_area] =
             Layout::vertical([Length(3), Length(22), Fill(1)]).areas(left_area);
 
@@ -267,6 +270,18 @@ impl CPU for OoOSpeculative {
         let [index_area, j_area, k_area, l_area, inst_area] =
             Layout::horizontal([Length(3), Length(11), Length(11), Length(11), Fill(1)])
                 .areas(rs_area_inner);
+        
+        let mem_string = self.state.mem.dump(mem_area.width.into(), (mem_area.height - 2).into(), self.state.regs.sp as usize, self.mem_bottom_offset);
+        frame.render_widget(
+            Block::new().borders(Borders::BOTTOM),
+            mem_top_border,
+        );
+        frame.render_widget(
+            Paragraph::new(mem_string).block(Block::new()
+                .title("Mem")
+                .title_alignment(Alignment::Center)),
+            mem_area,
+        );
 
         fn make_block_from_property<'a>(
             rs_to_display: &RSSet,

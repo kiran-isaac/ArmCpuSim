@@ -5,6 +5,9 @@ LINKER_SCRIPT := script.ld
 
 %.dis : %.out
 	$(ARMET)/bin/llvm-objdump -D -S  $< > $@ 
+	
+%.out: %.s
+	$(ARMET)/bin/clang -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
 
 %.out: %.c
 	$(ARMET)/bin/clang -O0 -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)

@@ -52,6 +52,10 @@ fn main() -> io::Result<()> {
     loop {
         cpu.tick();
         terminal.draw(|f| cpu.render(f))?;
+        
+        // 0: scroll rob
+        // 1: scroll mem
+        let mut focus = 0;
 
         // Wait for enter
         loop {
@@ -65,11 +69,21 @@ fn main() -> io::Result<()> {
                             break;
                         }
                         KeyCode::Up => {
-                            cpu.rob_focus_down();
+                            if focus == 0 {
+                                cpu.rob_focus_down();
+                            } else if focus == 1 {
+                                cpu.mem_bottom_offset += 1;
+                            }
                             terminal.draw(|f| cpu.render(f))?;
                         }
                         KeyCode::Down => {
-                            cpu.rob_focus_up();
+                            if focus == 0 {
+                                cpu.rob_focus_up();
+                            } else if focus == 1 {
+                                if cpu.mem_bottom_offset > 0 {
+                                    cpu.mem_bottom_offset -= 1;
+                                }
+                            }
                             terminal.draw(|f| cpu.render(f))?;
                         }
                         KeyCode::Char(c) => {
@@ -78,7 +92,15 @@ fn main() -> io::Result<()> {
                                 '2' => cpu.rs_current_display = IssueType::MUL,
                                 '3' => cpu.rs_current_display = IssueType::LoadStore,
                                 '4' => cpu.rs_current_display = IssueType::Control,
-                                'r' => {}
+                                'r' => {},
+                                'f' => {
+                                    let new_focus = if focus == 0 {
+                                        1
+                                    } else {
+                                        0
+                                    };
+                                    focus = new_focus
+                                },
                                 _ => continue,
                             }
                             terminal.draw(|f| cpu.render(f))?;

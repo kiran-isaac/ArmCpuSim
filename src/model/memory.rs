@@ -306,4 +306,33 @@ impl Memory {
             Ok(())
         }
     }
+    
+    pub fn dump(&self, width: usize, height: usize, bottom: usize, rows_scrolled_up: usize) -> String {
+        // A byte is two chars, a word is eight
+        // Addr is eight byes
+        // #aaaaaaaa: 01234567 01234567
+        let width_for_mem = width - 11;
+        let words_per_line = width_for_mem / 9;
+        
+        let start_addr = bottom - (words_per_line * height * 4) - (rows_scrolled_up * 4);
+        let mut string = String::new();
+        string.reserve(width * height);
+        
+        for y in 0..height {
+            let line_addr = start_addr + (y * words_per_line * 4);
+            string.push_str(&format!("#{:08X?}:", line_addr));
+            for x  in 0..words_per_line {
+                let addr = (line_addr + x * 4) as u32;
+                // string.push_str(&format!(" {:08X}", addr));
+                if let Ok(word) = self.get_word(addr) {
+                    string.push_str(&format!(" {:08X}", word));
+                } else {
+                    string.push_str(" ________");
+                }
+            }
+            string.push('\n');
+        }
+
+        string
+    }
 }
