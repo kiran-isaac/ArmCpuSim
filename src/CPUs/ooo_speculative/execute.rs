@@ -65,23 +65,23 @@ impl OoOSpeculative {
             }
         }
         
-        if let Some(rs_index) = self.rs_alu_shift.get_one_ready() {
+        if let Some(rs_index) = self.rs_alu_shift.get_oldest_ready(&self.rob) {
             self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut 0);
             self.rs_alu_shift.vec[rs_index].busy = false;
         }
 
-        if let Some(rs_index) = self.rs_mul.get_one_ready() {
+        if let Some(rs_index) = self.rs_mul.get_oldest_ready(&self.rob) {
             self.execute_mul(&self.rs_mul.vec[rs_index].clone(), &mut 0);
             self.rs_mul.vec[rs_index].busy = false;
         }
 
-        if let Some(rs_index) = self.rs_ls.get_one_ready() {
+        if let Some(rs_index) = self.rs_ls.get_oldest_ready(&self.rob) {
             self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
             self.rs_ls.vec[rs_index].busy = false;
         }
         
 
-        if let Some(rs_index) = self.rs_control.get_one_ready() {
+        if let Some(rs_index) = self.rs_control.get_oldest_ready(&self.rob) {
             self.execute_control(&self.rs_control.vec[rs_index].clone(), &mut 0);
             self.rs_control.vec[rs_index].busy = false;
         }
@@ -167,7 +167,7 @@ impl OoOSpeculative {
         };
 
         match rs.i.it {
-            B => target += 2,
+            B => target += 4,
             _ => {}
         }
         

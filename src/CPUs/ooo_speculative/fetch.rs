@@ -34,13 +34,13 @@ impl OoOSpeculative {
         // if its 0b1111 then its svc
         if ((i & 0b1111_0000_0000_0000) == 0b1101_0000_0000_0000) && briz(i, 8, 11) != 0b1111 {
             let i = decode_b1(i);
-            return Some(pc.wrapping_add((i.imms + 2) as u32))
+            return Some(pc.wrapping_add((i.imms + 4) as u32))
         }
         
         // B (T2)
         if ((i & 0b1111_1000_0000_0000) == 0b1110_0000_0000_0000) {
             let i = decode_b2(i);
-            return Some(pc.wrapping_add((i.imms + 2) as u32))
+            return Some(pc.wrapping_add((i.imms + 4) as u32))
         }
         
         None

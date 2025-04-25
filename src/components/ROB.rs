@@ -33,7 +33,7 @@ impl std::fmt::Display for ROBStatus {
 pub struct ROB {
     queue: [ROBEntry; ROB_ENTRIES],
     head: usize,
-    tail: usize,
+    pub tail: usize,
 
     // None means not busy
     // Some(n) means ROB entry n holds the result. 16 arch registers, then N Z C V
@@ -83,8 +83,8 @@ impl ROBEntry {
     
     pub fn is_serializing(&self) -> bool {
         match self.i.it {
-            SVC  => true,
-            B | BL | BLX | BX => STALL_ON_BRANCH,
+            SVC| BLX | BX => true,
+            B | BL  => STALL_ON_BRANCH,
             _ => false,
         }
     }

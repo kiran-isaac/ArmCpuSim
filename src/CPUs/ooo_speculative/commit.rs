@@ -20,8 +20,15 @@ impl OoOSpeculative{
         match head.i.it {
             // Maybe taken
             B => {
-                if ((head.branch_target & 1) == 1) == predicted_taken {
+                let taken = ((head.branch_target & 1) == 1);
+                
+                if taken && !predicted_taken {
                     self.spec_pc = head.branch_target - 1;
+                    self.flush_on_mispredict();
+                }
+ 
+                if !taken &&  predicted_taken {
+                    self.spec_pc = head.pc;
                     self.flush_on_mispredict();
                 }
             }

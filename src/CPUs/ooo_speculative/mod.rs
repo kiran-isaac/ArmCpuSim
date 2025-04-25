@@ -139,12 +139,12 @@ impl CPU for OoOSpeculative {
         self.commit();
         self.wb();
         self.execute();
-        
+
         if self.rob.is_full() {
             self.stall(StallReason::FullRob);
             return;
         }
-        
+
         // If last issued was serializing dont speculatively fetch or issue any more this
         // cycle
         if let Some(last_issued) = self.rob.get_last_issued() {
@@ -153,7 +153,7 @@ impl CPU for OoOSpeculative {
                 return;
             }
         }
-        
+
         self.issue();
         self.decode();
         self.fetch();
@@ -267,7 +267,7 @@ impl CPU for OoOSpeculative {
             .iq
             .iter()
             .enumerate()
-            .map(|(i, iqe)| format!("{}: {}", i, iqe.i))
+            .map(|(i, iqe)| format!("{}: {:<14}    {:08X?}", i, iqe.i.to_string(), iqe.pc))
             .collect::<Vec<String>>()
             .join("\n");
 

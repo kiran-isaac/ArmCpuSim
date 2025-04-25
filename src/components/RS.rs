@@ -163,21 +163,27 @@ impl<'a> RSSet {
         Some(self.vec.iter().enumerate().find(|(_, rs)| !rs.busy)?.0)
     }
 
-    pub fn get_one_ready(&self) -> Option<usize> {
+    pub fn get_oldest_ready(&self, rob: &ROB) -> Option<usize> {
+        let mut oldest_entry = (rob.tail, None);
         for (index, entry) in self.vec.iter().enumerate() {
             if !entry.busy {
                 continue;
             }
+
 
             // Ignore this entry if any still pending results
             match (entry.j, entry.k, entry.l) {
                 (RSData::ROB(_, _), _, _) | (_, RSData::ROB(_, _), _) | (_, _, RSData::ROB(_, _)) => {
                     continue
                 }
-                _ => return Some(index),
+                _ => {
+                    if rob.entry_is_before(entry.rob_dest, oldest_entry.0) {
+                        oldest_entry = (entry.rob_dest, Some(index));
+                    }
+                },
             }
         }
-        None
+        oldest_entry.1
     }
 
     /// Get a ready to execute RS
