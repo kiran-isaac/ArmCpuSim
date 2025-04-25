@@ -17,16 +17,14 @@ impl OoOSpeculative{
             B => {
                 if (head.value & 1) == 1 {
                     self.spec_pc = head.value - 1;
-                    self.iq.clear();
-                    self.fb = None;
+                    self.flush_on_mispredict();
                 }
             }
 
             // Always Taken, so branch is mispredicted in "not taken"
             BL | BX | BLX | SetPC => {
                 self.spec_pc = head.value;
-                self.iq.clear();
-                self.fb = None;
+                self.flush_on_mispredict();
             }
             
             _ => {}
@@ -51,19 +49,24 @@ impl OoOSpeculative{
                 }
             }
             ROBEntryDest::AwaitingAddress => unreachable!(),
-            ROBEntryDest::Register(rn, aspr_update) => {
+            ROBEntryDest::Register(rn, _) => {
                 self.state.regs.set(rn, head.value);
-
-                if aspr_update {
-                    self.state.regs.apply_aspr_update(&head.asprupdate);
-                    self.rob.wipe_aspr_rob_dependencies(&head.asprupdate);
-                }
 
                 self.rob.register_status[rn as usize] = None
             }
             _ => {}
         }
+        
+        if head.i.setsflags {
+            self.state.regs.apply_aspr_update(&head.asprupdate);
+            self.rob.wipe_aspr_rob_dependencies_at_head(&head.asprupdate);
+        }
 
         self.rob.clear_head_and_increment()
+    }
+    
+    fn flush_on_mispredict(&mut self) {
+        self.iq.clear();
+        self.fb = None;
     }
 }

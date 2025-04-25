@@ -55,7 +55,7 @@ impl OoOSpeculative {
                         self.rob.set_ready(record.rob_number);
                         self.rob.set_address(record.rob_number, address);
                     }
-                    ROBEntryDest::Register(n, setsflags) => {
+                    ROBEntryDest::Register(n, _) => {
                         self.rob.set_value(record.rob_number, record.result);
                         self.rob.set_ready(record.rob_number);
 
@@ -63,34 +63,34 @@ impl OoOSpeculative {
                         self.rs_mul.receive_cdb_broadcast(record.rob_number, n, record.result);
                         self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, n, record.result);
                         self.rs_ls.receive_cdb_broadcast(record.rob_number, n, record.result);
-
-                        if setsflags {
-                            self.rob.set_aspr(record.rob_number, record.aspr_update.clone());
-                            if let Some(n) = record.aspr_update.n {
-                                self.rs_control.receive_cdb_broadcast(record.rob_number, 16, n as u32);
-                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 16, n as u32);
-                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 16, n as u32);
-                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 16, n as u32);
-                            }
-                            if let Some(n) = record.aspr_update.z {
-                                self.rs_control.receive_cdb_broadcast(record.rob_number, 17, n as u32);
-                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 17, n as u32);
-                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 17, n as u32);
-                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 17, n as u32);
-                            }
-                            if let Some(n) = record.aspr_update.c {
-                                self.rs_control.receive_cdb_broadcast(record.rob_number, 18, n as u32);
-                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 18, n as u32);
-                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 18, n as u32);
-                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 18, n as u32);
-                            }
-                            if let Some(n) = record.aspr_update.v {
-                                self.rs_control.receive_cdb_broadcast(record.rob_number, 19, n as u32);
-                                self.rs_mul.receive_cdb_broadcast(record.rob_number, 19, n as u32);
-                                self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 19, n as u32);
-                                self.rs_ls.receive_cdb_broadcast(record.rob_number, 19, n as u32);
-                            }
-                        }
+                    }
+                }
+                
+                if self.rob.get(record.rob_number).i.setsflags {
+                    self.rob.set_aspr(record.rob_number, record.aspr_update);
+                    if let Some(n) = record.aspr_update.n {
+                        self.rs_control.receive_cdb_broadcast(record.rob_number, 16, n as u32);
+                        self.rs_mul.receive_cdb_broadcast(record.rob_number, 16, n as u32);
+                        self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 16, n as u32);
+                        self.rs_ls.receive_cdb_broadcast(record.rob_number, 16, n as u32);
+                    }
+                    if let Some(n) = record.aspr_update.z {
+                        self.rs_control.receive_cdb_broadcast(record.rob_number, 17, n as u32);
+                        self.rs_mul.receive_cdb_broadcast(record.rob_number, 17, n as u32);
+                        self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 17, n as u32);
+                        self.rs_ls.receive_cdb_broadcast(record.rob_number, 17, n as u32);
+                    }
+                    if let Some(n) = record.aspr_update.c {
+                        self.rs_control.receive_cdb_broadcast(record.rob_number, 18, n as u32);
+                        self.rs_mul.receive_cdb_broadcast(record.rob_number, 18, n as u32);
+                        self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 18, n as u32);
+                        self.rs_ls.receive_cdb_broadcast(record.rob_number, 18, n as u32);
+                    }
+                    if let Some(n) = record.aspr_update.v {
+                        self.rs_control.receive_cdb_broadcast(record.rob_number, 19, n as u32);
+                        self.rs_mul.receive_cdb_broadcast(record.rob_number, 19, n as u32);
+                        self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, 19, n as u32);
+                        self.rs_ls.receive_cdb_broadcast(record.rob_number, 19, n as u32);
                     }
                 }
             }

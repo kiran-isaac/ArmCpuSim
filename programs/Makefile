@@ -12,6 +12,9 @@ LINKER_SCRIPT := script.ld
 %.out: %.c
 	$(ARMET)/bin/clang -O0 -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
 
+%.s: %.c
+	$(ARMET)/bin/clang -O0 -S -g $(CLANG_TARGET_OPTIONS) $< -o $@
+
 all: $(C_FILES:.c=.dis) $(C_FILES:.c=.s) $(C_FILES:.c=.out)
 
 .PHONY: clean

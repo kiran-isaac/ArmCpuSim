@@ -159,8 +159,10 @@ impl OoOSpeculative {
                 let l = Self::get_data(rs.l).map(|x| x != 0);
                 match rs.i.rn {
                     // These all just require one flag that should be in j
-                    // EQ | NE | CS | CC | MI | PL | VS | VC
-                    0b0000 | 0b0001 | 0b0010 | 0b0011 | 0b0100 | 0b0101 | 0b0110 | 0b0111 => j.unwrap(),
+                    // EQ | CS |  MI | VS 
+                    0b0000 | 0b0010 | 0b0100 | 0b0110 => j.unwrap(),
+                    // NE | CC | PL | VC
+                    0b0001 | 0b0011 | 0b0101 | 0b0111 => !j.unwrap(),
                     // HI | LS
                     0b1000 | 0b1001 => k.unwrap() == true && j.unwrap() == false,
                     // GE | LT

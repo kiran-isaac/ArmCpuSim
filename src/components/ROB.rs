@@ -89,19 +89,37 @@ impl ROBEntry {
 }
 
 impl ROB {
-    pub fn wipe_aspr_rob_dependencies(&mut self, asprupdate: &ASPRUpdate) {
-        if asprupdate.n.is_some() {
-            self.register_status[16] = None;
+    // Only wipe aspr if the thing currently committing is the thing that is currently responsible for 
+    // the register_status entry
+    pub fn wipe_aspr_rob_dependencies_at_head(&mut self, asprupdate: &ASPRUpdate) {
+        match self.register_status[16] {
+            Some(n) => if n == self.head {self.register_status[16] = None}
+            _ => {}
         }
-        if asprupdate.z.is_some() {
-            self.register_status[17] = None;
+        match self.register_status[17] {
+            Some(n) => if n == self.head {self.register_status[17] = None}
+            _ => {}
         }
-        if asprupdate.c.is_some() {
-            self.register_status[18] = None;
+        match self.register_status[18] {
+            Some(n) => if n == self.head {self.register_status[18] = None}
+            _ => {}
         }
-        if asprupdate.v.is_some() {
-            self.register_status[19] = None;
+        match self.register_status[19] {
+            Some(n) => if n == self.head {self.register_status[19] = None}
+            _ => {}
         }
+        // if asprupdate.n.is_some() {
+        //     self.register_status[16] = None;
+        // }
+        // if asprupdate.z.is_some() {
+        //     self.register_status[17] = None;
+        // }
+        // if asprupdate.c.is_some() {
+        //     self.register_status[18] = None;
+        // }
+        // if asprupdate.v.is_some() {
+        //     self.register_status[19] = None;
+        // }
     }
     pub fn new() -> Self {
         Self {

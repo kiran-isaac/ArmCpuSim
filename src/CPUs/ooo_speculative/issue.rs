@@ -8,7 +8,7 @@ impl OoOSpeculative {
         }
         if let Some(last_issued) = self.rob.get_last_issued() {
             if last_issued.is_serializing() {
-                self.stall(StallReason::SerializingInstr);
+                self.stall(StallReason::IStall);
                 return;
             }
         }

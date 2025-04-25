@@ -45,7 +45,7 @@ enum StallReason {
     IssueRobFull,
     IssueRSFull,
     ExecuteLSQFull,
-    SerializingInstr
+    IStall
 }
 
 struct InstructionQueueEntry {
