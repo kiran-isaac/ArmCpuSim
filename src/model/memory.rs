@@ -249,6 +249,20 @@ impl Memory {
         }
     }
 
+    pub fn get_word_be(&self, vaddr: u32) -> Result<u32, MemError> {
+        let addr = self.mm(vaddr) as usize;
+        if addr >= self.memory.len() {
+            Err(MemError::LoadOOB)
+        } else {
+            Ok(u32::from_be_bytes([
+                self.memory[addr],
+                self.memory[addr + 1],
+                self.memory[addr + 2],
+                self.memory[addr + 3],
+            ]))
+        }
+    }
+
     pub fn set_word(
         &mut self,
         vaddr: u32,
@@ -324,7 +338,7 @@ impl Memory {
             for x  in 0..words_per_line {
                 let addr = (line_addr + x * 4) as u32;
                 // string.push_str(&format!(" {:08X}", addr));
-                if let Ok(word) = self.get_word(addr) {
+                if let Ok(word) = self.get_word_be(addr) {
                     string.push_str(&format!(" {:08X}", word));
                 } else {
                     string.push_str(" ________");

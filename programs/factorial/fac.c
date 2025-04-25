@@ -10,7 +10,7 @@ unsigned factorial(unsigned n) {
 
 int main() {
     unsigned n = 10;
-    unsigned result = factorial(n);
+    unsigned result = factorial(1);
 
     if (result == 3628800) {
         svc_puts("Yipee!!!!\n");

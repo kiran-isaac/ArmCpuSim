@@ -35,7 +35,7 @@ struct CDBRecord {
 
 #[derive(Clone, Copy)]
 pub struct LoadQueueEntry {
-    pub address: Option<u32>,
+    pub address: u32,
     pub rob_entry: usize,
     pub load_type: IT,
 }
@@ -72,9 +72,7 @@ pub struct OoOSpeculative {
     rs_alu_shift: RSSet,
     rs_ls: RSSet,
     rs_control: RSSet,
-
-    ls_pipeline_addr_calc: Option<u32>,
-
+    
     flush_delay: u32,
     flushing: bool,
     spec_pc: u32,
@@ -114,7 +112,6 @@ impl CPU for OoOSpeculative {
             flush_delay: 0,
             flushing: false,
             load_queue: VecDeque::with_capacity(LQ_SIZE),
-            ls_pipeline_addr_calc: None,
 
             stalls: Vec::new(),
             epoch: 0,

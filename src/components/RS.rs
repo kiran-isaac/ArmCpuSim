@@ -360,6 +360,7 @@ impl<'a> RSSet {
                     // Supervisor calls always read from r0
                     SVC => {
                         j = RSData::Data(i.immu);
+                        k = Self::get_rs_data(0, arf, register_status, rob);
                     }
                     _ => panic!(
                         "{:?} should not have been issued here. This is the res stations for {:?}",

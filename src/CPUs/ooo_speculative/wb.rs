@@ -6,11 +6,15 @@ impl OoOSpeculative {
         let mut free_slots = CDB_WIDTH;
         let mut new_to_broadcast = Vec::new();
         for (delay, record) in self.to_broadcast.iter_mut() {
-            if free_slots <= 0 {break;}
             if *delay > 1 {
                 *delay -= 1;
                 new_to_broadcast.push((*delay, record.clone()));
             } else {
+                if free_slots <= 0 {
+                    new_to_broadcast.push((*delay, record.clone()));
+                    continue;
+                }
+
                 record.valid = true;
                 self.cdb.push_back(record.clone());
                 self.rob.set_status(record.rob_number, ROBStatus::Write);
@@ -42,7 +46,7 @@ impl OoOSpeculative {
                     },
                     // There may be RS waiting on this thing (this could be cmp so we're waiting for flags)
                     // We will deal with flags after this
-                    ROBEntryDest::None => {                
+                    ROBEntryDest::None => {
                         self.rob.set_value(record.rob_number, record.result);
                         self.rob.set_ready(record.rob_number);
                     },

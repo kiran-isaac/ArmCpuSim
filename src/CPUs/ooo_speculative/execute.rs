@@ -8,6 +8,60 @@ use crate::system::syscall;
 
 impl OoOSpeculative {
     pub(super) fn execute(&mut self) {
+        if let Some(lqe_head) = self.load_queue.pop_front() {
+            if self.rob.load_can_go(&lqe_head) {
+                let load_address = lqe_head.address;
+
+                let result = match lqe_head.load_type {
+                    LDRBImm | LDRBReg => match self.state.mem.get_byte(load_address) {
+                        Ok(byte) => Ok(byte as u32),
+                        Err(e) => Err(e),
+                    },
+                    LDRHReg | LDRHImm => match self.state.mem.get_halfword(load_address) {
+                        Ok(byte) => Ok(byte as u32),
+                        Err(e) => Err(e),
+                    },
+                    LDRImm | LDRReg => self.state.mem.get_word(load_address),
+                    LDRSB => match self.state.mem.get_byte(load_address) {
+                        Ok(byte) => Ok(briz(byte as u32, 0, 6)
+                            + (if bit_as_bool(byte as u32, 7) {
+                            0x80000000
+                        } else {
+                            0
+                        })),
+                        Err(e) => Err(e),
+                    },
+                    LDRSH => match self.state.mem.get_halfword(load_address) {
+                        Ok(byte) => Ok(briz(byte as u32, 0, 14)
+                            + (if bit_as_bool(byte as u32, 15) {
+                            0x80000000
+                        } else {
+                            0
+                        })),
+                        Err(e) => Err(e),
+                    },
+                    _ => unreachable!(),
+                };
+
+                let result = match result {
+                    Ok(result) => result,
+                    Err(e) => panic!("Memory error {:?}", e),
+                };
+
+                // Load store has a delay of 1 cycles on top of the 1 cycle for addr calc
+                self.to_broadcast.push((
+                    0,
+                    CDBRecord {
+                        valid: false,
+                        result,
+                        aspr_update: ASPRUpdate::no_update(),
+                        rob_number: lqe_head.rob_entry,
+                        halt: false,
+                    },
+                ));
+            }
+        }
+        
         if let Some(rs_index) = self.rs_alu_shift.get_one_ready() {
             self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut 0);
             self.rs_alu_shift.vec[rs_index].busy = false;
@@ -34,6 +88,7 @@ impl OoOSpeculative {
     fn execute_control(&mut self, rs: &RS, num_broadcast: &mut usize) {
         if rs.i.it == SVC {
             let svc_num = Self::get_data(rs.j).unwrap();
+            let r0 = Self::get_data(rs.k).unwrap();
             match svc_num {
                 0 => {
                     self.to_broadcast.push((
@@ -49,6 +104,37 @@ impl OoOSpeculative {
                     *num_broadcast += 1;
                     return;
                 }
+                1 => {
+                    let mut addr = r0;
+                    loop {
+                        let c = self.state.mem.get_byte_nolog(addr);
+                        if c == 0 {
+                            break;
+                        }
+                        print!("{}", c as char);
+                        addr += 1;
+                    }
+                }
+                // 2 => {
+                //     // flush incase of output on same line
+                //     std::io::stdout().flush().unwrap();
+                //     let addr = self.state.regs.get(0) as u32;
+                //     let mut i = 0;
+                //     loop {
+                //         let c = std::io::stdin().bytes().next().unwrap().unwrap();
+                //         if c == 10 {
+                //             break;
+                //         }
+                //         state.mem.set_byte_nolog(addr + i, c);
+                //         i += 1;
+                //     }
+                //     // add null terminator
+                //     state.mem.set_byte_nolog(addr + i, 0);
+                // }
+                3 => {
+                    let value = r0;
+                    print!("{}", value);
+                }
                 _ => panic!("Invalid svc"),
             }
         }
@@ -57,7 +143,11 @@ impl OoOSpeculative {
         // B and BL are relative, and require an immediate
         let mut target= match rs.i.it {
             SetPC | BX | BLX => Self::get_data(rs.j).unwrap(),
-            BL | B => rs.i.immu,
+            BL | B => {
+                let pc = self.rob.get(rs.rob_dest).pc;
+                let offset = rs.i.imms as u32;
+                pc.wrapping_add(offset)
+            },
             _ => unreachable!(),
         };
         
@@ -108,75 +198,6 @@ impl OoOSpeculative {
     }
 
     fn execute_load_store(&mut self, rs: &RS, num_broadcast: &mut usize) {
-        // The pipeline is
-        // - Address calc
-        // - LQ insertion.
-        // - Executing head of LQ
-        // The pipeline is simulated backwards to stop instant propagation
-
-        if let Some(lqe_head) = self.load_queue.front() {
-            if let Some(load_address) = lqe_head.address {
-                if self.rob.load_can_go(lqe_head) {
-                    let result = match lqe_head.load_type {
-                        LDRBImm | LDRBReg => match self.state.mem.get_byte(load_address) {
-                            Ok(byte) => Ok(byte as u32),
-                            Err(e) => Err(e),
-                        },
-                        LDRHReg | LDRHImm => match self.state.mem.get_halfword(load_address) {
-                            Ok(byte) => Ok(byte as u32),
-                            Err(e) => Err(e),
-                        },
-                        LDRImm | LDRReg => self.state.mem.get_word(load_address),
-                        LDRSB => match self.state.mem.get_byte(load_address) {
-                            Ok(byte) => Ok(briz(byte as u32, 0, 6)
-                                + (if bit_as_bool(byte as u32, 7) {
-                                    0x80000000
-                                } else {
-                                    0
-                                })),
-                            Err(e) => Err(e),
-                        },
-                        LDRSH => match self.state.mem.get_halfword(load_address) {
-                            Ok(byte) => Ok(briz(byte as u32, 0, 14)
-                                + (if bit_as_bool(byte as u32, 15) {
-                                    0x80000000
-                                } else {
-                                    0
-                                })),
-                            Err(e) => Err(e),
-                        },
-                        _ => unreachable!(),
-                    };
-
-                    let result = match result {
-                        Ok(result) => result,
-                        Err(e) => panic!("Memory error {:?}", e),
-                    };
-
-                    // Load store has a delay of 1 cycles on top of the 1 cycle for addr calc
-                    self.to_broadcast.push((
-                        2,
-                        CDBRecord {
-                            valid: false,
-                            result,
-                            aspr_update: ASPRUpdate::no_update(),
-                            rob_number: rs.rob_dest,
-                            halt: false,
-                        },
-                    ));
-                    *num_broadcast += 1;
-                }
-            }
-        }
-
-        // Update the load queue with the last calculated address
-        if let Some(address_calc_result) = self.ls_pipeline_addr_calc {
-            if let Some(lqe) = self.load_queue.back_mut() {
-                assert_eq!(lqe.address, None);
-                lqe.address = Some(address_calc_result)
-            }
-        }
-        
         // Address calc
         let j = Self::get_data(rs.j).unwrap();
         let k = Self::get_data(rs.k).unwrap();
@@ -186,12 +207,10 @@ impl OoOSpeculative {
         match rs.i.it {
             LDRBImm | LDRBReg | LDRHReg | LDRHImm | LDRImm | LDRReg | LDRSB | LDRSH => {
                 self.load_queue.push_back(LoadQueueEntry {
-                    address: None,
+                    address,
                     rob_entry: rs.rob_dest,
                     load_type: rs.i.it,
-                });
-                // Will be moved into load queue next cycle
-                self.ls_pipeline_addr_calc = Some(address);
+                }); 
             }
             STRBImm | STRBReg | STRHImm | STRHReg | STRImm | STRReg => {
                 self.to_broadcast.push((1, 

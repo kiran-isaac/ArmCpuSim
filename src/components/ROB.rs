@@ -29,7 +29,7 @@ impl std::fmt::Display for ROBStatus {
     }
 }
 
-pub const ROB_ENTRIES: usize = 32;
+pub const ROB_ENTRIES: usize = 8;
 
 pub struct ROB {
     queue: [ROBEntry; ROB_ENTRIES],
@@ -82,7 +82,7 @@ impl ROBEntry {
     
     pub fn is_serializing(&self) -> bool {
         match self.i.it {
-            SVC => true,
+            SVC | B | BL | BLX | BX => true,
             _ => false,
         }
     }
@@ -155,44 +155,44 @@ impl ROB {
         match rob_dest {
             ROBEntryDest::Register(rd, setsflags) => {
                 self.temp_register_status[rd as usize] = Some(insert_point);
-
-                if setsflags {
-                    // Get what flags this updates
-                    let (n, z, c, v) = match i.it {
-                        // Adds and Subtracts: Sets all 4. All the add instructions pretty much
-                        ADC | ADDImm | ADDReg | CMN | CMPReg | CMPImm | SUBImm | SUBReg => {
-                            (true, true, true, true)
-                        }
-
-                        // Shifts: Sets all but v
-                        ASRImm | ASRReg | LSLReg | LSLImm | LSRImm | LSRReg | ROR => {
-                            (true, true, true, false)
-                        }
-
-                        // Logical ops + mul: Sets n, z. Some of these say they
-                        // update c in the spec but that's because the dummy shift
-                        AND | TST | BIC | MOVImm | MOVReg | MUL | MVN | EOR | ORR => {
-                            (true, true, false, false)
-                        }
-
-                        _ => panic!("{:?} shouldn't update NZCV flags", i),
-                    };
-                    // Update NZCV RS flags to point to this as the last update
-                    if n {
-                        self.temp_register_status[16] = Some(insert_point);
-                    }
-                    if z {
-                        self.temp_register_status[17] = Some(insert_point);
-                    }
-                    if c {
-                        self.temp_register_status[18] = Some(insert_point);
-                    }
-                    if v {
-                        self.temp_register_status[19] = Some(insert_point);
-                    }
-                }
             }
             _ => {}
+        }
+        
+        if i.setsflags {
+            // Get what flags this updates
+            let (n, z, c, v) = match i.it {
+                // Adds and Subtracts: Sets all 4. All the add instructions pretty much
+                ADC | ADDImm | ADDReg | CMN | CMPReg | CMPImm | SUBImm | SUBReg => {
+                    (true, true, true, true)
+                }
+
+                // Shifts: Sets all but v
+                ASRImm | ASRReg | LSLReg | LSLImm | LSRImm | LSRReg | ROR => {
+                    (true, true, true, false)
+                }
+
+                // Logical ops + mul: Sets n, z. Some of these say they
+                // update c in the spec but that's because the dummy shift
+                AND | TST | BIC | MOVImm | MOVReg | MUL | MVN | EOR | ORR => {
+                    (true, true, false, false)
+                }
+
+                _ => panic!("{:?} shouldn't update NZCV flags", i),
+            };
+            // Update NZCV RS flags to point to this as the last update
+            if n {
+                self.temp_register_status[16] = Some(insert_point);
+            }
+            if z {
+                self.temp_register_status[17] = Some(insert_point);
+            }
+            if c {
+                self.temp_register_status[18] = Some(insert_point);
+            }
+            if v {
+                self.temp_register_status[19] = Some(insert_point);
+            }
         }
 
         self.will_issue = ROBEntry {
@@ -305,7 +305,6 @@ impl ROB {
     }
 
     pub fn load_can_go(&self, load: &LoadQueueEntry) -> bool {
-        assert!(load.address.is_some());
         let mut i = self.head;
         while self.entry_is_before(i, load.rob_entry) {
             i += 1;
@@ -320,7 +319,7 @@ impl ROB {
                     ROBEntryDest::AwaitingAddress => return false,
                     // If the address is within a word of this one
                     ROBEntryDest::Address(store_addr) => {
-                        if store_addr.abs_diff(load.address.unwrap()) <= 4 {
+                        if store_addr.abs_diff(load.address) <= 4 {
                             return false;
                         }
                     }

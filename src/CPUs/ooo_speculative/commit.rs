@@ -15,12 +15,18 @@ impl OoOSpeculative{
         match head.i.it {
             // Maybe taken
             B => {
-
+                if (head.value & 1) == 1 {
+                    self.spec_pc = head.value - 1;
+                    self.iq.clear();
+                    self.fb = None;
+                }
             }
 
             // Always Taken, so branch is mispredicted in "not taken"
             BL | BX | BLX | SetPC => {
-                
+                self.spec_pc = head.value;
+                self.iq.clear();
+                self.fb = None;
             }
             
             _ => {}
