@@ -1,10 +1,10 @@
-use std::io::{Read, Write};
 use super::*;
 use crate::binary::{bit_as_bool, briz, signed_to_unsigned_bitcast, unsigned_to_signed_bitcast};
 use crate::components::shift::{shift_with_carry, ShiftType};
 use crate::components::ALU::{ALUOperation, CalcResult, ALU};
-use crate::IT::*;
 use crate::system::syscall;
+use crate::IT::*;
+use std::io::{Read, Write};
 
 impl OoOSpeculative {
     pub(super) fn execute(&mut self) {
@@ -27,19 +27,19 @@ impl OoOSpeculative {
                     LDRSB => match self.state.mem.get_byte(load_address) {
                         Ok(byte) => Ok(briz(byte as u32, 0, 6)
                             + (if bit_as_bool(byte as u32, 7) {
-                            0x80000000
-                        } else {
-                            0
-                        })),
+                                0x80000000
+                            } else {
+                                0
+                            })),
                         Err(e) => Err(e),
                     },
                     LDRSH => match self.state.mem.get_halfword(load_address) {
                         Ok(byte) => Ok(briz(byte as u32, 0, 14)
                             + (if bit_as_bool(byte as u32, 15) {
-                            0x80000000
-                        } else {
-                            0
-                        })),
+                                0x80000000
+                            } else {
+                                0
+                            })),
                         Err(e) => Err(e),
                     },
                     _ => unreachable!(),
@@ -64,7 +64,7 @@ impl OoOSpeculative {
                 ));
             }
         }
-        
+
         if let Some(rs_index) = self.rs_alu_shift.get_oldest_ready(&self.rob) {
             self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut 0);
             self.rs_alu_shift.vec[rs_index].busy = false;
@@ -79,7 +79,6 @@ impl OoOSpeculative {
             self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
             self.rs_ls.vec[rs_index].busy = false;
         }
-        
 
         if let Some(rs_index) = self.rs_control.get_oldest_ready(&self.rob) {
             self.execute_control(&self.rs_control.vec[rs_index].clone(), &mut 0);
@@ -98,7 +97,7 @@ impl OoOSpeculative {
                         CDBRecord {
                             is_branch_target: false,
                             valid: false,
-                            result: 0,
+                            result: r0,
                             aspr_update: ASPRUpdate::no_update(),
                             rob_number: rs.rob_dest,
                             halt: true,
@@ -152,17 +151,18 @@ impl OoOSpeculative {
                     halt: false,
                 },
             ));
+            return;
         }
         // BX, BLX and SetPc require RM
         // SetPC, BX and BLX are absolute
         // B and BL are relative, and require an immediate
-        let mut target= match rs.i.it {
+        let mut target = match rs.i.it {
             SetPC | BX | BLX => Self::get_data(rs.j).unwrap(),
             BL | B => {
                 let pc = self.rob.get(rs.rob_dest).pc;
                 let offset = rs.i.imms as u32;
                 pc.wrapping_add(offset)
-            },
+            }
             _ => unreachable!(),
         };
 
@@ -170,7 +170,7 @@ impl OoOSpeculative {
             B => target += 4,
             _ => {}
         }
-        
+
         let taken = match rs.i.it {
             SetPC | BX | BL | BLX => true,
             B => {
@@ -179,7 +179,7 @@ impl OoOSpeculative {
                 let l = Self::get_data(rs.l).map(|x| x != 0);
                 match rs.i.rn {
                     // These all just require one flag that should be in j
-                    // EQ | CS |  MI | VS 
+                    // EQ | CS |  MI | VS
                     0b0000 | 0b0010 | 0b0100 | 0b0110 => j.unwrap(),
                     // NE | CC | PL | VC
                     0b0001 | 0b0011 | 0b0101 | 0b0111 => !j.unwrap(),
@@ -198,14 +198,14 @@ impl OoOSpeculative {
             }
             _ => unreachable!(),
         };
-        
+
         // since B can only reach an even address, we may use the bottom bit for taken or untaken
         // All the other control instrs are always taken
         if rs.i.it == B {
             assert_eq!(target % 2, 0);
             target += taken as u32;
         }
-        
+
         self.to_broadcast.push((
             1,
             CDBRecord {
@@ -226,17 +226,18 @@ impl OoOSpeculative {
         let k = Self::get_data(rs.k).unwrap();
 
         let address = j.wrapping_add(k);
-    
+
         match rs.i.it {
             LDRBImm | LDRBReg | LDRHReg | LDRHImm | LDRImm | LDRReg | LDRSB | LDRSH => {
                 self.load_queue.push_back(LoadQueueEntry {
                     address,
                     rob_entry: rs.rob_dest,
                     load_type: rs.i.it,
-                }); 
+                });
             }
             STRBImm | STRBReg | STRHImm | STRHReg | STRImm | STRReg => {
-                self.to_broadcast.push((1, 
+                self.to_broadcast.push((
+                    1,
                     CDBRecord {
                         is_branch_target: false,
                         valid: true,
@@ -244,14 +245,14 @@ impl OoOSpeculative {
                         result: address,
                         aspr_update: ASPRUpdate::no_update(),
                         halt: false,
-                    })
-                );
+                    },
+                ));
                 // L has the actual data to be stored
-                self.rob.set_value(rs.rob_dest, Self::get_data(rs.l).unwrap())
+                self.rob
+                    .set_value(rs.rob_dest, Self::get_data(rs.l).unwrap())
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
-
     }
 
     fn execute_mul(&mut self, rs: &RS, num_broadcast: &mut usize) {
@@ -260,14 +261,14 @@ impl OoOSpeculative {
 
         assert_eq!(rs.i.it, MUL);
 
-        let result = j * k;
+        let (result, _) = j.overflowing_mul(k);
         let aspr_update = ASPRUpdate {
             n: Some(result < 1),
             z: Some(result == 0),
             c: None,
             v: None,
         };
-        let result = signed_to_unsigned_bitcast(j * k);
+        let result = signed_to_unsigned_bitcast(result);
 
         // Multiplier has a delay of 2 cycles
         self.to_broadcast.push((
@@ -358,7 +359,12 @@ impl OoOSpeculative {
             REVSH => (ALU_Shift::ALU_OP(ALUOperation::REVSH), j.unwrap(), 0, 0),
 
             // Mov adds 0
-            MOVReg | MOVImm => (ALU_Shift::ALU_OP(ALUOperation::AND), j.unwrap(), j.unwrap(), 0),
+            MOVReg | MOVImm => (
+                ALU_Shift::ALU_OP(ALUOperation::AND),
+                j.unwrap(),
+                j.unwrap(),
+                0,
+            ),
             MVN => (ALU_Shift::ALU_OP(ALUOperation::ADD), !j.unwrap(), 0, 0),
 
             // The shifts all take ASPR C

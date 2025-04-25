@@ -1041,9 +1041,7 @@ pub fn decode(i: u32) -> I {
                                 let cond = briz(i, 8, 11);
 
                                 match cond {
-                                    0b0000..=0b1110 => {
-                                        decode_b1(i)
-                                    }
+                                    0b0000..=0b1110 => decode_b1(i),
                                     0b1111 => I {
                                         it: IT::SVC,
                                         immu: briz(i, 0, 7),
@@ -1061,9 +1059,7 @@ pub fn decode(i: u32) -> I {
                         }
                     }
                     // B (T2)
-                    0b1000 | 0b1001 => {
-                        decode_b2(i)
-                    }
+                    0b1000 | 0b1001 => decode_b2(i),
                     _ => panic!("Invalid instr: {i}"),
                 },
                 _ => panic!("Invalid instr: {i}"),
@@ -1124,9 +1120,7 @@ pub fn decode(i: u32) -> I {
                             }
                         }
                         // BL
-                        (0b101, _) | (0b111, _) => {
-                            decode_bl(i)
-                        }
+                        (0b101, _) | (0b111, _) => decode_bl(i),
                         _ => panic!("Invalid instr: {i}"),
                     }
                 }
@@ -1135,7 +1129,6 @@ pub fn decode(i: u32) -> I {
         }
     }
 }
-
 
 pub fn decode_bl(i: u32) -> I {
     let s = bit_as_bool(i, 26);
@@ -1151,12 +1144,7 @@ pub fn decode_bl(i: u32) -> I {
     let s = if s { 0b1111_1111 } else { 0 };
 
     let imm32 = i32::from_ne_bytes(
-        ((imm11 << 1)
-            + (imm10 << 12)
-            + (i2 << 22)
-            + (i1 << 23)
-            + (s << 24))
-            .to_ne_bytes(),
+        ((imm11 << 1) + (imm10 << 12) + (i2 << 22) + (i1 << 23) + (s << 24)).to_ne_bytes(),
     );
 
     I {
@@ -1179,11 +1167,11 @@ pub fn decode_b1(i: u32) -> I {
     let imm8 = i32::from_ne_bytes(
         (imm7
             + if sign {
-            0b1111_1111_1111_1111_1111_1111 << 8
-        } else {
-            0
-        })
-            .to_ne_bytes(),
+                0b1111_1111_1111_1111_1111_1111 << 8
+            } else {
+                0
+            })
+        .to_ne_bytes(),
     );
 
     I {
@@ -1206,11 +1194,11 @@ pub fn decode_b2(i: u32) -> I {
     let imm11 = i32::from_ne_bytes(
         (imm10
             + if sign {
-            0b1111_1111_1111_1111_1111_11 << 11
-        } else {
-            0
-        })
-            .to_ne_bytes(),
+                0b1111_1111_1111_1111_1111_11 << 11
+            } else {
+                0
+            })
+        .to_ne_bytes(),
     );
 
     I {

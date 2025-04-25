@@ -1,7 +1,7 @@
 use super::{I, IT, IT::*};
-use std::fmt::Display;
 use crate::components::ROB::ROBEntryDest::Register;
 use crate::model::Registers;
+use std::fmt::Display;
 
 impl IT {
     fn to_string_no_type(&self) -> String {
@@ -18,10 +18,10 @@ impl Display for I {
         let mut str = self.it.to_string_no_type() + if self.setsflags { "s " } else { " " };
 
         let rd = Registers::reg_id_to_str(self.rd);
-        let rn  = Registers::reg_id_to_str(self.rn);
+        let rn = Registers::reg_id_to_str(self.rn);
         let rm = Registers::reg_id_to_str(self.rm);
-        let rt  = Registers::reg_id_to_str(self.rt);
-        
+        let rt = Registers::reg_id_to_str(self.rt);
+
         let args = match self.it {
             // RD, RN RM register register
             ADDReg | AND | ASRReg | BIC | EOR | LSLReg | LSRReg | ROR | MUL | ORR | SBC
@@ -71,7 +71,7 @@ impl Display for I {
 
             // immu
             SVC => format!("#{}", self.immu),
-            
+
             SetPC => "".to_string(),
 
             _ => unimplemented!("tostring for {:?}", self.it),

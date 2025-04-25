@@ -117,6 +117,18 @@ pub fn decode2(i: I) -> Vec<I> {
                     rm: 0,
                     setsflags: false,
                 });
+                // SP addition ( must be before BX or will be ignored)
+                vec.push(I {
+                    it: IT::ADDSpImm,
+                    rd: target,
+                    immu: n << 2,
+                    imms: 0,
+                    rm: 0,
+                    rn: target,
+                    rt: 0,
+                    rl: 0,
+                    setsflags: false,
+                });
                 vec.push(I {
                     it: IT::BX,
                     rn: 0,
@@ -128,20 +140,20 @@ pub fn decode2(i: I) -> Vec<I> {
                     rd: 0,
                     setsflags: false,
                 })
+            } else {
+                // SP addition
+                vec.push(I {
+                    it: IT::ADDSpImm,
+                    rd: target,
+                    immu: n << 2,
+                    imms: 0,
+                    rm: 0,
+                    rn: 0,
+                    rt: 0,
+                    rl: 0,
+                    setsflags: false,
+                });
             }
-
-            // SP addition
-            vec.push(I {
-                it: IT::ADDSpImm,
-                rd: target,
-                immu: n << 2,
-                imms: 0,
-                rm: 0,
-                rn: 0,
-                rt: 0,
-                rl: 0,
-                setsflags: false,
-            });
         }
         _ => {
             vec.push(i);

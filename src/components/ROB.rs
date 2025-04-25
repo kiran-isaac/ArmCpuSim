@@ -1,9 +1,9 @@
-use crate::decode::{I, IT, IT::*};
-use crate::CPUs::{LoadQueueEntry, ROB_ENTRIES, STALL_ON_BRANCH};
-use std::fmt::Formatter;
 use crate::components::ALU::ASPRUpdate;
 use crate::components::ROB::ROBStatus::EMPTY;
+use crate::decode::{I, IT, IT::*};
 use crate::model::Registers;
+use crate::CPUs::{LoadQueueEntry, ROB_ENTRIES, STALL_ON_BRANCH};
+use std::fmt::Formatter;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum ROBStatus {
@@ -59,7 +59,7 @@ pub struct ROBEntry {
     pub halt: bool,
     pub i: I,
     pub status: ROBStatus,
-    pub value: u32,    
+    pub value: u32,
     pub branch_target: u32,
     pub asprupdate: ASPRUpdate,
     pub ready: bool,
@@ -80,11 +80,11 @@ impl ROBEntry {
             ready: false,
         }
     }
-    
+
     pub fn is_serializing(&self) -> bool {
         match self.i.it {
-            SVC| BLX | BX => true,
-            B | BL  => STALL_ON_BRANCH,
+            SVC | BLX | BX => true,
+            B | BL => STALL_ON_BRANCH,
             _ => false,
         }
     }
@@ -95,19 +95,35 @@ impl ROB {
     // the register_status entry
     pub fn wipe_aspr_rob_dependencies_at_head(&mut self, asprupdate: &ASPRUpdate) {
         match self.register_status[16] {
-            Some(n) => if n == self.head {self.register_status[16] = None}
+            Some(n) => {
+                if n == self.head {
+                    self.register_status[16] = None
+                }
+            }
             _ => {}
         }
         match self.register_status[17] {
-            Some(n) => if n == self.head {self.register_status[17] = None}
+            Some(n) => {
+                if n == self.head {
+                    self.register_status[17] = None
+                }
+            }
             _ => {}
         }
         match self.register_status[18] {
-            Some(n) => if n == self.head {self.register_status[18] = None}
+            Some(n) => {
+                if n == self.head {
+                    self.register_status[18] = None
+                }
+            }
             _ => {}
         }
         match self.register_status[19] {
-            Some(n) => if n == self.head {self.register_status[19] = None}
+            Some(n) => {
+                if n == self.head {
+                    self.register_status[19] = None
+                }
+            }
             _ => {}
         }
     }
@@ -130,7 +146,7 @@ impl ROB {
         }
 
         let insert_point = self.tail;
-        
+
         // If this is a branch, set "value" to pc as this is the LR value
         let mut value = 0;
 
@@ -149,11 +165,13 @@ impl ROB {
             // Sets LR
             BL | BLX => {
                 value = pc;
-                ROBEntryDest::Register(14, i.setsflags) 
-            },
+                ROBEntryDest::Register(14, i.setsflags)
+            }
 
             // All store instructions will be pending address calculation
-            STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => ROBEntryDest::AwaitingAddress,
+            STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => {
+                ROBEntryDest::AwaitingAddress
+            }
 
             // All load instructions write back to rt, and do not update CSPR
             // (no clue why they differentiate between rd and rt)
@@ -175,7 +193,7 @@ impl ROB {
             }
             _ => {}
         }
-        
+
         if i.setsflags {
             // Get what flags this updates
             let (n, z, c, v) = match i.it {
@@ -228,7 +246,7 @@ impl ROB {
         // Cant insert now because RS might be full
         insert_point
     }
-    
+
     pub fn flush_on_mispredict(&mut self) -> Vec<usize> {
         let mut i = Self::increment_index(self.head);
         let mut flushed = vec![];
@@ -240,9 +258,8 @@ impl ROB {
                     }
                 }
             }
-            self.queue[i].status = EMPTY;
             flushed.push(i);
-            i = Self::increment_index(i);        
+            i = Self::increment_index(i);
         }
         self.tail = Self::increment_index(self.head);
         flushed
@@ -255,7 +272,7 @@ impl ROB {
     pub fn get_head(&self) -> &ROBEntry {
         &self.queue[self.head]
     }
-    
+
     pub fn get_last_issued(&self) -> Option<&ROBEntry> {
         let last_issued = &self.queue[Self::decrement_index(self.tail)];
         if last_issued.status == ROBStatus::EMPTY {
@@ -268,17 +285,17 @@ impl ROB {
     pub fn set_halt(&mut self, n: usize) {
         self.queue[n].halt = true;
     }
-    
+
     pub fn set_value(&mut self, n: usize, value: u32) {
         self.queue[n].value = value;
     }
-    
+
     pub fn set_branch_target(&mut self, n: usize, target: u32) {
         self.queue[n].branch_target = target;
     }
-    
+
     pub fn set_aspr(&mut self, n: usize, asprupdate: ASPRUpdate) {
-        self.queue[n].asprupdate = asprupdate;  
+        self.queue[n].asprupdate = asprupdate;
     }
 
     pub fn set_status(&mut self, n: usize, robstatus: ROBStatus) {
@@ -286,15 +303,17 @@ impl ROB {
     }
 
     pub fn set_address(&mut self, n: usize, address: u32) {
-        if self.queue[n].dest != ROBEntryDest::AwaitingAddress {unreachable!()}
+        if self.queue[n].dest != ROBEntryDest::AwaitingAddress {
+            unreachable!()
+        }
 
         self.queue[n].dest = ROBEntryDest::Address(address);
     }
-    
+
     pub fn set_ready(&mut self, n: usize) {
         self.queue[n].ready = true;
     }
-    
+
     pub fn clear_head_and_increment(&mut self) {
         self.queue[self.head].status = ROBStatus::EMPTY;
         self.head = Self::increment_index(self.head);
@@ -371,7 +390,7 @@ impl ROB {
                             return false;
                         }
                     }
-                    _ => {},
+                    _ => {}
                 },
             }
             i = Self::increment_index(i);
@@ -398,12 +417,16 @@ impl ROB {
 
 impl std::fmt::Display for ROBEntryDest {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            ROBEntryDest::Register(rn, _) => Registers::reg_id_to_str(*rn),
-            ROBEntryDest::AwaitingAddress => "AA".to_string(),
-            ROBEntryDest::Address(addr) => format!("{:08X?}", addr),
-            ROBEntryDest::None => "None".to_string(),
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                ROBEntryDest::Register(rn, _) => Registers::reg_id_to_str(*rn),
+                ROBEntryDest::AwaitingAddress => "AA".to_string(),
+                ROBEntryDest::Address(addr) => format!("{:08X?}", addr),
+                ROBEntryDest::None => "None".to_string(),
+            }
+        )
     }
 }
 impl std::fmt::Display for ROBEntry {
@@ -411,7 +434,14 @@ impl std::fmt::Display for ROBEntry {
         if self.status == ROBStatus::EMPTY {
             return write!(f, "__");
         }
-        write!(f, "{}, {}, {}, {:08X?}", self.status.to_string(), self.dest, self.i.to_string(), self.pc)
+        write!(
+            f,
+            "{}, {}, {}, {:08X?}",
+            self.status.to_string(),
+            self.dest,
+            self.i.to_string(),
+            self.pc
+        )
     }
 }
 #[cfg(test)]

@@ -60,7 +60,7 @@ impl ASPR {
             _ => panic!("Invalid condition code"),
         }
     }
-    
+
     fn apply_aspr_update(&mut self, update: &ASPRUpdate) {
         if let Some(update) = update.n {
             self.n = update;
@@ -130,7 +130,7 @@ impl Registers {
             _ => panic!("Invalid register index: {}", id),
         }
     }
-    
+
     pub fn apply_aspr_update(&mut self, ASPR: &ASPRUpdate) {
         self.apsr.apply_aspr_update(ASPR);
     }

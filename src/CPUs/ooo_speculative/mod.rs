@@ -6,7 +6,9 @@ mod issue;
 mod wb;
 
 use super::*;
+use crate::components::ROB::{ROBEntryDest, ROBStatus};
 use crate::decode::IT;
+use crate::model::Registers;
 use crate::{components::ALU::ASPRUpdate, components::ROB::ROB};
 use ratatui::layout::Margin;
 use ratatui::prelude::Alignment;
@@ -17,8 +19,6 @@ use ratatui::{
     Frame,
 };
 use std::collections::{HashMap, VecDeque};
-use crate::components::ROB::{ROBEntryDest, ROBStatus};
-use crate::model::Registers;
 
 #[derive(PartialEq, Eq)]
 pub enum PredictionAlgorithms {
@@ -26,11 +26,11 @@ pub enum PredictionAlgorithms {
     AlwaysUntaken,
 }
 
-const CDB_WIDTH: usize = 10;
+const CDB_WIDTH: usize = 2;
 const LQ_SIZE: usize = 8;
-pub const STALL_ON_BRANCH: bool = false;
+pub const STALL_ON_BRANCH: bool = true;
 const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
-pub const ROB_ENTRIES: usize = 16;
+pub const ROB_ENTRIES: usize = 32;
 
 #[derive(Clone, Copy)]
 struct CDBRecord {
@@ -39,7 +39,7 @@ struct CDBRecord {
     rob_number: usize,
     result: u32,
     aspr_update: ASPRUpdate,
-    halt:  bool,
+    halt: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -54,7 +54,7 @@ enum StallReason {
     FullRob,
     IssueRSFull,
     ExecuteLSQFull,
-    IStall
+    IStall,
 }
 
 struct InstructionQueueEntry {
@@ -81,7 +81,7 @@ pub struct OoOSpeculative {
     rs_alu_shift: RSSet,
     rs_ls: RSSet,
     rs_control: RSSet,
-    
+
     flush_delay: u32,
     flushing: bool,
     spec_pc: u32,
@@ -94,11 +94,17 @@ pub struct OoOSpeculative {
 
     // Render Info
     stalls: Vec<StallReason>,
-    epoch: usize,
+    pub epoch: usize,
+    pub instructions_committed: usize,
     pub rs_current_display: IssueType,
     pub rob_focus: usize,
     pub mem_bottom_offset: usize,
     pub display_focus: usize,
+
+    // The pc of the fn and its name
+    pub call_stack: Vec<(u32, String)>,
+
+    pub halt: Option<i32>,
 }
 
 impl CPU for OoOSpeculative {
@@ -123,12 +129,15 @@ impl CPU for OoOSpeculative {
 
             stalls: Vec::new(),
             epoch: 0,
+            instructions_committed: 0,
             rs_current_display: IssueType::ALUSHIFT,
             rob_focus: 0,
             to_broadcast: Vec::new(),
             cdb: VecDeque::new(),
             mem_bottom_offset: 0,
             display_focus: 0,
+            halt: None,
+            call_stack: Vec::new(),
         }
     }
 
@@ -192,9 +201,10 @@ impl CPU for OoOSpeculative {
         });
 
         let [fb_area, iq_area, rs_area, mem_top_border, mem_area] =
-            Layout::vertical([Length(3), Length(5), Length(10), Length(1), Fill(1)]).areas(right_area);
-        let [epoch_area, rst_area, stall_area] =
-            Layout::vertical([Length(3), Length(22), Fill(1)]).areas(left_area);
+            Layout::vertical([Length(3), Length(5), Length(10), Length(1), Fill(1)])
+                .areas(right_area);
+        let [epoch_area, rst_area, stall_area, call_stack_area] =
+            Layout::vertical([Length(3), Length(22), Length(5), Fill(1)]).areas(left_area);
 
         let bottom_border = |name| {
             Block::bordered()
@@ -234,22 +244,33 @@ impl CPU for OoOSpeculative {
         let rob_str = self.rob.render(self.rob_focus);
 
         frame.render_widget(
-            Paragraph::new(rob_str).block(Block::bordered().title(if self.display_focus == 0 {"#ROB#"} else {"ROB"})),
+            Paragraph::new(rob_str).block(Block::bordered().title(if self.display_focus == 0 {
+                "#ROB#"
+            } else {
+                "ROB"
+            })),
             rob_area,
         );
 
-        let mem_string = self.state.mem.dump(mem_area.width.into(), (mem_area.height - 2).into(), 0x22000000, self.mem_bottom_offset);
-        frame.render_widget(
-            Block::new().borders(Borders::BOTTOM),
-            mem_top_border,
+        let mem_string = self.state.mem.dump(
+            mem_area.width.into(),
+            (mem_area.height - 2).into(),
+            0x22000000,
+            self.mem_bottom_offset,
         );
+        frame.render_widget(Block::new().borders(Borders::BOTTOM), mem_top_border);
         frame.render_widget(
-            Paragraph::new(mem_string).block(Block::new()
-                .title(if self.display_focus == 1 {"#Mem#"} else {"Mem"})
-                .title_alignment(Alignment::Center)),
+            Paragraph::new(mem_string).block(
+                Block::new()
+                    .title(if self.display_focus == 1 {
+                        "#Mem#"
+                    } else {
+                        "Mem"
+                    })
+                    .title_alignment(Alignment::Center),
+            ),
             mem_area,
         );
-
 
         frame.render_widget(
             Paragraph::new(format!(
@@ -287,9 +308,17 @@ impl CPU for OoOSpeculative {
         }
 
         frame.render_widget(
-            Paragraph::new(stall_string)
-                .block(bottom_border("Stall Status").borders(Borders::NONE)),
+            Paragraph::new(stall_string).block(bottom_border("Stall Status")),
             stall_area,
+        );
+
+        frame.render_widget(
+            Paragraph::new(
+                self.call_stack
+                    .iter()
+                    .fold(String::new(), |acc, x| acc + "\n" + &x.1),
+            ),
+            call_stack_area,
         );
 
         let rs_title = format!("RS {}/4: {}", rs_to_display_n, rs_to_display_name);
@@ -299,7 +328,7 @@ impl CPU for OoOSpeculative {
         let [index_area, j_area, k_area, l_area, inst_area] =
             Layout::horizontal([Length(3), Length(11), Length(11), Length(11), Fill(1)])
                 .areas(rs_area_inner);
-        
+
         fn make_block_from_property<'a>(
             rs_to_display: &RSSet,
             property_getter: fn(&RS) -> String,
@@ -368,7 +397,7 @@ impl OoOSpeculative {
     fn stall(&mut self, reason: StallReason) {
         self.stalls.push(reason);
     }
-    
+
     pub fn rob_focus_up(&mut self) {
         self.rob_focus += 1;
         if self.rob_focus >= ROB_ENTRIES {
@@ -378,9 +407,8 @@ impl OoOSpeculative {
 
     pub fn rob_focus_down(&mut self) {
         if self.rob_focus == 0 {
-            self.rob_focus =  ROB_ENTRIES;
+            self.rob_focus = ROB_ENTRIES;
         }
         self.rob_focus -= 1;
-
     }
 }

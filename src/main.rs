@@ -17,6 +17,7 @@ use decode::*;
 use model::*;
 use ratatui::crossterm::event::{self, Event, KeyCode};
 use std::io;
+use std::process::exit;
 use CPUs::*;
 
 fn main() -> io::Result<()> {
@@ -41,7 +42,7 @@ fn main() -> io::Result<()> {
     };
 
     state.regs.pc = state.mem.entrypoint as u32;
-    
+
     let mut cpu = OoOSpeculative::new(
         state,
         "traces/trace.csv",
@@ -49,9 +50,27 @@ fn main() -> io::Result<()> {
         "traces/stack_dump.txt",
     );
 
+    let mut complete = false;
+
     loop {
         cpu.tick();
+        if let Some(exit_code) = cpu.halt {
+            terminal.clear()?;
+            terminal.flush()?;
+            terminal.set_cursor_position((0, 0))?;
+            println!("Program terminated with code {}", exit_code);
+            let ipc = (cpu.instructions_committed as f64) / (cpu.epoch as f64);
+            println!(
+                "Cycles: {}\nInstructions: {}\nIPC: {}",
+                cpu.epoch, cpu.instructions_committed, ipc
+            );
+            return Ok(());
+        }
         terminal.draw(|f| cpu.render(f))?;
+
+        if complete {
+            continue;
+        }
 
         // Wait for enter
         loop {
@@ -88,15 +107,15 @@ fn main() -> io::Result<()> {
                                 '2' => cpu.rs_current_display = IssueType::MUL,
                                 '3' => cpu.rs_current_display = IssueType::LoadStore,
                                 '4' => cpu.rs_current_display = IssueType::Control,
-                                'r' => {},
+                                'r' => {}
+                                'c' => {
+                                    complete = true;
+                                    break;
+                                }
                                 'f' => {
-                                    let new_focus = if cpu.display_focus == 0 {
-                                        1
-                                    } else {
-                                        0
-                                    };
+                                    let new_focus = if cpu.display_focus == 0 { 1 } else { 0 };
                                     cpu.display_focus = new_focus
-                                },
+                                }
                                 _ => continue,
                             }
                             terminal.draw(|f| cpu.render(f))?;

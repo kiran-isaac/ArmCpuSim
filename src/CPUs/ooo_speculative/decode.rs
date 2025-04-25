@@ -11,15 +11,9 @@ impl OoOSpeculative {
             for (i, mop) in i_as_mops.into_iter().enumerate() {
                 // Only increment PC if this is the last MOP in the stream
                 if i < mops_len - 1 {
-                    self.iq.push_back(InstructionQueueEntry {
-                        i: mop,
-                        pc,
-                    });
+                    self.iq.push_back(InstructionQueueEntry { i: mop, pc });
                 } else {
-                    self.iq.push_back(InstructionQueueEntry {
-                        i: mop,
-                        pc,
-                    });
+                    self.iq.push_back(InstructionQueueEntry { i: mop, pc });
                 }
             }
 

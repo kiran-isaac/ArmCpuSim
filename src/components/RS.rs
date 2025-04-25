@@ -89,7 +89,7 @@ impl RS {
             _ => {}
         }
     }
-    
+
     fn assert_not_waiting_for_rob(&self, rob_entry: usize) {
         match self.j {
             RSData::ROB(rob_entry_2, _) => {
@@ -121,11 +121,7 @@ pub struct RSSet {
 impl<'a> RSSet {
     pub fn new(issue_type: IssueType, n: usize) -> RSSet {
         let vec = vec![RS::new(); n];
-        RSSet {
-            vec,
-            issue_type,
-            n,
-        }
+        RSSet { vec, issue_type, n }
     }
 
     pub fn receive_cdb_broadcast(&mut self, rob_entry: usize, rn: u8, result: u32) {
@@ -133,7 +129,7 @@ impl<'a> RSSet {
             rs.receive_cdb_broadcast(rob_entry, rn, result);
         }
     }
-    
+
     pub fn assert_none_waiting_for_rob(&self, rob_entry: usize) {
         for rs in self.vec.iter() {
             rs.assert_not_waiting_for_rob(rob_entry);
@@ -145,7 +141,12 @@ impl<'a> RSSet {
     }
 
     /// if RST shows ROB entry then this, else get data from ARF
-    fn get_rs_data(rn: u8, arf: &Registers, register_status: &[Option<usize>; 20], rob: &'a ROB) -> RSData {
+    fn get_rs_data(
+        rn: u8,
+        arf: &Registers,
+        register_status: &[Option<usize>; 20],
+        rob: &'a ROB,
+    ) -> RSData {
         if let Some(rob_entry_num) = register_status[rn as usize] {
             let rob_entry = rob.get(rob_entry_num);
             if rob_entry.ready {
@@ -170,17 +171,16 @@ impl<'a> RSSet {
                 continue;
             }
 
-
             // Ignore this entry if any still pending results
             match (entry.j, entry.k, entry.l) {
-                (RSData::ROB(_, _), _, _) | (_, RSData::ROB(_, _), _) | (_, _, RSData::ROB(_, _)) => {
-                    continue
-                }
+                (RSData::ROB(_, _), _, _)
+                | (_, RSData::ROB(_, _), _)
+                | (_, _, RSData::ROB(_, _)) => continue,
                 _ => {
                     if rob.entry_is_before(entry.rob_dest, oldest_entry.0) {
                         oldest_entry = (entry.rob_dest, Some(index));
                     }
-                },
+                }
             }
         }
         oldest_entry.1
@@ -196,9 +196,9 @@ impl<'a> RSSet {
 
             // Ignore this entry if any still pending results
             match (entry.j, entry.k, entry.l) {
-                (RSData::ROB(_, _), _, _) | (_, RSData::ROB(_, _), _) | (_, _, RSData::ROB(_, _)) => {
-                    continue
-                }
+                (RSData::ROB(_, _), _, _)
+                | (_, RSData::ROB(_, _), _)
+                | (_, _, RSData::ROB(_, _)) => continue,
                 _ => set.push(entry),
             }
         }
@@ -217,7 +217,7 @@ impl<'a> RSSet {
         i: &I,
         arf: &Registers,
         register_status: &[Option<usize>; 20],
-        rob: &'a ROB
+        rob: &'a ROB,
     ) -> (RSData, RSData, RSData) {
         let mut j = RSData::None;
         let mut k = RSData::None;
@@ -236,8 +236,8 @@ impl<'a> RSSet {
                     }
 
                     // Dual register
-                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR 
-                    | MOVReg | ORR | SUBReg => {
+                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | MOVReg | ORR
+                    | SUBReg => {
                         j = Self::get_rs_data(i.rn, arf, register_status, rob);
                         k = Self::get_rs_data(i.rm, arf, register_status, rob);
                     }
@@ -380,7 +380,7 @@ impl<'a> RSSet {
 
         (j, k, l)
     }
-    
+
     pub fn flush_entries_corresponding_to_rob(&mut self, rob_entry: usize) {
         for entry in self.vec.iter_mut() {
             if entry.rob_dest == rob_entry {
@@ -395,7 +395,7 @@ impl<'a> RSSet {
         dest: usize,
         arf: &Registers,
         register_status: &[Option<usize>; 20],
-        rob: &'a ROB
+        rob: &'a ROB,
     ) -> Option<usize> {
         // will return none if it cannot allocate
         let alloc = self.get_alloc()?;

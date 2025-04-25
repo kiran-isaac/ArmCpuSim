@@ -263,11 +263,7 @@ impl Memory {
         }
     }
 
-    pub fn set_word(
-        &mut self,
-        vaddr: u32,
-        value: u32,
-    ) -> Result<(), MemError> {
+    pub fn set_word(&mut self, vaddr: u32, value: u32) -> Result<(), MemError> {
         let addr = self.mm(vaddr) as usize;
         if (addr as u32) < (self.flash_start + self.flash_size) {
             Err(MemError::SetRO)
@@ -287,11 +283,7 @@ impl Memory {
         }
     }
 
-    pub fn set_halfword(
-        &mut self,
-        vaddr: u32,
-        value: u16,
-    ) -> Result<(), MemError> {
+    pub fn set_halfword(&mut self, vaddr: u32, value: u16) -> Result<(), MemError> {
         let addr = self.mm(vaddr) as usize;
         if (addr as u32) < (self.flash_start + self.flash_size) {
             Err(MemError::SetRO)
@@ -321,7 +313,13 @@ impl Memory {
         }
     }
 
-    pub fn dump(&self, width: usize, height: usize, bottom: usize, rows_scrolled_up: usize) -> String {
+    pub fn dump(
+        &self,
+        width: usize,
+        height: usize,
+        bottom: usize,
+        rows_scrolled_up: usize,
+    ) -> String {
         // A byte is two chars, a word is eight
         // Addr is eight byes
         // #aaaaaaaa: 01234567 01234567
@@ -335,7 +333,7 @@ impl Memory {
         for y in 0..height {
             let line_addr = start_addr + (y * words_per_line * 4);
             string.push_str(&format!("#{:08X?}:", line_addr));
-            for x  in 0..words_per_line {
+            for x in 0..words_per_line {
                 let addr = (line_addr + x * 4) as u32;
                 // string.push_str(&format!(" {:08X}", addr));
                 if let Ok(word) = self.get_word_be(addr) {
