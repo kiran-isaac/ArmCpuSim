@@ -2,16 +2,6 @@ use super::*;
 
 impl OoOSpeculative {
     pub(super) fn issue(&mut self) {
-        if self.rob.is_full() {
-            self.stall(StallReason::FullRob);
-            return;
-        }
-        if let Some(last_issued) = self.rob.get_last_issued() {
-            if last_issued.is_serializing() {
-                self.stall(StallReason::IStall);
-                return;
-            }
-        }
         if self.iq.len() <= 0 {
             return;
         }

@@ -2,9 +2,9 @@ use super::*;
 
 impl OoOSpeculative {
     pub(super) fn decode(&mut self) {
-        if let Some(fb_entry) = &self.fb {
+        if let Some((pc, fb_entry)) = &self.fb {
+            let pc = *pc;
             let i = decode(*fb_entry);
-            let pc = self.spec_pc;
             let i_as_mops = decode2(i);
             let mops_len = i_as_mops.len();
 

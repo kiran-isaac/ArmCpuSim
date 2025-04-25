@@ -12,18 +12,31 @@ impl OoOSpeculative{
             exit(unsigned_to_signed_bitcast(self.state.regs.gp[0]))
         }
         
+        let predicted_taken = match PREDICT {
+            PredictionAlgorithms::AlwaysUntaken => false,
+            PredictionAlgorithms::AlwaysTaken => true,
+        };
+        
         match head.i.it {
             // Maybe taken
             B => {
-                if (head.value & 1) == 1 {
-                    self.spec_pc = head.value - 1;
+                if ((head.branch_target & 1) == 1) == predicted_taken {
+                    self.spec_pc = head.branch_target - 1;
                     self.flush_on_mispredict();
                 }
             }
 
             // Always Taken, so branch is mispredicted in "not taken"
-            BL | BX | BLX | SetPC => {
-                self.spec_pc = head.value;
+            BL => {
+                if predicted_taken == false {
+                    self.spec_pc = head.branch_target;
+                    self.flush_on_mispredict();
+                }
+            }
+
+            // Always requires a flush
+            BX | BLX | SetPC => {
+                self.spec_pc = head.branch_target;
                 self.flush_on_mispredict();
             }
             
@@ -80,5 +93,14 @@ impl OoOSpeculative{
     fn flush_on_mispredict(&mut self) {
         self.iq.clear();
         self.fb = None;
+        self.to_broadcast.clear();
+        self.load_queue.clear();
+        self.cdb.clear();
+        for flush in self.rob.flush_on_mispredict() {
+            self.rs_alu_shift.flush_entries_corresponding_to_rob(flush);
+            self.rs_control.flush_entries_corresponding_to_rob(flush);
+            self.rs_ls.flush_entries_corresponding_to_rob(flush);
+            self.rs_mul.flush_entries_corresponding_to_rob(flush);
+        }
     }
 }

@@ -1,7 +1,8 @@
 use crate::decode::{I, IT, IT::*};
-use crate::CPUs::LoadQueueEntry;
+use crate::CPUs::{LoadQueueEntry, ROB_ENTRIES, STALL_ON_BRANCH};
 use std::fmt::Formatter;
 use crate::components::ALU::ASPRUpdate;
+use crate::components::ROB::ROBStatus::EMPTY;
 use crate::model::Registers;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -28,8 +29,6 @@ impl std::fmt::Display for ROBStatus {
         }
     }
 }
-
-pub const ROB_ENTRIES: usize = 32;
 
 pub struct ROB {
     queue: [ROBEntry; ROB_ENTRIES],
@@ -60,7 +59,8 @@ pub struct ROBEntry {
     pub halt: bool,
     pub i: I,
     pub status: ROBStatus,
-    pub value: u32,
+    pub value: u32,    
+    pub branch_target: u32,
     pub asprupdate: ASPRUpdate,
     pub ready: bool,
     pub dest: ROBEntryDest,
@@ -71,6 +71,7 @@ impl ROBEntry {
         ROBEntry {
             pc: 0,
             value: 0,
+            branch_target: 0,
             halt: false,
             status: ROBStatus::EMPTY,
             dest: ROBEntryDest::None,
@@ -82,7 +83,8 @@ impl ROBEntry {
     
     pub fn is_serializing(&self) -> bool {
         match self.i.it {
-            SVC | B | BL | BLX | BX => true,
+            SVC  => true,
+            B | BL | BLX | BX => STALL_ON_BRANCH,
             _ => false,
         }
     }
@@ -108,18 +110,6 @@ impl ROB {
             Some(n) => if n == self.head {self.register_status[19] = None}
             _ => {}
         }
-        // if asprupdate.n.is_some() {
-        //     self.register_status[16] = None;
-        // }
-        // if asprupdate.z.is_some() {
-        //     self.register_status[17] = None;
-        // }
-        // if asprupdate.c.is_some() {
-        //     self.register_status[18] = None;
-        // }
-        // if asprupdate.v.is_some() {
-        //     self.register_status[19] = None;
-        // }
     }
     pub fn new() -> Self {
         Self {
@@ -140,6 +130,9 @@ impl ROB {
         }
 
         let insert_point = self.tail;
+        
+        // If this is a branch, set "value" to pc as this is the LR value
+        let mut value = 0;
 
         let rob_dest = match i.it {
             // All ALU instructions (+ mul) that write back to rd, and update CSPR
@@ -154,7 +147,10 @@ impl ROB {
             TST | CMPImm | CMN | CMPReg | B | BX | SVC | NOP => ROBEntryDest::None,
 
             // Sets LR
-            BL | BLX => ROBEntryDest::Register(14, i.setsflags),
+            BL | BLX => {
+                value = pc;
+                ROBEntryDest::Register(14, i.setsflags) 
+            },
 
             // All store instructions will be pending address calculation
             STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => ROBEntryDest::AwaitingAddress,
@@ -217,9 +213,10 @@ impl ROB {
         }
 
         self.will_issue = ROBEntry {
+            branch_target: 0,
             pc,
             status: ROBStatus::Execute,
-            value: 0,
+            value,
             i: i.clone(),
             halt: false,
             dest: rob_dest,
@@ -230,6 +227,25 @@ impl ROB {
         // Return where it would go upon issue commit
         // Cant insert now because RS might be full
         insert_point
+    }
+    
+    pub fn flush_on_mispredict(&mut self) -> Vec<usize> {
+        let mut i = Self::increment_index(self.head);
+        let mut flushed = vec![];
+        while self.entry_is_before(i, self.tail) {
+            for rn in 0..20 {
+                if let Some(rs) = self.register_status[rn] {
+                    if rs == i {
+                        self.register_status[rn] = None
+                    }
+                }
+            }
+            self.queue[i].status = EMPTY;
+            flushed.push(i);
+            i = Self::increment_index(i);        
+        }
+        self.tail = Self::increment_index(self.head);
+        flushed
     }
 
     pub fn get(&self, n: usize) -> &ROBEntry {
@@ -255,6 +271,10 @@ impl ROB {
     
     pub fn set_value(&mut self, n: usize, value: u32) {
         self.queue[n].value = value;
+    }
+    
+    pub fn set_branch_target(&mut self, n: usize, target: u32) {
+        self.queue[n].branch_target = target;
     }
     
     pub fn set_aspr(&mut self, n: usize, asprupdate: ASPRUpdate) {

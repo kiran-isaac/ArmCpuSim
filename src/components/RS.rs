@@ -1,4 +1,4 @@
-use crate::components::ROB::ROB;
+use crate::components::ROB::{ROBEntry, ROB};
 use crate::decode::{IssueType, I, IT::*};
 use crate::model::Registers;
 use std::cmp::Ordering;
@@ -356,9 +356,9 @@ impl<'a> RSSet {
                         j = Self::get_rs_data(i.rm, arf, register_status, rob);
                     }
                     // Sets PC from register value
-                    SetPC => {
-                        j = Self::get_rs_data(i.rn, arf, register_status, rob);
-                    }
+                    // SetPC => {
+                    //     j = Self::get_rs_data(i.rn, arf, register_status, rob);
+                    // }
                     // Supervisor calls always read from r0
                     SVC => {
                         j = RSData::Data(i.immu);
@@ -373,6 +373,14 @@ impl<'a> RSSet {
         }
 
         (j, k, l)
+    }
+    
+    pub fn flush_entries_corresponding_to_rob(&mut self, rob_entry: usize) {
+        for entry in self.vec.iter_mut() {
+            if entry.rob_dest == rob_entry {
+                entry.busy = false;
+            }
+        }
     }
 
     pub fn issue_receive(

@@ -17,15 +17,24 @@ use ratatui::{
     Frame,
 };
 use std::collections::{HashMap, VecDeque};
-use crate::components::ROB::{ROBEntryDest, ROBStatus, ROB_ENTRIES};
+use crate::components::ROB::{ROBEntryDest, ROBStatus};
 use crate::model::Registers;
+
+#[derive(PartialEq, Eq)]
+pub enum PredictionAlgorithms {
+    AlwaysTaken,
+    AlwaysUntaken,
+}
 
 const CDB_WIDTH: usize = 10;
 const LQ_SIZE: usize = 8;
-const MISPREDICT_FLUSH_DELAY: u32 = 2;
+pub const STALL_ON_BRANCH: bool = false;
+const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
+pub const ROB_ENTRIES: usize = 16;
 
 #[derive(Clone, Copy)]
 struct CDBRecord {
+    is_branch_target: bool,
     valid: bool,
     rob_number: usize,
     result: u32,
@@ -60,7 +69,7 @@ pub struct OoOSpeculative {
 
     // Only single fetch buffer space needed, as decode buffer will always produce
     // same or more num of mops, so fetch is never limiting factor
-    fb: Option<u32>,
+    fb: Option<(u32, u32)>,
     iq: VecDeque<InstructionQueueEntry>,
     rob: ROB,
 
@@ -95,7 +104,6 @@ pub struct OoOSpeculative {
 impl CPU for OoOSpeculative {
     fn new(state: ProcessorState, trace_file: &str, log_file: &str, stack_dump_file: &str) -> Self {
         let rob = ROB::new();
-        let sp = state.regs.sp as usize;
         Self {
             tracer: Tracer::new(trace_file, &state.regs),
             spec_pc: state.regs.pc,
@@ -127,18 +135,25 @@ impl CPU for OoOSpeculative {
     fn tick(&mut self) {
         // 6 stage pipeline
         // The pipeline stages are simulated backwards to avoid instantaneous updates
-        
-        if self.flushing {
-            if self.flush_delay != 0 {
-                self.flush_delay -= 1;
-            } else { 
-                
-            }    
-        }
 
         self.commit();
         self.wb();
         self.execute();
+        
+        if self.rob.is_full() {
+            self.stall(StallReason::FullRob);
+            return;
+        }
+        
+        // If last issued was serializing dont speculatively fetch or issue any more this
+        // cycle
+        if let Some(last_issued) = self.rob.get_last_issued() {
+            if last_issued.is_serializing() {
+                self.stall(StallReason::IStall);
+                return;
+            }
+        }
+        
         self.issue();
         self.decode();
         self.fetch();
@@ -240,7 +255,7 @@ impl CPU for OoOSpeculative {
             Paragraph::new(format!(
                 "{}",
                 match &self.fb {
-                    Some(i) => format!("{:08X}   Spec PC: {:08X?}", i, self.spec_pc),
+                    Some((pc, i)) => format!("{:08X}   Spec PC: {:08X?}", i, pc),
                     None => "-".to_string(),
                 }
             ))
@@ -367,10 +382,5 @@ impl OoOSpeculative {
         }
         self.rob_focus -= 1;
 
-    }
-
-    fn start_flush(&mut self) {
-        self.flushing = true;
-        self.flush_delay = MISPREDICT_FLUSH_DELAY;
     }
 }

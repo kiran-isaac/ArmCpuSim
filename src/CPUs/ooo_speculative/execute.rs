@@ -54,6 +54,7 @@ impl OoOSpeculative {
                 self.to_broadcast.push((
                     0,
                     CDBRecord {
+                        is_branch_target: false,
                         valid: false,
                         result,
                         aspr_update: ASPRUpdate::no_update(),
@@ -74,12 +75,11 @@ impl OoOSpeculative {
             self.rs_mul.vec[rs_index].busy = false;
         }
 
-        if self.load_queue.len() < LQ_SIZE - 1 {
-            if let Some(rs_index) = self.rs_ls.get_one_ready() {
-                self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
-                self.rs_ls.vec[rs_index].busy = false;
-            }
+        if let Some(rs_index) = self.rs_ls.get_one_ready() {
+            self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
+            self.rs_ls.vec[rs_index].busy = false;
         }
+        
 
         if let Some(rs_index) = self.rs_control.get_one_ready() {
             self.execute_control(&self.rs_control.vec[rs_index].clone(), &mut 0);
@@ -96,6 +96,7 @@ impl OoOSpeculative {
                     self.to_broadcast.push((
                         1,
                         CDBRecord {
+                            is_branch_target: false,
                             valid: false,
                             result: 0,
                             aspr_update: ASPRUpdate::no_update(),
@@ -143,6 +144,7 @@ impl OoOSpeculative {
             self.to_broadcast.push((
                 1,
                 CDBRecord {
+                    is_branch_target: false,
                     valid: false,
                     result: 0,
                     aspr_update: ASPRUpdate::no_update(),
@@ -207,6 +209,7 @@ impl OoOSpeculative {
         self.to_broadcast.push((
             1,
             CDBRecord {
+                is_branch_target: true,
                 valid: false,
                 result: target,
                 aspr_update: ASPRUpdate::no_update(),
@@ -235,6 +238,7 @@ impl OoOSpeculative {
             STRBImm | STRBReg | STRHImm | STRHReg | STRImm | STRReg => {
                 self.to_broadcast.push((1, 
                     CDBRecord {
+                        is_branch_target: false,
                         valid: true,
                         rob_number: rs.rob_dest,
                         result: address,
@@ -269,6 +273,7 @@ impl OoOSpeculative {
         self.to_broadcast.push((
             2,
             CDBRecord {
+                is_branch_target: false,
                 valid: false,
                 result,
                 aspr_update,
@@ -406,6 +411,7 @@ impl OoOSpeculative {
         self.to_broadcast.push((
             delay,
             CDBRecord {
+                is_branch_target: false,
                 valid: false,
                 result,
                 aspr_update,

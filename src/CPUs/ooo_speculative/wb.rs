@@ -35,7 +35,11 @@ impl OoOSpeculative {
 
                 match rob_entry.dest {
                     ROBEntryDest::Address(_) => {
-                        self.rob.set_value(record.rob_number, record.result);
+                        if record.is_branch_target {
+                            self.rob.set_branch_target(record.rob_number, record.result)
+                        } else {
+                            self.rob.set_value(record.rob_number, record.result);
+                        }
 
                         // There should be no reservation stations waiting on this thing
                         self.rs_control.assert_none_waiting_for_rob(record.rob_number);
@@ -46,14 +50,22 @@ impl OoOSpeculative {
                     // There may be RS waiting on this thing (this could be cmp so we're waiting for flags)
                     // We will deal with flags after this
                     ROBEntryDest::None => {
-                        self.rob.set_value(record.rob_number, record.result);
+                        if record.is_branch_target {
+                            self.rob.set_branch_target(record.rob_number, record.result)
+                        } else {
+                            self.rob.set_value(record.rob_number, record.result);
+                        }
                     },
                     ROBEntryDest::AwaitingAddress => {
                         let address = record.result;
                         self.rob.set_address(record.rob_number, address);
                     }
                     ROBEntryDest::Register(n, _) => {
-                        self.rob.set_value(record.rob_number, record.result);
+                        if record.is_branch_target {
+                            self.rob.set_branch_target(record.rob_number, record.result)
+                        } else {
+                            self.rob.set_value(record.rob_number, record.result);
+                        }
 
                         self.rs_control.receive_cdb_broadcast(record.rob_number, n, record.result);
                         self.rs_mul.receive_cdb_broadcast(record.rob_number, n, record.result);

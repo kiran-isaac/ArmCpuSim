@@ -1042,30 +1042,7 @@ pub fn decode(i: u32) -> I {
 
                                 match cond {
                                     0b0000..=0b1110 => {
-                                        let imm7 = briz(i, 0, 6) << 1;
-                                        let sign = bit_as_bool(i, 7);
-
-                                        let imm8 = i32::from_ne_bytes(
-                                            (imm7
-                                                + if sign {
-                                                    0b1111_1111_1111_1111_1111_1111 << 8
-                                                } else {
-                                                    0
-                                                })
-                                            .to_ne_bytes(),
-                                        );
-
-                                        I {
-                                            it: IT::B,
-                                            imms: imm8,
-                                            rn: cond as u8,
-                                            rd: 0,
-                                            rt: 0,
-                                            rl: 0,
-                                            rm: 0,
-                                            immu: 0,
-                                            setsflags: false,
-                                        }
+                                        decode_b1(i)
                                     }
                                     0b1111 => I {
                                         it: IT::SVC,
@@ -1085,30 +1062,7 @@ pub fn decode(i: u32) -> I {
                     }
                     // B (T2)
                     0b1000 | 0b1001 => {
-                        let imm10 = briz(i, 0, 9) << 1;
-                        let sign = bit_as_bool(i, 10);
-
-                        let imm11 = i32::from_ne_bytes(
-                            (imm10
-                                + if sign {
-                                    0b1111_1111_1111_1111_1111_11 << 11
-                                } else {
-                                    0
-                                })
-                            .to_ne_bytes(),
-                        );
-
-                        return I {
-                            it: IT::B,
-                            imms: imm11,
-                            rn: 0b1110,
-                            rd: 0,
-                            rt: 0,
-                            rl: 0,
-                            rm: 0,
-                            immu: 0,
-                            setsflags: false,
-                        };
+                        decode_b2(i)
                     }
                     _ => panic!("Invalid instr: {i}"),
                 },
@@ -1171,38 +1125,7 @@ pub fn decode(i: u32) -> I {
                         }
                         // BL
                         (0b101, _) | (0b111, _) => {
-                            let s = bit_as_bool(i, 26);
-                            let j1 = bit_as_bool(i, 13);
-                            let j2 = bit_as_bool(i, 11);
-
-                            let i1 = !(j1 ^ s) as u32;
-                            let i2 = !(j2 ^ s) as u32;
-
-                            let imm11 = briz(i, 0, 10);
-                            let imm10 = briz(i, 16, 25);
-
-                            let s = if s { 0b1111_1111 } else { 0 };
-
-                            let imm32 = i32::from_ne_bytes(
-                                ((imm11 << 1)
-                                    + (imm10 << 12)
-                                    + (i2 << 22)
-                                    + (i1 << 23)
-                                    + (s << 24))
-                                    .to_ne_bytes(),
-                            );
-
-                            I {
-                                it: IT::BL,
-                                imms: imm32,
-                                rd: 0,
-                                rn: 0,
-                                rm: 0,
-                                rt: 0,
-                                rl: 0,
-                                immu: 0,
-                                setsflags: false,
-                            }
+                            decode_bl(i)
                         }
                         _ => panic!("Invalid instr: {i}"),
                     }
@@ -1210,5 +1133,95 @@ pub fn decode(i: u32) -> I {
                 _ => panic!("Invalid instr: {i}"),
             }
         }
+    }
+}
+
+
+pub fn decode_bl(i: u32) -> I {
+    let s = bit_as_bool(i, 26);
+    let j1 = bit_as_bool(i, 13);
+    let j2 = bit_as_bool(i, 11);
+
+    let i1 = !(j1 ^ s) as u32;
+    let i2 = !(j2 ^ s) as u32;
+
+    let imm11 = briz(i, 0, 10);
+    let imm10 = briz(i, 16, 25);
+
+    let s = if s { 0b1111_1111 } else { 0 };
+
+    let imm32 = i32::from_ne_bytes(
+        ((imm11 << 1)
+            + (imm10 << 12)
+            + (i2 << 22)
+            + (i1 << 23)
+            + (s << 24))
+            .to_ne_bytes(),
+    );
+
+    I {
+        it: IT::BL,
+        imms: imm32,
+        rd: 0,
+        rn: 0,
+        rm: 0,
+        rt: 0,
+        rl: 0,
+        immu: 0,
+        setsflags: false,
+    }
+}
+
+pub fn decode_b1(i: u32) -> I {
+    let imm7 = briz(i, 0, 6) << 1;
+    let sign = bit_as_bool(i, 7);
+
+    let imm8 = i32::from_ne_bytes(
+        (imm7
+            + if sign {
+            0b1111_1111_1111_1111_1111_1111 << 8
+        } else {
+            0
+        })
+            .to_ne_bytes(),
+    );
+
+    I {
+        it: IT::B,
+        imms: imm8,
+        rn: briz(i, 8, 11) as u8,
+        rd: 0,
+        rt: 0,
+        rl: 0,
+        rm: 0,
+        immu: 0,
+        setsflags: false,
+    }
+}
+
+pub fn decode_b2(i: u32) -> I {
+    let imm10 = briz(i, 0, 9) << 1;
+    let sign = bit_as_bool(i, 10);
+
+    let imm11 = i32::from_ne_bytes(
+        (imm10
+            + if sign {
+            0b1111_1111_1111_1111_1111_11 << 11
+        } else {
+            0
+        })
+            .to_ne_bytes(),
+    );
+
+    I {
+        it: IT::B,
+        imms: imm11,
+        rn: 0b1110,
+        rd: 0,
+        rt: 0,
+        rl: 0,
+        rm: 0,
+        immu: 0,
+        setsflags: false,
     }
 }
