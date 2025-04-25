@@ -222,7 +222,7 @@ impl<'a> RSSet {
             IssueType::ALUSHIFT | IssueType::MUL => {
                 match i.it {
                     // Dual register and carry {
-                    ADC | SBC => {
+                    ADC | SBC | ROR | LSLReg | LSRReg => {
                         j = Self::get_rs_data(i.rn, arf, register_status, rob);
                         k = Self::get_rs_data(i.rm, arf, register_status, rob);
                         // 18 is carry
@@ -230,8 +230,8 @@ impl<'a> RSSet {
                     }
 
                     // Dual register
-                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | LSLReg | LSRReg
-                    | MOVReg | ORR | ROR | SUBReg => {
+                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR 
+                    | MOVReg | ORR | SUBReg => {
                         j = Self::get_rs_data(i.rn, arf, register_status, rob);
                         k = Self::get_rs_data(i.rm, arf, register_status, rob);
                     }
@@ -256,6 +256,8 @@ impl<'a> RSSet {
                     ASRImm | LSLImm | LSRImm => {
                         j = Self::get_rs_data(i.rm, arf, register_status, rob);
                         k = RSData::Data(i.immu);
+                        // 18 is carry
+                        l = Self::get_rs_data(18, arf, register_status, rob);
                     }
 
                     _ => panic!(

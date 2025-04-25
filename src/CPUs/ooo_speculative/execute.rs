@@ -8,8 +8,10 @@ use crate::system::syscall;
 
 impl OoOSpeculative {
     pub(super) fn execute(&mut self) {
-        if let Some(lqe_head) = self.load_queue.pop_front() {
+        if let Some(lqe_head) = self.load_queue.front() {
             if self.rob.load_can_go(&lqe_head) {
+                let lqe_head = lqe_head.clone();
+                self.load_queue.pop_front();
                 let load_address = lqe_head.address;
 
                 let result = match lqe_head.load_type {
@@ -137,6 +139,17 @@ impl OoOSpeculative {
                 }
                 _ => panic!("Invalid svc"),
             }
+
+            self.to_broadcast.push((
+                1,
+                CDBRecord {
+                    valid: false,
+                    result: 0,
+                    aspr_update: ASPRUpdate::no_update(),
+                    rob_number: rs.rob_dest,
+                    halt: false,
+                },
+            ));
         }
         // BX, BLX and SetPc require RM
         // SetPC, BX and BLX are absolute
@@ -150,6 +163,11 @@ impl OoOSpeculative {
             },
             _ => unreachable!(),
         };
+
+        match rs.i.it {
+            B => target += 2,
+            _ => {}
+        }
         
         let taken = match rs.i.it {
             SetPC | BX | BL | BLX => true,

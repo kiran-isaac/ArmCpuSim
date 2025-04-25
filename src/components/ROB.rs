@@ -29,7 +29,7 @@ impl std::fmt::Display for ROBStatus {
     }
 }
 
-pub const ROB_ENTRIES: usize = 8;
+pub const ROB_ENTRIES: usize = 32;
 
 pub struct ROB {
     queue: [ROBEntry; ROB_ENTRIES],
@@ -89,7 +89,7 @@ impl ROBEntry {
 }
 
 impl ROB {
-    // Only wipe aspr if the thing currently committing is the thing that is currently responsible for 
+    // Only wipe aspr if the thing currently committing is the thing that is currently responsible for
     // the register_status entry
     pub fn wipe_aspr_rob_dependencies_at_head(&mut self, asprupdate: &ASPRUpdate) {
         match self.register_status[16] {
@@ -151,7 +151,10 @@ impl ROB {
 
             // All ALU instructions that dont write back, as well as branches and system calls
             // Have none as a destination
-            TST | CMPImm | CMN | CMPReg | B | BL | BLX | BX | SVC | NOP => ROBEntryDest::None,
+            TST | CMPImm | CMN | CMPReg | B | BX | SVC | NOP => ROBEntryDest::None,
+
+            // Sets LR
+            BL | BLX => ROBEntryDest::Register(14, i.setsflags),
 
             // All store instructions will be pending address calculation
             STRImm | STRReg | STRBImm | STRBReg | STRHImm | STRHReg => ROBEntryDest::AwaitingAddress,
@@ -298,11 +301,22 @@ impl ROB {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.head == self.tail
+        (self.head == self.tail) && !self.is_full()
     }
 
     pub fn is_full(&self) -> bool {
-        self.head == Self::increment_index(self.tail)
+        let mut i = self.head;
+        if self.get(i).status == ROBStatus::EMPTY {
+            return false;
+        }
+        i = Self::increment_index(i);
+        while i != self.head {
+            if self.get(i).status == ROBStatus::EMPTY {
+                return false;
+            }
+            i = Self::increment_index(i);
+        }
+        true
     }
 
     /// True if e1 is first, false otherwise
@@ -325,10 +339,6 @@ impl ROB {
     pub fn load_can_go(&self, load: &LoadQueueEntry) -> bool {
         let mut i = self.head;
         while self.entry_is_before(i, load.rob_entry) {
-            i += 1;
-            if i >= ROB_ENTRIES {
-                i = 0
-            }
             let thingy = self.queue[i];
             match thingy.status {
                 ROBStatus::EMPTY => break, // we must have exceded tail?
@@ -341,9 +351,10 @@ impl ROB {
                             return false;
                         }
                     }
-                    _ => continue,
+                    _ => {},
                 },
             }
+            i = Self::increment_index(i);
         }
         true
     }
@@ -380,7 +391,7 @@ impl std::fmt::Display for ROBEntry {
         if self.status == ROBStatus::EMPTY {
             return write!(f, "__");
         }
-        write!(f, "{}, {}, {}", self.status.to_string(), self.dest, self.i.to_string())
+        write!(f, "{}, {}, {}, {:08X?}", self.status.to_string(), self.dest, self.i.to_string(), self.pc)
     }
 }
 #[cfg(test)]

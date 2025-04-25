@@ -6,7 +6,7 @@ use super::*;
 impl OoOSpeculative{
     pub(super) fn commit(&mut self) {
         let head = self.rob.get_head().clone();
-        if !head.ready {return;}
+        if !head.ready || self.rob.is_empty() {return;}
         if head.halt {
             // r0 is the exit code, must have been committed by now
             exit(unsigned_to_signed_bitcast(self.state.regs.gp[0]))
@@ -34,15 +34,21 @@ impl OoOSpeculative{
             ROBEntryDest::Address(addr) => {
                 match head.i.it {
                     STRImm | STRReg => {
-                        self.state.mem.set_word(addr, head.value).unwrap();
+                        if let Err(e) = self.state.mem.set_word(addr, head.value) {
+                            panic!("{:?}: attempt to set halfword at {:08X?}", e, addr)
+                        }
                     }
                         
                     STRHImm | STRHReg => {
-                        self.state.mem.set_halfword(addr, head.value as u16).unwrap();
+                        if let Err(e) = self.state.mem.set_halfword(addr, head.value as u16) {
+                            panic!("{:?}: attempt to set halfword at {:08X?}", e, addr)
+                        }
                     }
                     
                     STRBImm | STRBReg => {
-                        self.state.mem.set_byte(addr, head.value as u8).unwrap()
+                        if let Err(e) = self.state.mem.set_byte(addr, head.value as u8) {
+                            panic!("{:?}: attempt to set halfword at {:08X?}", e, addr)
+                        }
                     }
                     
                     _ => unreachable!()
@@ -56,15 +62,21 @@ impl OoOSpeculative{
             }
             _ => {}
         }
-        
+
         if head.i.setsflags {
             self.state.regs.apply_aspr_update(&head.asprupdate);
             self.rob.wipe_aspr_rob_dependencies_at_head(&head.asprupdate);
         }
 
+        //
+        match head.i.it {
+            BL | BLX => self.state.regs.set(14, head.pc),
+            _ => {}
+        }
+
         self.rob.clear_head_and_increment()
     }
-    
+
     fn flush_on_mispredict(&mut self) {
         self.iq.clear();
         self.fb = None;

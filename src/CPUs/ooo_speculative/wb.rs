@@ -3,6 +3,7 @@ use super::*;
 impl OoOSpeculative {
     pub(super) fn wb(&mut self) {
         // Decrease all delays, and add to ready queue if they are 0
+
         let mut free_slots = CDB_WIDTH;
         let mut new_to_broadcast = Vec::new();
         for (delay, record) in self.to_broadcast.iter_mut() {
@@ -22,8 +23,7 @@ impl OoOSpeculative {
             }
         }
         self.to_broadcast = new_to_broadcast;
-
-
+        
         // Broadcast the first {CDB_WIDTH} cdb records to everything that needs it
         for _ in 0..CDB_WIDTH {
             if let Some(record) = self.cdb.pop_front() {
@@ -36,7 +36,6 @@ impl OoOSpeculative {
                 match rob_entry.dest {
                     ROBEntryDest::Address(_) => {
                         self.rob.set_value(record.rob_number, record.result);
-                        self.rob.set_ready(record.rob_number);
 
                         // There should be no reservation stations waiting on this thing
                         self.rs_control.assert_none_waiting_for_rob(record.rob_number);
@@ -48,16 +47,13 @@ impl OoOSpeculative {
                     // We will deal with flags after this
                     ROBEntryDest::None => {
                         self.rob.set_value(record.rob_number, record.result);
-                        self.rob.set_ready(record.rob_number);
                     },
                     ROBEntryDest::AwaitingAddress => {
                         let address = record.result;
-                        self.rob.set_ready(record.rob_number);
                         self.rob.set_address(record.rob_number, address);
                     }
                     ROBEntryDest::Register(n, _) => {
                         self.rob.set_value(record.rob_number, record.result);
-                        self.rob.set_ready(record.rob_number);
 
                         self.rs_control.receive_cdb_broadcast(record.rob_number, n, record.result);
                         self.rs_mul.receive_cdb_broadcast(record.rob_number, n, record.result);
@@ -65,7 +61,8 @@ impl OoOSpeculative {
                         self.rs_ls.receive_cdb_broadcast(record.rob_number, n, record.result);
                     }
                 }
-                
+                self.rob.set_ready(record.rob_number);
+
                 if self.rob.get(record.rob_number).i.setsflags {
                     self.rob.set_aspr(record.rob_number, record.aspr_update);
                     if let Some(n) = record.aspr_update.n {

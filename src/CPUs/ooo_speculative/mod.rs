@@ -20,7 +20,7 @@ use std::collections::{HashMap, VecDeque};
 use crate::components::ROB::{ROBEntryDest, ROBStatus, ROB_ENTRIES};
 use crate::model::Registers;
 
-const CDB_WIDTH: usize = 1;
+const CDB_WIDTH: usize = 10;
 const LQ_SIZE: usize = 8;
 const MISPREDICT_FLUSH_DELAY: u32 = 2;
 
@@ -42,7 +42,7 @@ pub struct LoadQueueEntry {
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug)]
 enum StallReason {
-    IssueRobFull,
+    FullRob,
     IssueRSFull,
     ExecuteLSQFull,
     IStall
@@ -240,7 +240,7 @@ impl CPU for OoOSpeculative {
             Paragraph::new(format!(
                 "{}",
                 match &self.fb {
-                    Some(i) => format!("{:08X}", i),
+                    Some(i) => format!("{:08X}   Spec PC: {:08X?}", i, self.spec_pc),
                     None => "-".to_string(),
                 }
             ))
@@ -268,7 +268,7 @@ impl CPU for OoOSpeculative {
 
         let mut stall_string = String::new();
         for entry in stall_count {
-            stall_string += &format!("{:?}: {}", entry.0, entry.1);
+            stall_string += &format!("{:?}: {}\n", entry.0, entry.1);
         }
 
         frame.render_widget(

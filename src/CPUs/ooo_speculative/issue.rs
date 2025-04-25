@@ -3,7 +3,7 @@ use super::*;
 impl OoOSpeculative {
     pub(super) fn issue(&mut self) {
         if self.rob.is_full() {
-            self.stall(StallReason::IssueRobFull);
+            self.stall(StallReason::FullRob);
             return;
         }
         if let Some(last_issued) = self.rob.get_last_issued() {
