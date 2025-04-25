@@ -226,7 +226,7 @@ impl CPU for OoOSpeculative {
             rob_area,
         );
 
-        let mem_string = self.state.mem.dump(mem_area.width.into(), (mem_area.height - 2).into(), self.state.regs.sp as usize, self.mem_bottom_offset);
+        let mem_string = self.state.mem.dump(mem_area.width.into(), (mem_area.height - 2).into(), 0x22000000, self.mem_bottom_offset);
         frame.render_widget(
             Block::new().borders(Borders::BOTTOM),
             mem_top_border,

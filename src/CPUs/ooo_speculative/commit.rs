@@ -5,7 +5,7 @@ use super::*;
 
 impl OoOSpeculative{
     pub(super) fn commit(&mut self) {
-        let head = self.rob.get_head();
+        let head = self.rob.get_head().clone();
         if !head.ready {return;}
         if head.halt {
             // r0 is the exit code, must have been committed by now
@@ -30,7 +30,7 @@ impl OoOSpeculative{
             ROBEntryDest::Address(addr) => {
                 match head.i.it {
                     STRImm | STRReg => {
-                        self.state.mem.set_byte(addr, head.value as u8).unwrap()
+                        self.state.mem.set_word(addr, head.value).unwrap();
                     }
                         
                     STRHImm | STRHReg => {
@@ -38,7 +38,7 @@ impl OoOSpeculative{
                     }
                     
                     STRBImm | STRBReg => {
-                        self.state.mem.set_word(addr, head.value).unwrap();
+                        self.state.mem.set_byte(addr, head.value as u8).unwrap()
                     }
                     
                     _ => unreachable!()
@@ -49,7 +49,8 @@ impl OoOSpeculative{
                 self.state.regs.set(rn, head.value);
 
                 if aspr_update {
-                    self.state.regs.apply_aspr_update(&head.asprupdate)
+                    self.state.regs.apply_aspr_update(&head.asprupdate);
+                    self.rob.wipe_aspr_rob_dependencies(&head.asprupdate);
                 }
 
                 self.rob.register_status[rn as usize] = None

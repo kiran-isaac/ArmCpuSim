@@ -13,6 +13,7 @@ impl OoOSpeculative {
             } else {
                 record.valid = true;
                 self.cdb.push_back(record.clone());
+                self.rob.set_status(record.rob_number, ROBStatus::Write);
                 free_slots -= 1;
             }
         }
@@ -23,14 +24,16 @@ impl OoOSpeculative {
         for _ in 0..CDB_WIDTH {
             if let Some(record) = self.cdb.pop_front() {
                 let rob_entry = self.rob.get(record.rob_number).clone();
-                self.rob.set_value_and_ready(record.rob_number, record.result);
                 if record.halt {
                     self.rob.set_halt(record.rob_number);
                 }
-                assert_eq!(rob_entry.status, ROBStatus::Execute);
+                assert_eq!(rob_entry.status, ROBStatus::Write);
 
                 match rob_entry.dest {
                     ROBEntryDest::Address(_) => {
+                        self.rob.set_value(record.rob_number, record.result);
+                        self.rob.set_ready(record.rob_number);
+
                         // There should be no reservation stations waiting on this thing
                         self.rs_control.assert_none_waiting_for_rob(record.rob_number);
                         self.rs_mul.assert_none_waiting_for_rob(record.rob_number);
@@ -39,18 +42,26 @@ impl OoOSpeculative {
                     },
                     // There may be RS waiting on this thing (this could be cmp so we're waiting for flags)
                     // We will deal with flags after this
-                    ROBEntryDest::None => {},
+                    ROBEntryDest::None => {                
+                        self.rob.set_value(record.rob_number, record.result);
+                        self.rob.set_ready(record.rob_number);
+                    },
                     ROBEntryDest::AwaitingAddress => {
                         let address = record.result;
+                        self.rob.set_ready(record.rob_number);
                         self.rob.set_address(record.rob_number, address);
                     }
-                    ROBEntryDest::Register(n, cspr) => {
+                    ROBEntryDest::Register(n, setsflags) => {
+                        self.rob.set_value(record.rob_number, record.result);
+                        self.rob.set_ready(record.rob_number);
+
                         self.rs_control.receive_cdb_broadcast(record.rob_number, n, record.result);
                         self.rs_mul.receive_cdb_broadcast(record.rob_number, n, record.result);
                         self.rs_alu_shift.receive_cdb_broadcast(record.rob_number, n, record.result);
                         self.rs_ls.receive_cdb_broadcast(record.rob_number, n, record.result);
 
-                        if cspr {
+                        if setsflags {
+                            self.rob.set_aspr(record.rob_number, record.aspr_update.clone());
                             if let Some(n) = record.aspr_update.n {
                                 self.rs_control.receive_cdb_broadcast(record.rob_number, 16, n as u32);
                                 self.rs_mul.receive_cdb_broadcast(record.rob_number, 16, n as u32);

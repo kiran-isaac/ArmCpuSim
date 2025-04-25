@@ -202,7 +202,9 @@ impl OoOSpeculative {
                         aspr_update: ASPRUpdate::no_update(),
                         halt: false,
                     })
-                )
+                );
+                // L has the actual data to be stored
+                self.rob.set_value(rs.rob_dest, Self::get_data(rs.l).unwrap())
             }
             _ => unreachable!()
         }
@@ -312,7 +314,7 @@ impl OoOSpeculative {
             REVSH => (ALU_Shift::ALU_OP(ALUOperation::REVSH), j.unwrap(), 0, 0),
 
             // Mov adds 0
-            MOVReg | MOVImm => (ALU_Shift::ALU_OP(ALUOperation::ADD), j.unwrap(), 0, 0),
+            MOVReg | MOVImm => (ALU_Shift::ALU_OP(ALUOperation::AND), j.unwrap(), j.unwrap(), 0),
             MVN => (ALU_Shift::ALU_OP(ALUOperation::ADD), !j.unwrap(), 0, 0),
 
             // The shifts all take ASPR C

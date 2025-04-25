@@ -23,7 +23,7 @@ impl std::fmt::Display for ROBStatus {
             ROBStatus::Execute => write!(f, "EX"),
             ROBStatus::Pending => write!(f, "PN"),
             ROBStatus::Commit => write!(f, "CO"),
-            ROBStatus::Write => write!(f, "WP"),
+            ROBStatus::Write => write!(f, "WB"),
             ROBStatus::Exception(v) => write!(f, "V{}", v),
         }
     }
@@ -89,6 +89,20 @@ impl ROBEntry {
 }
 
 impl ROB {
+    pub fn wipe_aspr_rob_dependencies(&mut self, asprupdate: &ASPRUpdate) {
+        if asprupdate.n.is_some() {
+            self.register_status[16] = None;
+        }
+        if asprupdate.z.is_some() {
+            self.register_status[17] = None;
+        }
+        if asprupdate.c.is_some() {
+            self.register_status[18] = None;
+        }
+        if asprupdate.v.is_some() {
+            self.register_status[19] = None;
+        }
+    }
     pub fn new() -> Self {
         Self {
             queue: [ROBEntry::new(); ROB_ENTRIES],
@@ -218,15 +232,26 @@ impl ROB {
         self.queue[n].halt = true;
     }
     
-    pub fn set_value_and_ready(&mut self, n: usize, value: u32) {
+    pub fn set_value(&mut self, n: usize, value: u32) {
         self.queue[n].value = value;
-        self.queue[n].ready = true;
+    }
+    
+    pub fn set_aspr(&mut self, n: usize, asprupdate: ASPRUpdate) {
+        self.queue[n].asprupdate = asprupdate;  
+    }
+
+    pub fn set_status(&mut self, n: usize, robstatus: ROBStatus) {
+        self.queue[n].status = robstatus;
     }
 
     pub fn set_address(&mut self, n: usize, address: u32) {
         if self.queue[n].dest != ROBEntryDest::AwaitingAddress {unreachable!()}
 
         self.queue[n].dest = ROBEntryDest::Address(address);
+    }
+    
+    pub fn set_ready(&mut self, n: usize) {
+        self.queue[n].ready = true;
     }
     
     pub fn clear_head_and_increment(&mut self) {

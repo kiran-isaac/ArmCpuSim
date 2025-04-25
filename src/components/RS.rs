@@ -266,15 +266,27 @@ impl<'a> RSSet {
             }
             IssueType::LoadStore => match i.it {
                 // rn + imm offset
-                STRImm | STRBImm | STRHImm | LDRImm | LDRBImm | LDRHImm => {
+                LDRImm | LDRBImm | LDRHImm => {
                     j = Self::get_rs_data(i.rn, arf, register_status, rob);
                     k = RSData::Data(i.immu);
                 }
 
+                STRImm | STRBImm | STRHImm => {
+                    j = Self::get_rs_data(i.rn, arf, register_status, rob);
+                    k = RSData::Data(i.immu);
+                    l = Self::get_rs_data(i.rt, arf, register_status, rob);
+                }
+
                 // rn + rm offset
-                STRReg | STRBReg | STRHReg | LDRReg | LDRBReg | LDRHReg | LDRSH | LDRSB => {
+                LDRReg | LDRBReg | LDRHReg | LDRSH | LDRSB => {
                     j = Self::get_rs_data(i.rn, arf, register_status, rob);
                     k = Self::get_rs_data(i.rm, arf, register_status, rob);
+                }
+
+                STRReg | STRBReg | STRHReg => {
+                    j = Self::get_rs_data(i.rn, arf, register_status, rob);
+                    k = Self::get_rs_data(i.rm, arf, register_status, rob);
+                    l = Self::get_rs_data(i.rt, arf, register_status, rob);
                 }
                 _ => panic!("{:?} should not have been issued here", i),
             },
