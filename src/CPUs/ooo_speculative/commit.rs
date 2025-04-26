@@ -27,12 +27,12 @@ impl OoOSpeculative {
             B => {
                 let taken = ((head.branch_target & 1) == 1);
                 
-                if taken && !predicted_taken {
+                if taken && (!predicted_taken || STALL_ON_BRANCH) {
                     self.spec_pc = head.branch_target - 1;
                     self.flush_on_mispredict();
                 }
  
-                if !taken && predicted_taken {
+                if !taken && (predicted_taken || STALL_ON_BRANCH) {
                     self.spec_pc = head.pc;
                     self.flush_on_mispredict();
                 }
@@ -40,7 +40,7 @@ impl OoOSpeculative {
 
             // Always Taken, so branch is mispredicted in "not taken"
             BL => {
-                if predicted_taken == false {
+                if !predicted_taken || STALL_ON_BRANCH {
                     self.spec_pc = head.branch_target;
                     self.flush_on_mispredict();
                 }
@@ -102,12 +102,15 @@ impl OoOSpeculative {
         self.instructions_committed += 1;
     }
 
-    fn flush_on_mispredict(&mut self) {
+    pub fn flush_on_mispredict(&mut self) {
         self.iq.clear();
         self.fb = None;
+        self.flushing = true;
+        self.flush_delay = FLUSH_DELAY;
         self.to_broadcast.clear();
         self.load_queue.clear();
         self.cdb.clear();
+        self.fetch_stall = false;
         for flush in self.rob.flush_on_mispredict().iter() {
             let flush = *flush;
             self.rs_alu_shift.flush_entries_corresponding_to_rob(flush);

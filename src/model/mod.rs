@@ -4,6 +4,7 @@ mod registers;
 pub use memory::Memory;
 pub use registers::Registers;
 
+#[derive(Clone)]
 pub struct ProcessorState {
     pub regs: Registers,
     pub mem: Memory,

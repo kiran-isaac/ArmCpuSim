@@ -82,11 +82,7 @@ impl ROBEntry {
     }
 
     pub fn is_serializing(&self) -> bool {
-        match self.i.it {
-            SVC | BLX | BX => true,
-            B | BL => STALL_ON_BRANCH,
-            _ => false,
-        }
+        self.i.it.is_serializing()
     }
 }
 
@@ -263,6 +259,12 @@ impl ROB {
         }
         self.tail = Self::increment_index(self.head);
         flushed
+    }
+    
+    pub fn clear(&mut self) {
+        for i in 0..ROB_ENTRIES {
+            self.queue[i].status = EMPTY
+        }
     }
 
     pub fn get(&self, n: usize) -> &ROBEntry {

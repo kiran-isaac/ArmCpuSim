@@ -28,9 +28,10 @@ pub enum PredictionAlgorithms {
 
 const CDB_WIDTH: usize = 2;
 const LQ_SIZE: usize = 8;
-pub const STALL_ON_BRANCH: bool = true;
+pub const STALL_ON_BRANCH: bool = false;
 const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
 pub const ROB_ENTRIES: usize = 32;
+pub const FLUSH_DELAY: u32 = 3;
 
 #[derive(Clone, Copy)]
 struct CDBRecord {
@@ -86,6 +87,8 @@ pub struct OoOSpeculative {
     flushing: bool,
     spec_pc: u32,
 
+    fetch_stall: bool,
+
     // only the first {CDB_WIDTH} are currently being broadcasted
     cdb: VecDeque<CDBRecord>,
     // Holds all the simulated delays of simulated operations, and
@@ -113,7 +116,7 @@ impl CPU for OoOSpeculative {
         Self {
             tracer: Tracer::new(trace_file, &state.regs),
             spec_pc: state.regs.pc,
-            state,
+            state: state.clone(),
             fb: None,
             iq: VecDeque::new(),
 
@@ -125,6 +128,7 @@ impl CPU for OoOSpeculative {
             rob,
             flush_delay: 0,
             flushing: false,
+            fetch_stall: false,
             load_queue: VecDeque::with_capacity(LQ_SIZE),
 
             stalls: Vec::new(),
@@ -144,8 +148,20 @@ impl CPU for OoOSpeculative {
     fn tick(&mut self) {
         // 6 stage pipeline
         // The pipeline stages are simulated backwards to avoid instantaneous updates
+        self.epoch += 1;
+
+        if self.flushing {
+            self.flush_delay -= 1;
+            if self.flush_delay == 0 {
+                self.flushing = false;
+            }
+        }
 
         self.commit();
+        if self.flushing {
+            return;
+        }
+
         self.wb();
         self.execute();
 
@@ -167,7 +183,6 @@ impl CPU for OoOSpeculative {
         self.decode();
         self.fetch();
 
-        self.epoch += 1;
     }
 
     // -----------------------------------------------------------------
@@ -411,4 +426,16 @@ impl OoOSpeculative {
         }
         self.rob_focus -= 1;
     }
+
+    // pub fn reset(&mut self) {
+    //     self.flush_on_mispredict();
+    //     self.rob.clear();
+    //     self.rs_mul.empty();
+    //     self.rs_alu_shift.empty();
+    //     self.rs_control.empty();
+    //     self.rs_ls.empty();
+    //     self.epoch = 0;
+    // }
 }
+
+

@@ -165,9 +165,9 @@ impl OoOSpeculative {
             }
             _ => unreachable!(),
         };
-
+        
         match rs.i.it {
-            B => target += 4,
+            B => target += 2,
             _ => {}
         }
 

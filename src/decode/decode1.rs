@@ -1,4 +1,6 @@
 use crate::binary::{bit_as_bool, briz};
+use crate::CPUs::STALL_ON_BRANCH;
+use crate::decode::IT::{B, BL, BLX, BX, SVC};
 
 #[allow(dead_code)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -653,6 +655,7 @@ pub fn decode(i: u32) -> I {
                                 imms: 0,
                             }
                         }
+                        // BLX
                         0b1110 | 0b1111 => {
                             let rm = briz(i, 3, 6) as u8;
                             if briz(i, 0, 2) != 0 {
@@ -1211,5 +1214,15 @@ pub fn decode_b2(i: u32) -> I {
         rm: 0,
         immu: 0,
         setsflags: false,
+    }
+}
+
+impl IT {
+    pub fn is_serializing(&self) -> bool {
+        match self {
+            SVC | BLX | BX => true,
+            B | BL => STALL_ON_BRANCH,
+            _ => false,
+        }
     }
 }

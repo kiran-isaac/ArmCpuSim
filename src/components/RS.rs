@@ -185,6 +185,12 @@ impl<'a> RSSet {
         }
         oldest_entry.1
     }
+    
+    pub fn empty(&mut self) {
+        for elem in self.vec.iter_mut() {
+            elem.busy = false;
+        }
+    }
 
     /// Get a ready to execute RS
     pub fn get_all_ready(&self, rob: &ROB) -> Vec<&RS> {
@@ -236,7 +242,7 @@ impl<'a> RSSet {
                     }
 
                     // Dual register
-                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | MOVReg | ORR
+                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | ORR
                     | SUBReg => {
                         j = Self::get_rs_data(i.rn, arf, register_status, rob);
                         k = Self::get_rs_data(i.rm, arf, register_status, rob);
@@ -254,7 +260,7 @@ impl<'a> RSSet {
                     }
 
                     // Single Register (rm)
-                    MVN | REV | REV16 | REVSH | SXTB | SXTH | UXTB | UXTH => {
+                    MVN | REV | REV16 | REVSH | SXTB | SXTH | UXTB | UXTH | MOVReg => {
                         j = Self::get_rs_data(i.rm, arf, register_status, rob);
                     }
 

@@ -44,7 +44,7 @@ fn main() -> io::Result<()> {
     state.regs.pc = state.mem.entrypoint as u32;
 
     let mut cpu = OoOSpeculative::new(
-        state,
+        state.clone(),
         "traces/trace.csv",
         "traces/log.txt",
         "traces/stack_dump.txt",
@@ -107,7 +107,15 @@ fn main() -> io::Result<()> {
                                 '2' => cpu.rs_current_display = IssueType::MUL,
                                 '3' => cpu.rs_current_display = IssueType::LoadStore,
                                 '4' => cpu.rs_current_display = IssueType::Control,
-                                'r' => {}
+                                'r' => {},
+                                'l' => {
+                                    cpu = OoOSpeculative::new(
+                                        state.clone(),
+                                        "traces/trace.csv",
+                                        "traces/log.txt",
+                                        "traces/stack_dump.txt",
+                                    )
+                                }
                                 'c' => {
                                     complete = true;
                                     break;

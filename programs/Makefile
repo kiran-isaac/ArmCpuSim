@@ -13,7 +13,7 @@ LINKER_SCRIPT := script.ld
 	$(ARMET)/bin/clang -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
 
 %.s: %.c
-	$(ARMET)/bin/clang -O1 -S -g $(CLANG_TARGET_OPTIONS) $< -o $@
+	$(ARMET)/bin/clang -O0 -S $(CLANG_TARGET_OPTIONS) $< -o $@
 
 all: $(C_FILES:.c=.dis) $(C_FILES:.c=.s) $(C_FILES:.c=.out)
 

@@ -8,7 +8,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use super::Registers;
-
+#[derive(Clone)]
 pub struct Memory {
     pub entrypoint: usize,
     memory: Vec<u8>,
