@@ -36,7 +36,8 @@ impl<'a> OoOSpeculative<'a> {
                 match rob_entry.dest {
                     ROBEntryDest::Address(_) => {
                         if record.is_branch_target {
-                            self.rob.set_target_address(record.rob_number, record.result)
+                            self.rob
+                                .set_target_address(record.rob_number, record.result)
                         } else {
                             self.rob.set_value(record.rob_number, record.result);
                         }
@@ -53,7 +54,8 @@ impl<'a> OoOSpeculative<'a> {
                     // We will deal with flags after this
                     ROBEntryDest::None => {
                         if record.is_branch_target {
-                            self.rob.set_target_address(record.rob_number, record.result)
+                            self.rob
+                                .set_target_address(record.rob_number, record.result)
                         } else {
                             self.rob.set_value(record.rob_number, record.result);
                         }
@@ -65,7 +67,8 @@ impl<'a> OoOSpeculative<'a> {
                     }
                     ROBEntryDest::Register(n, _) => {
                         if record.is_branch_target {
-                            self.rob.set_target_address(record.rob_number, record.result)
+                            self.rob
+                                .set_target_address(record.rob_number, record.result)
                         } else {
                             self.rob.set_value(record.rob_number, record.result);
                         }

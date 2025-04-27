@@ -30,7 +30,7 @@ const CDB_WIDTH: usize = 2;
 const LQ_SIZE: usize = 8;
 pub const STALL_ON_BRANCH: bool = false;
 pub const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
-pub const ROB_ENTRIES: usize = 32;
+pub const ROB_ENTRIES: usize = 16;
 pub const FLUSH_DELAY: u32 = 3;
 
 #[derive(Clone, Copy)]
@@ -89,6 +89,8 @@ pub struct OoOSpeculative<'a> {
     spec_pc: u32,
 
     fetch_stall: bool,
+    pub mispredicts: u32,
+    pub correct_predicts: u32,
 
     // only the first {CDB_WIDTH} are currently being broadcasted
     cdb: VecDeque<CDBRecord>,
@@ -138,6 +140,8 @@ impl<'a> OoOSpeculative<'a> {
             load_queue: VecDeque::with_capacity(LQ_SIZE),
 
             stalls: Vec::new(),
+            mispredicts: 0,
+            correct_predicts: 0,
             epoch: 0,
             instructions_committed: 0,
             rs_current_display: IssueType::ALUSHIFT,
@@ -236,7 +240,11 @@ impl<'a> OoOSpeculative<'a> {
 
         // Render epoch num
         frame.render_widget(
-            Paragraph::new(format!("Epoch: {}\nCommitted: {}", self.epoch, self.instructions_committed)).block(bottom_border("")),
+            Paragraph::new(format!(
+                "Epoch: {}\nCommitted: {}",
+                self.epoch, self.instructions_committed
+            ))
+            .block(bottom_border("")),
             epoch_area,
         );
 

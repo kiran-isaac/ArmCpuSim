@@ -15,10 +15,17 @@ extern crate ratatui;
 
 use decode::*;
 use model::*;
+use ratatui::backend::{Backend, CrosstermBackend};
 use ratatui::crossterm::event::{self, Event, KeyCode};
+use ratatui::crossterm::execute;
+use ratatui::crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+};
+use ratatui::Terminal;
 use std::fs::File;
 use std::io;
-use std::io::Write;
+use std::io::{stdout, Write};
+use std::panic::{set_hook, take_hook};
 use std::process::exit;
 use CPUs::*;
 
@@ -45,15 +52,13 @@ fn main() -> io::Result<()> {
 
     state.regs.pc = state.mem.entrypoint as u32;
 
-    let mut log_file = File::create(
-        if STALL_ON_BRANCH {
-            "traces/log_stall.txt"
-        } else if PREDICT == PredictionAlgorithms::AlwaysTaken {
-            "traces/log_taken.txt"
-        } else {
-            "traces/log_un.txt"
-        }
-    )?;
+    let mut log_file = File::create(if STALL_ON_BRANCH {
+        "traces/log_stall.txt"
+    } else if PREDICT == PredictionAlgorithms::AlwaysTaken {
+        "traces/log_taken.txt"
+    } else {
+        "traces/log_un.txt"
+    })?;
 
     let mut cpu = OoOSpeculative::new(
         state.clone(),
@@ -72,11 +77,15 @@ fn main() -> io::Result<()> {
             terminal.clear()?;
             terminal.flush()?;
             terminal.set_cursor_position((0, 0))?;
+            restore_tui()?;
+
             println!("Program terminated with code {}", exit_code);
             let ipc = (cpu.instructions_committed as f64) / (cpu.epoch as f64);
             println!(
-                "Cycles: {}\nInstructions: {}\nIPC: {}",
-                cpu.epoch, cpu.instructions_committed, ipc
+                "Cycles: {}\nInstructions: {}\nIPC: {}, Mispredicts: {}, Correct Predicts: {}, Prediction accuracy: {}",
+                cpu.epoch, cpu.instructions_committed, ipc, cpu.mispredicts, cpu.correct_predicts, 
+                ((cpu.correct_predicts as f64) / ((cpu.correct_predicts as f64) + (cpu.mispredicts as f64))
+                )
             );
             return Ok(());
         }
@@ -145,4 +154,25 @@ fn main() -> io::Result<()> {
             }
         }
     }
+}
+
+pub fn init_panic_hook() {
+    let original_hook = take_hook();
+    set_hook(Box::new(move |panic_info| {
+        // intentionally ignore errors here since we're already in a panic
+        let _ = restore_tui();
+        original_hook(panic_info);
+    }));
+}
+
+pub fn init_tui() -> io::Result<Terminal<impl Backend>> {
+    enable_raw_mode()?;
+    execute!(stdout(), EnterAlternateScreen)?;
+    Terminal::new(CrosstermBackend::new(stdout()))
+}
+
+pub fn restore_tui() -> io::Result<()> {
+    disable_raw_mode()?;
+    execute!(stdout(), LeaveAlternateScreen)?;
+    Ok(())
 }

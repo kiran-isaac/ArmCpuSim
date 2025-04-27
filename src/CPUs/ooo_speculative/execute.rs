@@ -13,7 +13,8 @@ impl<'a> OoOSpeculative<'a> {
                 let lqe_head = lqe_head.clone();
                 self.load_queue.pop_front();
                 let load_address = lqe_head.address;
-                self.rob.set_target_address(lqe_head.rob_entry, lqe_head.address);
+                self.rob
+                    .set_target_address(lqe_head.rob_entry, lqe_head.address);
 
                 let result = match lqe_head.load_type {
                     LDRBImm | LDRBReg => match self.state.mem.get_byte(load_address) {
@@ -191,10 +192,10 @@ impl<'a> OoOSpeculative<'a> {
                     0b1001 => !(k.unwrap() == true && j.unwrap() == false),
                     // GE
                     0b1010 => j.unwrap() == k.unwrap(),
-                    // LT 
+                    // LT
                     0b1011 => !(j.unwrap() == k.unwrap()),
-                    // GT 
-                    0b1100  => k.unwrap() == false && j.unwrap() == l.unwrap(),
+                    // GT
+                    0b1100 => k.unwrap() == false && j.unwrap() == l.unwrap(),
                     // LE
                     0b1101 => !(k.unwrap() == false && j.unwrap() == l.unwrap()),
                     // AL
@@ -348,6 +349,12 @@ impl<'a> OoOSpeculative<'a> {
                 k.unwrap(),
                 0,
             ),
+            BIC => (
+                ALU_Shift::ALU_OP(ALUOperation::AND),
+                j.unwrap(),
+                !k.unwrap(),
+                0,
+            ),
             ORR => (
                 ALU_Shift::ALU_OP(ALUOperation::OR),
                 j.unwrap(),
@@ -408,7 +415,7 @@ impl<'a> OoOSpeculative<'a> {
 
             NOP => (ALU_Shift::ALU_OP(ALUOperation::AND), 0, 0, 0),
 
-            _ => unreachable!(),
+            _ => unreachable!("{:?}", rs.i.it),
         };
 
         let CalcResult {

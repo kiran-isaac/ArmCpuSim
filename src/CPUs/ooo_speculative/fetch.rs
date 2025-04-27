@@ -10,14 +10,14 @@ impl<'a> OoOSpeculative<'a> {
             let fetched = self.state.mem.get_instruction(self.spec_pc);
             let pc_increment = if is_32_bit(fetched) { 4 } else { 2 };
 
-    /* The use of 0b1111 as a register specifier is not normally permitted in Thumb instructions. When a value of 0b1111 is
-       permitted, a variety of meanings is possible. For register reads, these meanings are:
-           • Read the PC value, that is, the address of the current instruction + 4. Some instructions read the PC value
-           implicitly, without the use of a register specifier, for example the conditional branch instruction B<c>.
-           • Read the word-aligned PC value, that is, the address of the current instruction + 4, with bits [1:0] forced to
-           zero. This enables instructions such as ADR and LDR (literal) instructions to use PC-relative data addressing.
-           The register specifier is implicit in the ARMv6-M encodings of these instructions.
-    */
+            /* The use of 0b1111 as a register specifier is not normally permitted in Thumb instructions. When a value of 0b1111 is
+               permitted, a variety of meanings is possible. For register reads, these meanings are:
+                   • Read the PC value, that is, the address of the current instruction + 4. Some instructions read the PC value
+                   implicitly, without the use of a register specifier, for example the conditional branch instruction B<c>.
+                   • Read the word-aligned PC value, that is, the address of the current instruction + 4, with bits [1:0] forced to
+                   zero. This enables instructions such as ADR and LDR (literal) instructions to use PC-relative data addressing.
+                   The register specifier is implicit in the ARMv6-M encodings of these instructions.
+            */
 
             if let Some((control_instruction, control_offset)) =
                 Self::pre_decode(self.spec_pc, fetched)
@@ -25,7 +25,7 @@ impl<'a> OoOSpeculative<'a> {
                 // if control_instruction == IT::B {
                 //     self.fb = Some((self.spec_pc + 4, fetched));
                 // } else {
-                    self.fb = Some((self.spec_pc + pc_increment, fetched));
+                self.fb = Some((self.spec_pc + pc_increment, fetched));
 
                 if control_instruction.is_serializing() {
                     self.fetch_stall = true;
@@ -37,7 +37,9 @@ impl<'a> OoOSpeculative<'a> {
                     self.spec_pc = self.spec_pc.wrapping_add(control_offset).wrapping_add(4);
                     return;
                 } else {
-                    if control_instruction != IT::B && control_instruction != IT::BL {panic!()}
+                    if control_instruction != IT::B && control_instruction != IT::BL {
+                        panic!()
+                    }
                     self.spec_pc += 4;
                     return;
                 }

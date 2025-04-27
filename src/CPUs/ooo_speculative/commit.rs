@@ -29,17 +29,25 @@ impl<'a> OoOSpeculative<'a> {
             B => {
                 let taken = ((head.target_address & 1) == 1);
 
-                if taken && (!predicted_taken || STALL_ON_BRANCH) {
-                    string_info += "MT ";
-                    self.spec_pc = head.target_address - 1;
-                    self.flush_on_mispredict();
+                if taken {
+                    if (!predicted_taken || STALL_ON_BRANCH) {
+                        string_info += "MT ";
+                        self.spec_pc = head.target_address - 1;
+                        self.mispredicts += 1;
+                        self.flush_on_mispredict();
+                    } else {
+                        self.correct_predicts += 1;
+                    }
                 }
 
                 if !taken {
                     if predicted_taken || STALL_ON_BRANCH {
                         string_info += "MU ";
                         self.spec_pc = head.pc;
+                        self.mispredicts += 1;
                         self.flush_on_mispredict();
+                    } else {
+                        self.correct_predicts += 1;
                     }
                 }
 
@@ -56,7 +64,10 @@ impl<'a> OoOSpeculative<'a> {
             BL => {
                 if !predicted_taken || STALL_ON_BRANCH {
                     self.spec_pc = head.target_address;
+                    self.mispredicts += 1;
                     self.flush_on_mispredict();
+                } else {
+                    self.correct_predicts += 1;
                 }
             }
 
