@@ -117,7 +117,7 @@ impl<'a> OoOSpeculative<'a> {
         }
 
         (self.log_fn)(format!(
-            "{}: {:08X?} {} => {:08X?} =#{}  {}",
+            "{}: {:08X?} {} => {:08X?} =# {:08X?}  {}",
             self.instructions_committed,
             head.pc,
             head.i.to_string(),

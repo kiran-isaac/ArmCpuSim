@@ -27,9 +27,17 @@ void assert_is_sorted(unsigned *arr, int n) {
   svc_puts("Array is sorted\n");
 }
 
+
+
+
+
+
+
+
+
 int main() {
   unsigned arr[] = {2, 1};
-  bubble_sort(arr, 8);
+  bubble_sort(arr, 2);
 //  assert_is_sorted(arr, len);
 
 //  svc_exit(69);
