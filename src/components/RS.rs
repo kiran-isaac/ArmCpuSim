@@ -251,7 +251,8 @@ impl<'a> RSSet {
                     // register immediate (rn)
                     ADDImm | ADDSpImm | CMPImm | SUBImm => {
                         if i.rn == 15 {
-                            j = RSData::Data(pc + 2);
+                            // pc + 4 (+ 2 as its already +2) with bits 1:0 set to 0
+                            j = RSData::Data(((pc + 2) >> 2) << 2);
                         } else {
                             j = Self::get_rs_data(i.rn, arf, register_status, rob);
                         }
@@ -286,7 +287,8 @@ impl<'a> RSSet {
                 // rn + imm offset
                 LDRImm | LDRBImm | LDRHImm => {
                     if i.rn == 15 {
-                        j = RSData::Data(pc + 2);
+                        // pc + 4 (+ 2 as its already +2) with bits 1:0 set to 0
+                        j = RSData::Data(((pc + 2) >> 2) << 2);
                     } else {
                         j = Self::get_rs_data(i.rn, arf, register_status, rob);
                     }
