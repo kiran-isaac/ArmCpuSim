@@ -22,11 +22,10 @@ impl<'a> OoOSpeculative<'a> {
             if let Some((control_instruction, control_offset)) =
                 Self::pre_decode(self.spec_pc, fetched)
             {
-                if control_instruction == IT::B {
-                    self.fb = Some((self.spec_pc + 4, fetched));
-                } else {
+                // if control_instruction == IT::B {
+                //     self.fb = Some((self.spec_pc + 4, fetched));
+                // } else {
                     self.fb = Some((self.spec_pc + pc_increment, fetched));
-                }
 
                 if control_instruction.is_serializing() {
                     self.fetch_stall = true;

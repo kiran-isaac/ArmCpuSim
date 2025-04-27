@@ -168,10 +168,10 @@ impl<'a> OoOSpeculative<'a> {
         };
 
         // Not necessary as the PC is already incremented by 4
-        // match rs.i.it {
-        //     B => target += 2,
-        //     _ => {}
-        // }
+        match rs.i.it {
+            B => target += 2,
+            _ => {}
+        }
 
         let taken = match rs.i.it {
             SetPC | BX | BL | BLX => true,
@@ -185,12 +185,18 @@ impl<'a> OoOSpeculative<'a> {
                     0b0000 | 0b0010 | 0b0100 | 0b0110 => j.unwrap(),
                     // NE | CC | PL | VC
                     0b0001 | 0b0011 | 0b0101 | 0b0111 => !j.unwrap(),
-                    // HI | LS
-                    0b1000 | 0b1001 => k.unwrap() == true && j.unwrap() == false,
-                    // GE | LT
-                    0b1010 | 0b1011 => j.unwrap() == k.unwrap(),
-                    // GT | LE
-                    0b1100 | 0b1101 => k.unwrap() == false && j.unwrap() == l.unwrap(),
+                    // HI
+                    0b1000 => k.unwrap() == true && j.unwrap() == false,
+                    // LS
+                    0b1001 => !(k.unwrap() == true && j.unwrap() == false),
+                    // GE
+                    0b1010 => j.unwrap() == k.unwrap(),
+                    // LT 
+                    0b1011 => !(j.unwrap() == k.unwrap()),
+                    // GT 
+                    0b1100  => k.unwrap() == false && j.unwrap() == l.unwrap(),
+                    // LE
+                    0b1101 => !(k.unwrap() == false && j.unwrap() == l.unwrap()),
                     // AL
                     0b1110 => true,
                     // NV
