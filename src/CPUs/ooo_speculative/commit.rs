@@ -142,7 +142,7 @@ impl<'a> OoOSpeculative<'a> {
 
     pub fn flush_on_mispredict(&mut self) {
         self.iq.clear();
-        self.fb = None;
+        self.fb = [None; N_ISSUE];
         self.flushing = true;
         self.flush_delay = FLUSH_DELAY;
         self.to_broadcast.clear();

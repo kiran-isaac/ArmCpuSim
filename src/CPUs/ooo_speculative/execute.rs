@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use super::*;
 use crate::binary::{bit_as_bool, briz, signed_to_unsigned_bitcast, unsigned_to_signed_bitcast};
 use crate::components::shift::{shift_with_carry, ShiftType};
@@ -8,83 +9,94 @@ use std::io::{Read, Write};
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn execute(&mut self) {
-        if let Some(lqe_head) = self.load_queue.front() {
-            if self.rob.load_can_go(&lqe_head) {
-                let lqe_head = lqe_head.clone();
-                self.load_queue.pop_front();
-                let load_address = lqe_head.address;
-                self.rob
-                    .set_target_address(lqe_head.rob_entry, lqe_head.address);
-
-                let result = match lqe_head.load_type {
-                    LDRBImm | LDRBReg => match self.state.mem.get_byte(load_address) {
-                        Ok(byte) => Ok(byte as u32),
-                        Err(e) => Err(e),
-                    },
-                    LDRHReg | LDRHImm => match self.state.mem.get_halfword(load_address) {
-                        Ok(byte) => Ok(byte as u32),
-                        Err(e) => Err(e),
-                    },
-                    LDRImm | LDRReg => self.state.mem.get_word(load_address),
-                    LDRSB => match self.state.mem.get_byte(load_address) {
-                        Ok(byte) => Ok(briz(byte as u32, 0, 6)
-                            + (if bit_as_bool(byte as u32, 7) {
-                                0x80000000
-                            } else {
-                                0
-                            })),
-                        Err(e) => Err(e),
-                    },
-                    LDRSH => match self.state.mem.get_halfword(load_address) {
-                        Ok(byte) => Ok(briz(byte as u32, 0, 14)
-                            + (if bit_as_bool(byte as u32, 15) {
-                                0x80000000
-                            } else {
-                                0
-                            })),
-                        Err(e) => Err(e),
-                    },
-                    _ => unreachable!(),
-                };
-
-                let result = match result {
-                    Ok(result) => result,
-                    Err(e) => panic!("Memory error {:?}", e),
-                };
-
-                // Load store has a delay of 1 cycles on top of the 1 cycle for addr calc
-                self.to_broadcast.push((
-                    0,
-                    CDBRecord {
-                        is_branch_target: false,
-                        valid: false,
-                        result,
-                        aspr_update: ASPRUpdate::no_update(),
-                        rob_number: lqe_head.rob_entry,
-                        halt: false,
-                    },
-                ));
+        let mut can_go = Vec::with_capacity(N_ISSUE);
+        let mut new_load_queue = VecDeque::new();
+        for entry in &self.load_queue {
+            if self.rob.load_can_go(entry) || can_go.len() >= N_ISSUE  {
+                can_go.push(entry);
+            } else {
+                new_load_queue.push_back(entry.clone());
             }
         }
+        
+        for ready_entry in can_go {
+            let lqe_head = ready_entry.clone();
+            let load_address = lqe_head.address;
+            self.rob
+                .set_target_address(lqe_head.rob_entry, lqe_head.address);
 
-        if let Some(rs_index) = self.rs_alu_shift.get_oldest_ready(&self.rob) {
-            self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut 0);
-            self.rs_alu_shift.vec[rs_index].busy = false;
+            let result = match lqe_head.load_type {
+                LDRBImm | LDRBReg => match self.state.mem.get_byte(load_address) {
+                    Ok(byte) => Ok(byte as u32),
+                    Err(e) => Err(e),
+                },
+                LDRHReg | LDRHImm => match self.state.mem.get_halfword(load_address) {
+                    Ok(byte) => Ok(byte as u32),
+                    Err(e) => Err(e),
+                },
+                LDRImm | LDRReg => self.state.mem.get_word(load_address),
+                LDRSB => match self.state.mem.get_byte(load_address) {
+                    Ok(byte) => Ok(briz(byte as u32, 0, 6)
+                        + (if bit_as_bool(byte as u32, 7) {
+                        0x80000000
+                    } else {
+                        0
+                    })),
+                    Err(e) => Err(e),
+                },
+                LDRSH => match self.state.mem.get_halfword(load_address) {
+                    Ok(byte) => Ok(briz(byte as u32, 0, 14)
+                        + (if bit_as_bool(byte as u32, 15) {
+                        0x80000000
+                    } else {
+                        0
+                    })),
+                    Err(e) => Err(e),
+                },
+                _ => unreachable!(),
+            };
+
+            let result = match result {
+                Ok(result) => result,
+                Err(e) => panic!("Memory error {:?}", e),
+            };
+
+            // Load store has a delay of 1 cycles on top of the 1 cycle for addr calc
+            self.to_broadcast.push((
+                0,
+                CDBRecord {
+                    is_branch_target: false,
+                    valid: false,
+                    result,
+                    aspr_update: ASPRUpdate::no_update(),
+                    rob_number: lqe_head.rob_entry,
+                    halt: false,
+                },
+            ));
         }
+        
+        self.load_queue = new_load_queue;
 
-        if let Some(rs_index) = self.rs_mul.get_oldest_ready(&self.rob) {
-            self.execute_mul(&self.rs_mul.vec[rs_index].clone(), &mut 0);
-            self.rs_mul.vec[rs_index].busy = false;
-        }
+        for _ in 0..N_ISSUE {
+            if let Some(rs_index) = self.rs_alu_shift.get_oldest_ready(&self.rob) {
+                self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut 0);
+                self.rs_alu_shift.vec[rs_index].busy = false;
+            }
 
-        if let Some(rs_index) = self.rs_ls.get_oldest_ready(&self.rob) {
-            self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
-            self.rs_ls.vec[rs_index].busy = false;
-        }
+            if let Some(rs_index) = self.rs_mul.get_oldest_ready(&self.rob) {
+                self.execute_mul(&self.rs_mul.vec[rs_index].clone(), &mut 0);
+                self.rs_mul.vec[rs_index].busy = false;
+            }
 
-        if let Some(rs_index) = self.rs_control.get_oldest_ready(&self.rob) {
-            self.execute_control(&self.rs_control.vec[rs_index].clone(), &mut 0);
-            self.rs_control.vec[rs_index].busy = false;
+            if let Some(rs_index) = self.rs_ls.get_oldest_ready(&self.rob) {
+                self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
+                self.rs_ls.vec[rs_index].busy = false;
+            }
+
+            if let Some(rs_index) = self.rs_control.get_oldest_ready(&self.rob) {
+                self.execute_control(&self.rs_control.vec[rs_index].clone(), &mut 0);
+                self.rs_control.vec[rs_index].busy = false;
+            }
         }
     }
 

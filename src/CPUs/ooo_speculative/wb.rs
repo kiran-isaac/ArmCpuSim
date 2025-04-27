@@ -3,7 +3,6 @@ use super::*;
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn wb(&mut self) {
         // Decrease all delays, and add to ready queue if they are 0
-
         let mut free_slots = CDB_WIDTH;
         let mut new_to_broadcast = Vec::new();
         for (delay, record) in self.to_broadcast.iter_mut() {
@@ -66,24 +65,26 @@ impl<'a> OoOSpeculative<'a> {
                         self.rob.set_target_address(record.rob_number, address)
                     }
                     ROBEntryDest::Register(n, _) => {
+                        let mut val = record.result;
                         if record.is_branch_target {
                             self.rob
-                                .set_target_address(record.rob_number, record.result)
+                                .set_target_address(record.rob_number, record.result);
+                            val = self.rob.get(record.rob_number).value;
                         } else {
-                            self.rob.set_value(record.rob_number, record.result);
+                            self.rob.set_value(record.rob_number, val);
                         }
 
                         self.rs_control
-                            .receive_cdb_broadcast(record.rob_number, n, record.result);
+                            .receive_cdb_broadcast(record.rob_number, n, val);
                         self.rs_mul
-                            .receive_cdb_broadcast(record.rob_number, n, record.result);
+                            .receive_cdb_broadcast(record.rob_number, n, val);
                         self.rs_alu_shift.receive_cdb_broadcast(
                             record.rob_number,
                             n,
-                            record.result,
+                            val,
                         );
                         self.rs_ls
-                            .receive_cdb_broadcast(record.rob_number, n, record.result);
+                            .receive_cdb_broadcast(record.rob_number, n, val);
                     }
                 }
                 self.rob.set_ready(record.rob_number);

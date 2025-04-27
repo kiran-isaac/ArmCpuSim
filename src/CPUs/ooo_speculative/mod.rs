@@ -1,3 +1,4 @@
+use itertools::Itertools;
 mod commit;
 mod decode;
 mod execute;
@@ -26,11 +27,12 @@ pub enum PredictionAlgorithms {
     AlwaysUntaken,
 }
 
-const CDB_WIDTH: usize = 2;
+pub const N_ISSUE: usize = 2;
+const CDB_WIDTH: usize = 4;
 const LQ_SIZE: usize = 8;
 pub const STALL_ON_BRANCH: bool = false;
 pub const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
-pub const ROB_ENTRIES: usize = 16;
+pub const ROB_ENTRIES: usize = 32;
 pub const FLUSH_DELAY: u32 = 3;
 
 #[derive(Clone, Copy)]
@@ -71,11 +73,12 @@ pub struct OoOSpeculative<'a> {
 
     // Only single fetch buffer space needed, as decode buffer will always produce
     // same or more num of mops, so fetch is never limiting factor
-    fb: Option<(u32, u32)>,
+    fb: [Option<(u32, u32)>; N_ISSUE],
     iq: VecDeque<InstructionQueueEntry>,
     rob: ROB,
 
     load_queue: VecDeque<LoadQueueEntry>,
+    load_queue_additions: Vec<LoadQueueEntry>,
 
     // Reservation stations
     rs_mul: RSSet,
@@ -125,7 +128,7 @@ impl<'a> OoOSpeculative<'a> {
             tracer: Tracer::new(trace_file, &state.regs),
             spec_pc: state.regs.pc,
             state: state.clone(),
-            fb: None,
+            fb: [None; N_ISSUE],
             iq: VecDeque::new(),
 
             rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 8),
@@ -138,6 +141,7 @@ impl<'a> OoOSpeculative<'a> {
             flushing: false,
             fetch_stall: false,
             load_queue: VecDeque::with_capacity(LQ_SIZE),
+            load_queue_additions: Vec::with_capacity(LQ_SIZE),
 
             stalls: Vec::new(),
             mispredicts: 0,
@@ -167,13 +171,16 @@ impl<'a> OoOSpeculative<'a> {
             }
         }
 
-        self.commit();
+        for _ in 0..N_ISSUE {
+            self.commit();
+        }
         if self.flushing {
             return;
         }
 
         self.wb();
         self.execute();
+        
 
         if self.rob.is_full() {
             self.stall(StallReason::FullRob);
@@ -189,7 +196,9 @@ impl<'a> OoOSpeculative<'a> {
             }
         }
 
-        self.issue();
+        for _ in 0..N_ISSUE {
+            self.issue();
+        }
         self.decode();
         self.fetch();
     }
@@ -225,7 +234,7 @@ impl<'a> OoOSpeculative<'a> {
         });
 
         let [fb_area, iq_area, rs_area, mem_top_border, mem_area] =
-            Layout::vertical([Length(3), Length(5), Length(10), Length(1), Fill(1)])
+            Layout::vertical([Length((2 + N_ISSUE) as u16), Length(5), Length(10), Length(1), Fill(1)])
                 .areas(right_area);
         let [epoch_area, rst_area, stall_area, call_stack_area] =
             Layout::vertical([Length(4), Length(22), Length(5), Fill(1)]).areas(left_area);
@@ -303,10 +312,12 @@ impl<'a> OoOSpeculative<'a> {
         frame.render_widget(
             Paragraph::new(format!(
                 "{}",
-                match &self.fb {
-                    Some((pc, i)) => format!("{:08X}   Spec PC: {:08X?}", i, pc),
-                    None => "-".to_string(),
-                }
+                (0..N_ISSUE).map(|j| {
+                    match &self.fb[j] {
+                        Some((pc, i)) => format!("{:08X}   Spec PC: {:08X?}", i, pc),
+                        None => "-".to_string(),
+                    }
+                }).join("\n"),
             ))
             .block(bottom_border("Fetch Buffer")),
             fb_area,

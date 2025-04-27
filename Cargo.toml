@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 elf = "0.7.4"
 ratatui = "0.29.0"
+itertools = "0.13.0"

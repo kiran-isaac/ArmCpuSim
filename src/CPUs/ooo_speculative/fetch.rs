@@ -6,47 +6,56 @@ use std::panic::panic_any;
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn fetch(&mut self) {
-        if self.fb.is_none() && !self.fetch_stall {
-            let fetched = self.state.mem.get_instruction(self.spec_pc);
-            let pc_increment = if is_32_bit(fetched) { 4 } else { 2 };
+        for i in 0..N_ISSUE {
+            if self.fb[i].is_none() && !self.fetch_stall {
+                let fetched = self.state.mem.get_instruction(self.spec_pc);
+                let pc_increment = if is_32_bit(fetched) { 4 } else { 2 };
 
-            /* The use of 0b1111 as a register specifier is not normally permitted in Thumb instructions. When a value of 0b1111 is
-               permitted, a variety of meanings is possible. For register reads, these meanings are:
-                   • Read the PC value, that is, the address of the current instruction + 4. Some instructions read the PC value
-                   implicitly, without the use of a register specifier, for example the conditional branch instruction B<c>.
-                   • Read the word-aligned PC value, that is, the address of the current instruction + 4, with bits [1:0] forced to
-                   zero. This enables instructions such as ADR and LDR (literal) instructions to use PC-relative data addressing.
-                   The register specifier is implicit in the ARMv6-M encodings of these instructions.
-            */
+                /* The use of 0b1111 as a register specifier is not normally permitted in Thumb instructions. When a value of 0b1111 is
+                   permitted, a variety of meanings is possible. For register reads, these meanings are:
+                       • Read the PC value, that is, the address of the current instruction + 4. Some instructions read the PC value
+                       implicitly, without the use of a register specifier, for example the conditional branch instruction B<c>.
+                       • Read the word-aligned PC value, that is, the address of the current instruction + 4, with bits [1:0] forced to
+                       zero. This enables instructions such as ADR and LDR (literal) instructions to use PC-relative data addressing.
+                       The register specifier is implicit in the ARMv6-M encodings of these instructions.
+                */
 
-            if let Some((control_instruction, control_offset)) =
-                Self::pre_decode(self.spec_pc, fetched)
-            {
-                // if control_instruction == IT::B {
-                //     self.fb = Some((self.spec_pc + 4, fetched));
-                // } else {
-                self.fb = Some((self.spec_pc + pc_increment, fetched));
+                if let Some((control_instruction, control_offset)) =
+                    Self::pre_decode(self.spec_pc, fetched)
+                {
+                    // if control_instruction == IT::B {
+                    //     self.fb = Some((self.spec_pc + 4, fetched));
+                    // } else {
+                    self.fb[i] = Some((self.spec_pc + pc_increment, fetched));
 
-                if control_instruction.is_serializing() {
-                    self.fetch_stall = true;
-                    return;
-                }
-
-                // BL or B
-                if PREDICT == PredictionAlgorithms::AlwaysTaken {
-                    self.spec_pc = self.spec_pc.wrapping_add(control_offset).wrapping_add(4);
-                    return;
-                } else {
-                    if control_instruction != IT::B && control_instruction != IT::BL {
-                        panic!()
+                    if control_instruction.is_serializing() {
+                        self.fetch_stall = true;
+                        continue;
                     }
-                    self.spec_pc += 4;
-                    return;
+
+                    // BL or B
+                    if PREDICT == PredictionAlgorithms::AlwaysTaken {
+                        self.spec_pc = self.spec_pc.wrapping_add(control_offset).wrapping_add(4);
+                        continue;
+                    } else {
+                        if control_instruction != IT::B && control_instruction != IT::BL {
+                            panic!()
+                        }
+                        self.spec_pc += 4;
+                        // if its a BL only fetch 1
+                        if control_instruction == IT::BL {
+                            return;
+                        } else if control_instruction == IT::B {
+                            continue;
+                        } else {
+                            unreachable!()
+                        }
+                    }
+                } else {
+                    self.fb[i] = Some((self.spec_pc + pc_increment, fetched));
                 }
-            } else {
-                self.fb = Some((self.spec_pc + pc_increment, fetched));
+                self.spec_pc += pc_increment;
             }
-            self.spec_pc += pc_increment;
         }
     }
 
