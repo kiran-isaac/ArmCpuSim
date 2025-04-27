@@ -185,7 +185,7 @@ impl<'a> RSSet {
         }
         oldest_entry.1
     }
-    
+
     pub fn empty(&mut self) {
         for elem in self.vec.iter_mut() {
             elem.busy = false;
@@ -221,6 +221,7 @@ impl<'a> RSSet {
     fn get_dependencies(
         &mut self,
         i: &I,
+        pc: u32,
         arf: &Registers,
         register_status: &[Option<usize>; 20],
         rob: &'a ROB,
@@ -242,15 +243,18 @@ impl<'a> RSSet {
                     }
 
                     // Dual register
-                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | ORR
-                    | SUBReg => {
+                    MUL | ADDReg | AND | BIC | ASRReg | CMN | CMPReg | EOR | ORR | SUBReg => {
                         j = Self::get_rs_data(i.rn, arf, register_status, rob);
                         k = Self::get_rs_data(i.rm, arf, register_status, rob);
                     }
 
                     // register immediate (rn)
                     ADDImm | ADDSpImm | CMPImm | SUBImm => {
-                        j = Self::get_rs_data(i.rn, arf, register_status, rob);
+                        if i.rn == 15 {
+                            j = RSData::Data(pc + 2);
+                        } else {
+                            j = Self::get_rs_data(i.rn, arf, register_status, rob);
+                        }
                         k = RSData::Data(i.immu);
                     }
 
@@ -281,7 +285,11 @@ impl<'a> RSSet {
             IssueType::LoadStore => match i.it {
                 // rn + imm offset
                 LDRImm | LDRBImm | LDRHImm => {
-                    j = Self::get_rs_data(i.rn, arf, register_status, rob);
+                    if i.rn == 15 {
+                        j = RSData::Data(pc + 2);
+                    } else {
+                        j = Self::get_rs_data(i.rn, arf, register_status, rob);
+                    }
                     k = RSData::Data(i.immu);
                 }
 
@@ -399,6 +407,7 @@ impl<'a> RSSet {
         &mut self,
         i: &I,
         dest: usize,
+        pc: u32,
         arf: &Registers,
         register_status: &[Option<usize>; 20],
         rob: &'a ROB,
@@ -406,7 +415,7 @@ impl<'a> RSSet {
         // will return none if it cannot allocate
         let alloc = self.get_alloc()?;
 
-        let (j, k, l) = self.get_dependencies(i, arf, register_status, rob);
+        let (j, k, l) = self.get_dependencies(i, pc, arf, register_status, rob);
 
         self.vec[alloc] = RS {
             busy: true,

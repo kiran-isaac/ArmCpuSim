@@ -9,7 +9,7 @@ unsigned factorial(unsigned n) {
 }
 
 int main() {
-    unsigned result = factorial(4);
+    unsigned result = factorial(10);
     svc_exit(result);
 
     if (result == 3628800) {

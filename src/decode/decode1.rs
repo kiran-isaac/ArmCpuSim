@@ -1,6 +1,6 @@
 use crate::binary::{bit_as_bool, briz};
-use crate::CPUs::STALL_ON_BRANCH;
 use crate::decode::IT::{B, BL, BLX, BX, SVC};
+use crate::CPUs::STALL_ON_BRANCH;
 
 #[allow(dead_code)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]

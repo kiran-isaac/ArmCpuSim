@@ -16,7 +16,9 @@ extern crate ratatui;
 use decode::*;
 use model::*;
 use ratatui::crossterm::event::{self, Event, KeyCode};
+use std::fs::File;
 use std::io;
+use std::io::Write;
 use std::process::exit;
 use CPUs::*;
 
@@ -43,10 +45,22 @@ fn main() -> io::Result<()> {
 
     state.regs.pc = state.mem.entrypoint as u32;
 
+    let mut log_file = File::create(
+        if STALL_ON_BRANCH {
+            "traces/log_stall.txt"
+        } else if PREDICT == PredictionAlgorithms::AlwaysTaken {
+            "traces/log_taken.txt"
+        } else {
+            "traces/log_un.txt"
+        }
+    )?;
+
     let mut cpu = OoOSpeculative::new(
         state.clone(),
         "traces/trace.csv",
-        "traces/log.txt",
+        |i: String| {
+            log_file.write((i + "\n").as_bytes()).unwrap();
+        },
         "traces/stack_dump.txt",
     );
 
@@ -107,15 +121,8 @@ fn main() -> io::Result<()> {
                                 '2' => cpu.rs_current_display = IssueType::MUL,
                                 '3' => cpu.rs_current_display = IssueType::LoadStore,
                                 '4' => cpu.rs_current_display = IssueType::Control,
-                                'r' => {},
-                                'l' => {
-                                    cpu = OoOSpeculative::new(
-                                        state.clone(),
-                                        "traces/trace.csv",
-                                        "traces/log.txt",
-                                        "traces/stack_dump.txt",
-                                    )
-                                }
+                                'r' => {}
+                                'l' => cpu.reset(),
                                 'c' => {
                                     complete = true;
                                     break;

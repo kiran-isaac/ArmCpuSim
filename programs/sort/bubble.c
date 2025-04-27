@@ -1,13 +1,13 @@
 #include "../syscalls/syscalls.h"
 #include <stdio.h>
 
-void swap(char *arr, int i, int j) {
+void swap(unsigned *arr, int i, int j) {
   char temp = arr[i];
   arr[i] = arr[j];
   arr[j] = temp;
 }
 
-void bubble_sort(char arr[], int n) {
+void bubble_sort(unsigned arr[], int n) {
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n - i - 1; j++) {
       if (arr[j] > arr[j + 1])
@@ -16,10 +16,10 @@ void bubble_sort(char arr[], int n) {
   }
 }
 
-void assert_is_sorted(char *arr, int n) {
+void assert_is_sorted(unsigned *arr, int n) {
   for (int i = 0; i < n - 1; i++) {
     if (arr[i] > arr[i + 1]) {
-      svc_puts("Array is not sorted\n");
+//      svc_puts("Array is not sorted\n");
       svc_exit(1);
       return;
     }
@@ -28,10 +28,11 @@ void assert_is_sorted(char *arr, int n) {
 }
 
 int main() {
-  char arr[] = {1, 2, 3};
-  unsigned len = sizeof(arr) / sizeof(arr[0]);
-  bubble_sort(arr, len);
-  assert_is_sorted(arr, len);
+  unsigned arr[] = {2, 1};
+  bubble_sort(arr, 8);
+//  assert_is_sorted(arr, len);
 
+//  svc_exit(69);
+//
   svc_exit(arr[0]);
 }

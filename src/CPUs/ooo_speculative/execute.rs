@@ -6,13 +6,14 @@ use crate::system::syscall;
 use crate::IT::*;
 use std::io::{Read, Write};
 
-impl OoOSpeculative {
+impl<'a> OoOSpeculative<'a> {
     pub(super) fn execute(&mut self) {
         if let Some(lqe_head) = self.load_queue.front() {
             if self.rob.load_can_go(&lqe_head) {
                 let lqe_head = lqe_head.clone();
                 self.load_queue.pop_front();
                 let load_address = lqe_head.address;
+                self.rob.set_target_address(lqe_head.rob_entry, lqe_head.address);
 
                 let result = match lqe_head.load_type {
                     LDRBImm | LDRBReg => match self.state.mem.get_byte(load_address) {
@@ -165,11 +166,12 @@ impl OoOSpeculative {
             }
             _ => unreachable!(),
         };
-        
-        match rs.i.it {
-            B => target += 2,
-            _ => {}
-        }
+
+        // Not necessary as the PC is already incremented by 4
+        // match rs.i.it {
+        //     B => target += 2,
+        //     _ => {}
+        // }
 
         let taken = match rs.i.it {
             SetPC | BX | BL | BLX => true,

@@ -32,7 +32,7 @@ impl std::fmt::Display for ROBStatus {
 
 pub struct ROB {
     queue: [ROBEntry; ROB_ENTRIES],
-    head: usize,
+    pub head: usize,
     pub tail: usize,
 
     // None means not busy
@@ -60,7 +60,7 @@ pub struct ROBEntry {
     pub i: I,
     pub status: ROBStatus,
     pub value: u32,
-    pub branch_target: u32,
+    pub target_address: u32,
     pub asprupdate: ASPRUpdate,
     pub ready: bool,
     pub dest: ROBEntryDest,
@@ -71,7 +71,7 @@ impl ROBEntry {
         ROBEntry {
             pc: 0,
             value: 0,
-            branch_target: 0,
+            target_address: 0,
             halt: false,
             status: ROBStatus::EMPTY,
             dest: ROBEntryDest::None,
@@ -227,7 +227,7 @@ impl ROB {
         }
 
         self.will_issue = ROBEntry {
-            branch_target: 0,
+            target_address: 0,
             pc,
             status: ROBStatus::Execute,
             value,
@@ -260,7 +260,7 @@ impl ROB {
         self.tail = Self::increment_index(self.head);
         flushed
     }
-    
+
     pub fn clear(&mut self) {
         for i in 0..ROB_ENTRIES {
             self.queue[i].status = EMPTY
@@ -292,8 +292,8 @@ impl ROB {
         self.queue[n].value = value;
     }
 
-    pub fn set_branch_target(&mut self, n: usize, target: u32) {
-        self.queue[n].branch_target = target;
+    pub fn set_target_address(&mut self, n: usize, target: u32) {
+        self.queue[n].target_address = target;
     }
 
     pub fn set_aspr(&mut self, n: usize, asprupdate: ASPRUpdate) {

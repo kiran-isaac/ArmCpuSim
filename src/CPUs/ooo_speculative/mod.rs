@@ -29,7 +29,7 @@ pub enum PredictionAlgorithms {
 const CDB_WIDTH: usize = 2;
 const LQ_SIZE: usize = 8;
 pub const STALL_ON_BRANCH: bool = false;
-const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
+pub const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
 pub const ROB_ENTRIES: usize = 32;
 pub const FLUSH_DELAY: u32 = 3;
 
@@ -63,8 +63,9 @@ struct InstructionQueueEntry {
     /// the pc value fetched from
     pub pc: u32,
 }
-pub struct OoOSpeculative {
+pub struct OoOSpeculative<'a> {
     state: ProcessorState,
+    log_fn: Box<dyn FnMut(String) + 'a>,
 
     tracer: Tracer,
 
@@ -110,10 +111,15 @@ pub struct OoOSpeculative {
     pub halt: Option<i32>,
 }
 
-impl CPU for OoOSpeculative {
-    fn new(state: ProcessorState, trace_file: &str, log_file: &str, stack_dump_file: &str) -> Self {
+impl<'a> OoOSpeculative<'a> {
+    pub fn new<F>(state: ProcessorState, trace_file: &str, log_fn: F, stack_dump_file: &str) -> Self
+    where
+        F: FnMut(String) + 'a,
+    {
         let rob = ROB::new();
         Self {
+            log_fn: Box::new(log_fn),
+
             tracer: Tracer::new(trace_file, &state.regs),
             spec_pc: state.regs.pc,
             state: state.clone(),
@@ -145,7 +151,7 @@ impl CPU for OoOSpeculative {
         }
     }
 
-    fn tick(&mut self) {
+    pub fn tick(&mut self) {
         // 6 stage pipeline
         // The pipeline stages are simulated backwards to avoid instantaneous updates
         self.epoch += 1;
@@ -182,12 +188,11 @@ impl CPU for OoOSpeculative {
         self.issue();
         self.decode();
         self.fetch();
-
     }
 
     // -----------------------------------------------------------------
     // Rendering stuff
-    fn render(&self, frame: &mut Frame) {
+    pub fn render(&self, frame: &mut Frame) {
         use Constraint::{Fill, Length, Min};
 
         let vertical = Layout::vertical([Min(0)]);
@@ -219,7 +224,7 @@ impl CPU for OoOSpeculative {
             Layout::vertical([Length(3), Length(5), Length(10), Length(1), Fill(1)])
                 .areas(right_area);
         let [epoch_area, rst_area, stall_area, call_stack_area] =
-            Layout::vertical([Length(3), Length(22), Length(5), Fill(1)]).areas(left_area);
+            Layout::vertical([Length(4), Length(22), Length(5), Fill(1)]).areas(left_area);
 
         let bottom_border = |name| {
             Block::bordered()
@@ -231,7 +236,7 @@ impl CPU for OoOSpeculative {
 
         // Render epoch num
         frame.render_widget(
-            Paragraph::new(format!("Epoch: {}", self.epoch)).block(bottom_border("")),
+            Paragraph::new(format!("Epoch: {}\nCommitted: {}", self.epoch, self.instructions_committed)).block(bottom_border("")),
             epoch_area,
         );
 
@@ -406,9 +411,7 @@ impl CPU for OoOSpeculative {
         frame.render_widget(l_para, l_area);
         frame.render_widget(inst_para, inst_area);
     }
-}
 
-impl OoOSpeculative {
     fn stall(&mut self, reason: StallReason) {
         self.stalls.push(reason);
     }
@@ -427,15 +430,13 @@ impl OoOSpeculative {
         self.rob_focus -= 1;
     }
 
-    // pub fn reset(&mut self) {
-    //     self.flush_on_mispredict();
-    //     self.rob.clear();
-    //     self.rs_mul.empty();
-    //     self.rs_alu_shift.empty();
-    //     self.rs_control.empty();
-    //     self.rs_ls.empty();
-    //     self.epoch = 0;
-    // }
+    pub fn reset(&mut self) {
+        self.flush_on_mispredict();
+        self.rob.clear();
+        self.rs_mul.empty();
+        self.rs_alu_shift.empty();
+        self.rs_control.empty();
+        self.rs_ls.empty();
+        self.epoch = 0;
+    }
 }
-
-

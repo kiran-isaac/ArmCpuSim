@@ -1,6 +1,6 @@
 use super::*;
 
-impl OoOSpeculative {
+impl<'a> OoOSpeculative<'a> {
     pub(super) fn issue(&mut self) {
         if self.iq.len() <= 0 {
             return;
@@ -14,6 +14,7 @@ impl OoOSpeculative {
             IssueType::ALUSHIFT => self.rs_alu_shift.issue_receive(
                 &iqe.i,
                 dest,
+                iqe.pc,
                 &self.state.regs,
                 &self.rob.register_status,
                 &self.rob,
@@ -21,6 +22,7 @@ impl OoOSpeculative {
             IssueType::MUL => self.rs_mul.issue_receive(
                 &iqe.i,
                 dest,
+                iqe.pc,
                 &self.state.regs,
                 &self.rob.register_status,
                 &self.rob,
@@ -28,6 +30,7 @@ impl OoOSpeculative {
             IssueType::LoadStore => self.rs_ls.issue_receive(
                 &iqe.i,
                 dest,
+                iqe.pc,
                 &self.state.regs,
                 &self.rob.register_status,
                 &self.rob,
@@ -35,6 +38,7 @@ impl OoOSpeculative {
             IssueType::Control => self.rs_control.issue_receive(
                 &iqe.i,
                 dest,
+                iqe.pc,
                 &self.state.regs,
                 &self.rob.register_status,
                 &self.rob,

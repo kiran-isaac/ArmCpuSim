@@ -1,6 +1,6 @@
 use super::*;
 
-impl OoOSpeculative {
+impl<'a> OoOSpeculative<'a> {
     pub(super) fn wb(&mut self) {
         // Decrease all delays, and add to ready queue if they are 0
 
@@ -36,7 +36,7 @@ impl OoOSpeculative {
                 match rob_entry.dest {
                     ROBEntryDest::Address(_) => {
                         if record.is_branch_target {
-                            self.rob.set_branch_target(record.rob_number, record.result)
+                            self.rob.set_target_address(record.rob_number, record.result)
                         } else {
                             self.rob.set_value(record.rob_number, record.result);
                         }
@@ -53,7 +53,7 @@ impl OoOSpeculative {
                     // We will deal with flags after this
                     ROBEntryDest::None => {
                         if record.is_branch_target {
-                            self.rob.set_branch_target(record.rob_number, record.result)
+                            self.rob.set_target_address(record.rob_number, record.result)
                         } else {
                             self.rob.set_value(record.rob_number, record.result);
                         }
@@ -61,10 +61,11 @@ impl OoOSpeculative {
                     ROBEntryDest::AwaitingAddress => {
                         let address = record.result;
                         self.rob.set_address(record.rob_number, address);
+                        self.rob.set_target_address(record.rob_number, address)
                     }
                     ROBEntryDest::Register(n, _) => {
                         if record.is_branch_target {
-                            self.rob.set_branch_target(record.rob_number, record.result)
+                            self.rob.set_target_address(record.rob_number, record.result)
                         } else {
                             self.rob.set_value(record.rob_number, record.result);
                         }

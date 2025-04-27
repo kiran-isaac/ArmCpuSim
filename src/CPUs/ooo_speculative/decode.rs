@@ -1,6 +1,6 @@
 use super::*;
 
-impl OoOSpeculative {
+impl<'a> OoOSpeculative<'a> {
     pub(super) fn decode(&mut self) {
         if let Some((pc, fb_entry)) = &self.fb {
             let pc = *pc;

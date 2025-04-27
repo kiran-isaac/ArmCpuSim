@@ -6,7 +6,7 @@ use crate::decode::IT::{
 };
 use std::process::exit;
 
-impl OoOSpeculative {
+impl<'a> OoOSpeculative<'a> {
     pub(super) fn commit(&mut self) {
         let head = self.rob.get_head().clone();
         if !head.ready || self.rob.is_empty() {
@@ -22,33 +22,47 @@ impl OoOSpeculative {
             PredictionAlgorithms::AlwaysTaken => true,
         };
 
+        let mut string_info = String::new();
+
         match head.i.it {
             // Maybe taken
             B => {
-                let taken = ((head.branch_target & 1) == 1);
-                
+                let taken = ((head.target_address & 1) == 1);
+
                 if taken && (!predicted_taken || STALL_ON_BRANCH) {
-                    self.spec_pc = head.branch_target - 1;
+                    string_info += "MT ";
+                    self.spec_pc = head.target_address - 1;
                     self.flush_on_mispredict();
                 }
- 
-                if !taken && (predicted_taken || STALL_ON_BRANCH) {
-                    self.spec_pc = head.pc;
-                    self.flush_on_mispredict();
+
+                if !taken {
+                    if predicted_taken || STALL_ON_BRANCH {
+                        string_info += "MU ";
+                        self.spec_pc = head.pc;
+                        self.flush_on_mispredict();
+                    }
                 }
+
+                string_info += &format!(
+                    "pred: {} actual: {} target: {} ",
+                    predicted_taken,
+                    taken,
+                    head.target_address - 1
+                );
+                self.fetch_stall = false;
             }
 
             // Always Taken, so branch is mispredicted in "not taken"
             BL => {
                 if !predicted_taken || STALL_ON_BRANCH {
-                    self.spec_pc = head.branch_target;
+                    self.spec_pc = head.target_address;
                     self.flush_on_mispredict();
                 }
             }
 
             // Always requires a flush
             BX | BLX | SetPC => {
-                self.spec_pc = head.branch_target;
+                self.spec_pc = head.target_address;
                 self.flush_on_mispredict();
             }
 
@@ -81,7 +95,11 @@ impl OoOSpeculative {
             ROBEntryDest::Register(rn, _) => {
                 self.state.regs.set(rn, head.value);
 
-                self.rob.register_status[rn as usize] = None
+                if let Some(rs_entry) = self.rob.register_status[rn as usize] {
+                    if rs_entry == self.rob.head {
+                        self.rob.register_status[rn as usize] = None
+                    }
+                }
             }
             _ => {}
         }
@@ -98,6 +116,15 @@ impl OoOSpeculative {
             _ => {}
         }
 
+        (self.log_fn)(format!(
+            "{}: {:08X?} {} => {:08X?} =#{}  {}",
+            self.instructions_committed,
+            head.pc,
+            head.i.to_string(),
+            head.value,
+            head.target_address,
+            string_info
+        ));
         self.rob.clear_head_and_increment();
         self.instructions_committed += 1;
     }
@@ -109,8 +136,8 @@ impl OoOSpeculative {
         self.flush_delay = FLUSH_DELAY;
         self.to_broadcast.clear();
         self.load_queue.clear();
-        self.cdb.clear();
         self.fetch_stall = false;
+        self.cdb.clear();
         for flush in self.rob.flush_on_mispredict().iter() {
             let flush = *flush;
             self.rs_alu_shift.flush_entries_corresponding_to_rob(flush);
