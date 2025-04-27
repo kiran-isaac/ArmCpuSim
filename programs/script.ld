@@ -11,6 +11,7 @@ __flash_size 	= 0x00100000;
 __ram 			= 0x20000000;
 __ram_size 		= 0x02000000;
 __stack_size 	= 0x00080000;
+__heap_size_min = 0x00080000;
 
 MEMORY
 {
@@ -182,7 +183,7 @@ SECTIONS
 	 * it for the initial TLS storage.
 	 * Create special section here just to make room.
 	 */
-        /* For ld.bfd: 
+        /* For ld.bfd:
         .tbss_space (NOLOAD) : {
 		. = ADDR(.tbss);
 		. = . + SIZEOF(.tbss);
@@ -224,7 +225,7 @@ SECTIONS
 
 	/* Throw away C++ exception handling information */
 
-	
+
 
 	/DISCARD/ : {
 		*(.note .note.*)
@@ -233,7 +234,7 @@ SECTIONS
 		*(.ARM.exidx*)
 	}
 
-	
+
 
 	/* Stabs debugging sections.  */
 	.stab          0 : { *(.stab) }

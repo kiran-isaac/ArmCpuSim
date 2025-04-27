@@ -164,13 +164,20 @@ impl<'a> RSSet {
         Some(self.vec.iter().enumerate().find(|(_, rs)| !rs.busy)?.0)
     }
 
-    pub fn get_oldest_ready(&self, rob: &ROB) -> Option<usize> {
+    pub fn get_oldest_ready(&self, rob: &ROB, no_loads: bool) -> Option<usize> {
         let mut oldest_entry = (rob.tail, None);
         for (index, entry) in self.vec.iter().enumerate() {
             if !entry.busy {
                 continue;
             }
-
+            
+            if no_loads {
+                match entry.i.it {
+                    LDRReg | LDRImm | LDRHReg | LDRHImm | LDRBReg | LDRBImm => {continue}
+                    _ => {}
+                }
+            }
+            
             // Ignore this entry if any still pending results
             match (entry.j, entry.k, entry.l) {
                 (RSData::ROB(_, _), _, _)
@@ -249,7 +256,7 @@ impl<'a> RSSet {
                     }
 
                     // register immediate (rn)
-                    ADDImm | ADDSpImm | CMPImm | SUBImm => {
+                    ADDImm | ADDSpImm | CMPImm | SUBImm | RSB => {
                         if i.rn == 15 {
                             // pc + 4 (+ 2 as its already +2) with bits 1:0 set to 0
                             j = RSData::Data(((pc + 2) >> 2) << 2);

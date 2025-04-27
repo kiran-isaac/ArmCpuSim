@@ -71,9 +71,10 @@ impl<'a> OoOSpeculative<'a> {
                 }
             }
 
+            
             // Always requires a flush
-            BX | BLX | SetPC => {
-                self.spec_pc = head.target_address;
+            BX | BLX => {
+                self.spec_pc = (head.target_address >> 1) << 1;
                 self.flush_on_mispredict();
             }
 

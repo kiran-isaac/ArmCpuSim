@@ -43,22 +43,19 @@ use crate::binary::{bit_as_bool, hamming_weight};
 
 pub fn decode2(i: I) -> Vec<I> {
     let mut vec = Vec::new();
+    let n = hamming_weight(i.rl as u32);
     match i.it {
-        PUSH | STMIA => {
+        PUSH => {
             let n = hamming_weight(i.rl as u32);
-            let target = match i.it {
-                PUSH => 13,
-                STMIA => i.rn as u32,
-                _ => unreachable!(),
-            } as u8;
-            // SP subtraction
+            let target = 13;
+            // target subtraction
             vec.push(I {
                 it: SUBImm,
                 rd: target,
                 immu: n << 2,
                 imms: 0,
                 rm: 0,
-                rn: 13,
+                rn: target,
                 rt: 0,
                 rl: 0,
                 setsflags: false,
@@ -80,6 +77,38 @@ pub fn decode2(i: I) -> Vec<I> {
                     sp_offset += 4
                 }
             }
+        },
+        STMIA => {
+            let target = i.rn;
+            let mut target_offset = 0;
+            for r in 0..15 {
+                if bit_as_bool(i.rl as u32, r) {
+                    vec.push(I {
+                        it: STRImm,
+                        rt: r as u8,
+                        immu: target_offset,
+                        imms: 0,
+                        rn: target,
+                        rd: 0,
+                        rl: 0,
+                        rm: 0,
+                        setsflags: false,
+                    });
+                    target_offset += 4
+                }
+            }
+            // target increment
+            vec.push(I {
+                it: IT::ADDImm,
+                rd: target,
+                immu: n << 2,
+                imms: 0,
+                rm: 0,
+                rn: target,
+                rt: 0,
+                rl: 0,
+                setsflags: false,
+            });
         }
         POP | LDMIA => {
             let n = hamming_weight(i.rl as u32);
@@ -117,9 +146,9 @@ pub fn decode2(i: I) -> Vec<I> {
                     rm: 0,
                     setsflags: false,
                 });
-                // SP addition ( must be before BX or will be ignored)
+                // target increment
                 vec.push(I {
-                    it: IT::ADDSpImm,
+                    it: IT::ADDImm,
                     rd: target,
                     immu: n << 2,
                     imms: 0,
@@ -141,14 +170,14 @@ pub fn decode2(i: I) -> Vec<I> {
                     setsflags: false,
                 })
             } else {
-                // SP addition
+                // target increment
                 vec.push(I {
-                    it: IT::ADDSpImm,
+                    it: IT::ADDImm,
                     rd: target,
                     immu: n << 2,
                     imms: 0,
                     rm: 0,
-                    rn: 0,
+                    rn: target,
                     rt: 0,
                     rl: 0,
                     setsflags: false,

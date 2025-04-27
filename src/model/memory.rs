@@ -92,6 +92,8 @@ impl Memory {
         let ram_start = *symtab_map.get("__ram").unwrap() as u32;
         let ram_size = *symtab_map.get("__ram_size").unwrap() as u32;
         let mem_size = (flash_size + ram_size) as usize;
+        let heap_start = *symtab_map.get("__heap_start").unwrap() as u32;
+
         let mut memory: Vec<u8> = Vec::new();
 
         // println!("{:?}", symtab_map);

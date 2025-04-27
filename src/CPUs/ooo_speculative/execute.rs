@@ -1,25 +1,32 @@
 use std::cmp::Ordering;
+use std::collections::HashSet;
 use super::*;
 use crate::binary::{bit_as_bool, briz, signed_to_unsigned_bitcast, unsigned_to_signed_bitcast};
 use crate::components::shift::{shift_with_carry, ShiftType};
 use crate::components::ALU::{ALUOperation, CalcResult, ALU};
-use crate::system::syscall;
 use crate::IT::*;
-use std::io::{Read, Write};
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn execute(&mut self) {
-        let mut can_go = Vec::with_capacity(N_ISSUE);
-        let mut new_load_queue = VecDeque::new();
-        for entry in &self.load_queue {
-            if self.rob.load_can_go(entry) || can_go.len() >= N_ISSUE  {
-                can_go.push(entry);
-            } else {
-                new_load_queue.push_back(entry.clone());
+        let mut can_go = Vec::with_capacity(N_LS_EXECS);
+        for (i, entry) in self.load_queue.iter().enumerate() {
+            if self.rob.load_can_go(entry)   {
+                can_go.push((i, entry.clone()));
             }
         }
         
-        for ready_entry in can_go {
+        // Sort by ROB entry
+        can_go.sort_by(|a, b| {
+            if self.rob.entry_is_before(a.1.rob_entry, b.1.rob_entry) {
+                Ordering::Less
+            } else {
+                Ordering::Greater
+            }
+        });
+        
+        let mut went = HashSet::new();
+        for (i, ready_entry) in can_go {
+            went.insert(i);
             let lqe_head = ready_entry.clone();
             let load_address = lqe_head.address;
             self.rob
@@ -63,7 +70,7 @@ impl<'a> OoOSpeculative<'a> {
 
             // Load store has a delay of 1 cycles on top of the 1 cycle for addr calc
             self.to_broadcast.push((
-                0,
+                1,
                 CDBRecord {
                     is_branch_target: false,
                     valid: false,
@@ -75,27 +82,41 @@ impl<'a> OoOSpeculative<'a> {
             ));
         }
         
+        let mut new_load_queue = VecDeque::new();
+        for (i, e) in self.load_queue.iter().enumerate() {
+            if !went.contains(&i) {
+                new_load_queue.push_back(e.clone());
+            }
+        }
         self.load_queue = new_load_queue;
-
-        for _ in 0..N_ISSUE {
-            if let Some(rs_index) = self.rs_alu_shift.get_oldest_ready(&self.rob) {
+        
+        for _ in 0..N_ALUSHIFTERS {
+            if let Some(rs_index) = self.rs_alu_shift.get_oldest_ready(&self.rob, false) {
                 self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut 0);
                 self.rs_alu_shift.vec[rs_index].busy = false;
             }
-
-            if let Some(rs_index) = self.rs_mul.get_oldest_ready(&self.rob) {
+        }
+        
+        for _ in 0..N_MULS {
+            if let Some(rs_index) = self.rs_mul.get_oldest_ready(&self.rob, false) {
                 self.execute_mul(&self.rs_mul.vec[rs_index].clone(), &mut 0);
                 self.rs_mul.vec[rs_index].busy = false;
             }
-
-            if let Some(rs_index) = self.rs_ls.get_oldest_ready(&self.rob) {
-                self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
-                self.rs_ls.vec[rs_index].busy = false;
-            }
-
-            if let Some(rs_index) = self.rs_control.get_oldest_ready(&self.rob) {
+        }
+        
+        for _ in 0..N_CONTROL {
+            if let Some(rs_index) = self.rs_control.get_oldest_ready(&self.rob, false) {
                 self.execute_control(&self.rs_control.vec[rs_index].clone(), &mut 0);
                 self.rs_control.vec[rs_index].busy = false;
+            }
+        }
+        
+        for _ in 0..N_LS_EXECS {
+            // No loads if the queue is full
+            let no_loads = self.load_queue.len() >= LQ_SIZE;
+            if let Some(rs_index) = self.rs_ls.get_oldest_ready(&self.rob, no_loads) {
+                self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
+                self.rs_ls.vec[rs_index].busy = false;
             }
         }
     }

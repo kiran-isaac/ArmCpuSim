@@ -1,8 +1,17 @@
+use std::cmp::Ordering;
 use super::*;
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn wb(&mut self) {
         // Decrease all delays, and add to ready queue if they are 0
+        self.to_broadcast.sort_by(|a, b| {
+            if self.rob.entry_is_before(a.1.rob_number, b.1.rob_number) {
+                Ordering::Less
+            } else {
+                Ordering::Greater
+            }
+        });
+
         let mut free_slots = CDB_WIDTH;
         let mut new_to_broadcast = Vec::new();
         for (delay, record) in self.to_broadcast.iter_mut() {

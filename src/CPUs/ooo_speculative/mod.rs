@@ -27,13 +27,17 @@ pub enum PredictionAlgorithms {
     AlwaysUntaken,
 }
 
-pub const N_ISSUE: usize = 2;
+pub const N_ISSUE: usize = 1;
 const CDB_WIDTH: usize = 4;
 const LQ_SIZE: usize = 8;
-pub const STALL_ON_BRANCH: bool = false;
+pub const N_LS_EXECS: usize = 3;
+pub const N_ALUSHIFTERS: usize = 3;
+pub const N_MULS: usize = 1;
+pub const N_CONTROL: usize = 2;
+pub const STALL_ON_BRANCH: bool = true;
 pub const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
-pub const ROB_ENTRIES: usize = 32;
-pub const FLUSH_DELAY: u32 = 3;
+pub const ROB_ENTRIES: usize = 64;
+pub const FLUSH_DELAY: u32 = 2;
 
 #[derive(Clone, Copy)]
 struct CDBRecord {
@@ -78,7 +82,6 @@ pub struct OoOSpeculative<'a> {
     rob: ROB,
 
     load_queue: VecDeque<LoadQueueEntry>,
-    load_queue_additions: Vec<LoadQueueEntry>,
 
     // Reservation stations
     rs_mul: RSSet,
@@ -141,7 +144,6 @@ impl<'a> OoOSpeculative<'a> {
             flushing: false,
             fetch_stall: false,
             load_queue: VecDeque::with_capacity(LQ_SIZE),
-            load_queue_additions: Vec::with_capacity(LQ_SIZE),
 
             stalls: Vec::new(),
             mispredicts: 0,
