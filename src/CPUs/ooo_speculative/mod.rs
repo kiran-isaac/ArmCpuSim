@@ -129,10 +129,10 @@ impl<'a> OoOSpeculative<'a> {
             fb: [None; N_ISSUE],
             iq: VecDeque::new(),
 
-            rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 8),
+            rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 12),
             rs_mul: RSSet::new(IssueType::MUL,  8),
             rs_control: RSSet::new(IssueType::Control, 8),
-            rs_ls: RSSet::new(IssueType::LoadStore, 8),
+            rs_ls: RSSet::new(IssueType::LoadStore, 12),
 
             rob,
             flush_delay: 0,
@@ -286,7 +286,7 @@ impl<'a> OoOSpeculative<'a> {
             rob_area,
         );
 
-        let mem_string = self.state.mem.dump(
+         let mem_string = self.state.mem.dump(
             mem_area.width.into(),
             (mem_area.height - 2).into(),
             0x22000000,

@@ -13,6 +13,7 @@ mod test;
 
 extern crate ratatui;
 
+use std::collections::HashSet;
 use decode::*;
 use model::*;
 use ratatui::backend::{Backend, CrosstermBackend};
@@ -29,7 +30,6 @@ use std::panic::{set_hook, take_hook};
 use std::process::exit;
 use CPUs::*;
 
-const FAST: bool = true;
 
 fn main() -> io::Result<()> {
     // let sdl_context = sdl2::init().unwrap();
@@ -42,6 +42,15 @@ fn main() -> io::Result<()> {
     let mut terminal = ratatui::init();
     let mut registers = Registers::new();
     let app_path = std::env::args().nth(1).unwrap();
+    
+    let other_args =  std::env::args().skip(2).collect::<Vec<String>>();
+    let mut FAST = true;
+    
+    for arg in other_args.into_iter() {
+        if arg == "--tui" {
+            FAST = false;
+        }
+    }
 
     // Load ELF and initialise register values
     let memory: Memory = Memory::from_elf(&app_path, &mut registers);
@@ -79,13 +88,10 @@ fn main() -> io::Result<()> {
 
     loop {
         cpu.tick();
-        if let Some(exit_code) = cpu.halt {
-            terminal.clear()?;
-            terminal.flush()?;
-            terminal.set_cursor_position((0, 0))?;
-            restore_tui()?;
+        
+        let quit = |cpu : &OoOSpeculative| {
+            restore_tui().unwrap();
 
-            println!("Program terminated with code {}", exit_code);
             let ipc = (cpu.instructions_committed as f64) / (cpu.epoch as f64);
             println!(
                 "Cycles: {}\nInstructions: {}\nIPC: {}, Mispredicts: {}, Correct Predicts: {}, Prediction accuracy: {}",
@@ -94,8 +100,14 @@ fn main() -> io::Result<()> {
                 )
             );
             println!("output: \n{}", cpu.output);
-            return Ok(());
+        };
+        
+        if let Some(exit_code) = cpu.halt {
+            println!("Program terminated with code {}", exit_code);
+            quit(&cpu);
+            exit(exit_code);
         }
+        
         if FAST {
             continue;
         }
@@ -112,7 +124,8 @@ fn main() -> io::Result<()> {
                 match event::read()? {
                     Event::Key(key_event) => match key_event.code {
                         KeyCode::Char('q') | KeyCode::Esc => {
-                            std::process::exit(0);
+                            quit(&cpu);
+                            exit(0);
                         }
                         KeyCode::Enter => {
                             break;
