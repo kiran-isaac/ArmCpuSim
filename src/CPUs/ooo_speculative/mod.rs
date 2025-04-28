@@ -30,10 +30,10 @@ pub enum PredictionAlgorithms {
 pub const N_ISSUE: usize = 4;
 const CDB_WIDTH: usize = 10;
 const LQ_SIZE: usize = 8;
-pub const N_LS_EXECS: usize = 3;
-pub const N_ALUSHIFTERS: usize = 3;
+pub const N_LS_EXECS: usize = 2;
+pub const N_ALUSHIFTERS: usize = 2;
 pub const N_MULS: usize = 1;
-pub const N_CONTROL: usize = 2;
+pub const N_CONTROL: usize = 1;
 pub const STALL_ON_BRANCH: bool = false;
 pub const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
 pub const ROB_ENTRIES: usize = 64;
