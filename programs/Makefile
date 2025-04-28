@@ -7,7 +7,7 @@ LINKER_SCRIPT := script.ld
 	$(ARMET)/bin/llvm-objdump -D -S  $< > $@
 
 %.out: %.c
-	$(ARMET)/bin/clang -O0 -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
+	$(ARMET)/bin/clang -O1 -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
 	
 %.out: %.s
 	$(ARMET)/bin/clang -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)

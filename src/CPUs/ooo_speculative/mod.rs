@@ -28,8 +28,8 @@ pub enum PredictionAlgorithms {
 }
 
 pub const N_ISSUE: usize = 4;
-const CDB_WIDTH: usize = 1000;
-const LQ_SIZE: usize = 16;
+const CDB_WIDTH: usize = 10;
+const LQ_SIZE: usize = 8;
 pub const N_LS_EXECS: usize = 3;
 pub const N_ALUSHIFTERS: usize = 3;
 pub const N_MULS: usize = 1;
@@ -138,8 +138,8 @@ impl<'a> OoOSpeculative<'a> {
             iq: VecDeque::new(),
 
             rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 8),
-            rs_mul: RSSet::new(IssueType::MUL,  4),
-            rs_control: RSSet::new(IssueType::Control, 4),
+            rs_mul: RSSet::new(IssueType::MUL,  8),
+            rs_control: RSSet::new(IssueType::Control, 8),
             rs_ls: RSSet::new(IssueType::LoadStore, 8),
 
             rob,

@@ -29,7 +29,7 @@ use std::panic::{set_hook, take_hook};
 use std::process::exit;
 use CPUs::*;
 
-const FAST: bool = false;
+const FAST: bool = true;
 
 fn main() -> io::Result<()> {
     // let sdl_context = sdl2::init().unwrap();

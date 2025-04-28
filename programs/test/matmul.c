@@ -1,28 +1,28 @@
 #include "../syscalls/syscalls.h"
 
-#include <stdio.h>
-
-
-#define SIZE 20
+#define ROWS1 2
+#define COLS1 3
+#define ROWS2 3
+#define COLS2 2
 
 int main() {
-    int matrix1[SIZE][SIZE];
-    int matrix2[SIZE][SIZE];
-    volatile int result[SIZE][SIZE];
+    int matrix1[ROWS1][COLS1] = {
+        {1, 2, 3},
+        {4, 5, 6}
+    };
 
-    // Initialize matrix1 and matrix2
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            matrix1[i][j] = i + j * 2 + 4;
-            matrix2[i][j] = i * j - 2;
-            result[i][j] = 0;
-        }
-    }
+    int matrix2[ROWS2][COLS2] = {
+        {7, 8},
+        {9, 10},
+        {11, 12}
+    };
+
+    volatile int result[ROWS1][COLS2] = {0};
 
     // Matrix multiplication
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            for (int k = 0; k < SIZE; k++) {
+    for (int i = 0; i < ROWS1; i++) {
+        for (int j = 0; j < COLS2; j++) {
+            for (int k = 0; k < COLS1; k++) {
                 result[i][j] += matrix1[i][k] * matrix2[k][j];
             }
         }
