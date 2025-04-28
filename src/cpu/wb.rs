@@ -1,5 +1,5 @@
-use std::cmp::Ordering;
 use super::*;
+use std::cmp::Ordering;
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn wb(&mut self) {
@@ -73,7 +73,7 @@ impl<'a> OoOSpeculative<'a> {
                         self.rob.set_address(record.rob_number, address);
                         self.rob.set_target_address(record.rob_number, address)
                     }
-                    ROBEntryDest::Register(n, _) => {
+                    ROBEntryDest::Register(n) => {
                         let mut val = record.result;
                         if record.is_branch_target {
                             self.rob
@@ -85,15 +85,10 @@ impl<'a> OoOSpeculative<'a> {
 
                         self.rs_control
                             .receive_cdb_broadcast(record.rob_number, n, val);
-                        self.rs_mul
+                        self.rs_mul.receive_cdb_broadcast(record.rob_number, n, val);
+                        self.rs_alu_shift
                             .receive_cdb_broadcast(record.rob_number, n, val);
-                        self.rs_alu_shift.receive_cdb_broadcast(
-                            record.rob_number,
-                            n,
-                            val,
-                        );
-                        self.rs_ls
-                            .receive_cdb_broadcast(record.rob_number, n, val);
+                        self.rs_ls.receive_cdb_broadcast(record.rob_number, n, val);
                     }
                 }
                 self.rob.set_ready(record.rob_number);

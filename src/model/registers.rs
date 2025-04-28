@@ -1,5 +1,3 @@
-use crate::components::ALU::ASPRUpdate;
-
 #[derive(Clone, Copy)]
 pub struct Registers {
     // R0-R12
@@ -22,45 +20,26 @@ pub struct ASPR {
     pub v: bool,
 }
 
-impl ASPR {
-    pub fn cond(&self, cond: u8) -> bool {
-        match cond {
-            // EQ
-            0b0000 => self.z == true,
-            // NE
-            0b0001 => self.z == false,
-            // CS
-            0b0010 => self.c == true,
-            // CC
-            0b0011 => self.c == false,
-            // MI
-            0b0100 => self.n == true,
-            // PL
-            0b0101 => self.n == false,
-            // VS
-            0b0110 => self.v == true,
-            // VC
-            0b0111 => self.v == false,
-            // HI
-            0b1000 => self.c == true && self.z == false,
-            // LS
-            0b1001 => self.c == false || self.z == true,
-            // GE
-            0b1010 => self.n == self.v,
-            // LT
-            0b1011 => self.n != self.v,
-            // GT
-            0b1100 => self.z == false && self.n == self.v,
-            // LE
-            0b1101 => self.z == true || self.n != self.v,
-            // AL
-            0b1110 => true,
-            // NV
-            0b1111 => false,
-            _ => panic!("Invalid condition code"),
+#[derive(Clone, Copy)]
+pub struct ASPRUpdate {
+    pub n: Option<bool>,
+    pub z: Option<bool>,
+    pub c: Option<bool>,
+    pub v: Option<bool>,
+}
+
+impl ASPRUpdate {
+    pub fn no_update() -> Self {
+        ASPRUpdate {
+            n: None,
+            z: None,
+            c: None,
+            v: None,
         }
     }
+}
 
+impl ASPR {
     fn apply_aspr_update(&mut self, update: &ASPRUpdate) {
         if let Some(update) = update.n {
             self.n = update;

@@ -1,4 +1,4 @@
-use crate::components::ROB::{ROBEntry, ROB};
+use crate::components::ROB::ROB;
 use crate::decode::{IssueType, I, IT::*};
 use crate::model::Registers;
 use std::cmp::Ordering;
@@ -170,14 +170,14 @@ impl<'a> RSSet {
             if !entry.busy {
                 continue;
             }
-            
+
             if no_loads {
                 match entry.i.it {
-                    LDRReg | LDRImm | LDRHReg | LDRHImm | LDRBReg | LDRBImm => {continue}
+                    LDRReg | LDRImm | LDRHReg | LDRHImm | LDRBReg | LDRBImm => continue,
                     _ => {}
                 }
             }
-            
+
             // Ignore this entry if any still pending results
             match (entry.j, entry.k, entry.l) {
                 (RSData::ROB(_, _), _, _)

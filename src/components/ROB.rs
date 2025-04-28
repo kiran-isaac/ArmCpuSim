@@ -1,8 +1,7 @@
-use crate::components::ALU::ASPRUpdate;
 use crate::components::ROB::ROBStatus::EMPTY;
-use crate::decode::{I, IT, IT::*};
-use crate::model::Registers;
-use crate::CPUs::{LoadQueueEntry, ROB_ENTRIES, STALL_ON_BRANCH};
+use crate::cpu::{LoadQueueEntry, ROB_ENTRIES};
+use crate::decode::{I, IT::*};
+use crate::model::{ASPRUpdate, Registers};
 use std::fmt::Formatter;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -49,9 +48,7 @@ pub enum ROBEntryDest {
     None,
     AwaitingAddress,
     Address(u32),
-
-    /// Boolean for if it updates cspr
-    Register(u8, bool),
+    Register(u8),
 }
 #[derive(Copy, Clone)]
 pub struct ROBEntry {
@@ -151,7 +148,7 @@ impl ROB {
             ADC | ADDImm | ADDReg | ADDSpImm | AND | BIC | EOR | MOVImm | MOVReg | MVN | ORR
             | REVSH | REV16 | REV | RSB | SBC | ROR | SUBImm | SUBReg | SXTB | SXTH | UXTB
             | UXTH | MUL | LSLImm | LSLReg | LSRReg | LSRImm | ASRReg | ASRImm => {
-                ROBEntryDest::Register(i.rd, i.setsflags)
+                ROBEntryDest::Register(i.rd)
             }
 
             // All ALU instructions that dont write back, as well as branches and system calls
@@ -161,7 +158,7 @@ impl ROB {
             // Sets LR
             BL | BLX => {
                 value = pc;
-                ROBEntryDest::Register(14, i.setsflags)
+                ROBEntryDest::Register(14)
             }
 
             // All store instructions will be pending address calculation
@@ -172,7 +169,7 @@ impl ROB {
             // All load instructions write back to rt, and do not update CSPR
             // (no clue why they differentiate between rd and rt)
             LDRImm | LDRReg | LDRHImm | LDRHReg | LDRBImm | LDRBReg | LDRSB | LDRSH => {
-                ROBEntryDest::Register(i.rt, false)
+                ROBEntryDest::Register(i.rt)
             }
 
             _ => panic!("ROB cannot add {:?}", i),
@@ -181,7 +178,7 @@ impl ROB {
         // If its gonna write to a register, add this to the register status
         self.temp_register_status = self.register_status.clone();
         match rob_dest {
-            ROBEntryDest::Register(rd, setsflags) => {
+            ROBEntryDest::Register(rd) => {
                 self.temp_register_status[rd as usize] = Some(insert_point);
             }
             _ => {}
@@ -420,7 +417,7 @@ impl std::fmt::Display for ROBEntryDest {
             f,
             "{}",
             match self {
-                ROBEntryDest::Register(rn, _) => Registers::reg_id_to_str(*rn),
+                ROBEntryDest::Register(rn) => Registers::reg_id_to_str(*rn),
                 ROBEntryDest::AwaitingAddress => "AA".to_string(),
                 ROBEntryDest::Address(addr) => format!("{:08X?}", addr),
                 ROBEntryDest::None => "None".to_string(),

@@ -4,7 +4,7 @@ impl<'a> OoOSpeculative<'a> {
     pub(super) fn issue(&mut self) {
         if self.iq.len() <= 0 {
             return;
-        }        
+        }
         if self.rob.is_full() {
             self.stall(StallReason::FullRob);
             return;

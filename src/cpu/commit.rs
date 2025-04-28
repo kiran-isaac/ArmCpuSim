@@ -2,7 +2,6 @@ use super::*;
 use crate::binary::unsigned_to_signed_bitcast;
 use crate::components::ROB::ROBStatus::EMPTY;
 use crate::decode::IT::*;
-use std::process::exit;
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn commit(&mut self) {
@@ -25,10 +24,10 @@ impl<'a> OoOSpeculative<'a> {
         match head.i.it {
             // Maybe taken
             B => {
-                let taken = ((head.target_address & 1) == 1);
+                let taken = (head.target_address & 1) == 1;
 
                 if taken {
-                    if (!predicted_taken || STALL_ON_BRANCH) {
+                    if !predicted_taken || STALL_ON_BRANCH {
                         string_info += "MT ";
                         self.spec_pc = head.target_address - 1;
                         self.mispredicts += 1;
@@ -69,13 +68,12 @@ impl<'a> OoOSpeculative<'a> {
                 }
             }
 
-            
             // Always requires a flush
             BX | BLX => {
                 self.spec_pc = (head.target_address >> 1) << 1;
                 self.flush_on_mispredict();
             }
-            
+
             SVC => {
                 self.fetch_stall = false;
             }
@@ -106,7 +104,7 @@ impl<'a> OoOSpeculative<'a> {
                 _ => unreachable!(),
             },
             ROBEntryDest::AwaitingAddress => unreachable!(),
-            ROBEntryDest::Register(rn, _) => {
+            ROBEntryDest::Register(rn) => {
                 self.state.regs.set(rn, head.value);
 
                 if let Some(rs_entry) = self.rob.register_status[rn as usize] {

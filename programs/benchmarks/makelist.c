@@ -3,7 +3,7 @@
 #define N_SAMPLES 5
 
 int main() {
-    volatile int arr[1000000];
+    volatile int arr[100000];
     int len = sizeof(arr) / sizeof(arr[0]);
     for (unsigned i = 0; i < len; i++) {
         arr[i] = (int) (i + 1);

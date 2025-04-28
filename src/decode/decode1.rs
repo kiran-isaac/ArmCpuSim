@@ -1,6 +1,6 @@
 use crate::binary::{bit_as_bool, briz};
+use crate::cpu::STALL_ON_BRANCH;
 use crate::decode::IT::{B, BL, BLX, BX, SVC};
-use crate::CPUs::STALL_ON_BRANCH;
 
 #[allow(dead_code)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -187,7 +187,7 @@ pub enum IT {
     /// Subtract with Carry (register) subtracts a register value and the value of NOT(Carry flag) from a register value, and
     /// writes the result to the destination register. The condition flags are updated based on the result.
     SBC,
-    /// Send Event is a hint instruction. It causes an event to be signaled to all CPUs within a multiprocessor system.
+    /// Send Event is a hint instruction. It causes an event to be signaled to all cpu within a multiprocessor system.
     /// This is a NOP-compatible hint, see Hint Instructions on page A6-98.
     SEV,
     /// The Store Multiple Increment After and the Store Multiple Empty Ascending instructions store multiple registers

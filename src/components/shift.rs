@@ -1,4 +1,5 @@
-use crate::components::ALU::{ASPRUpdate, CalcResult};
+use crate::components::ALU::CalcResult;
+use crate::model::ASPRUpdate;
 
 #[allow(dead_code)]
 pub enum ShiftType {

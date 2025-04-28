@@ -55,6 +55,15 @@ impl ExecutorPool {
         false
     }
 
+    pub fn will_accept(&self, i: I) -> bool {
+        for executor in &self.pool {
+            if executor.i.is_none() {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn tick(&mut self, state: &mut ProcessorState) {
         for executor in self.pool.iter_mut() {
             if executor.i.is_some() {

@@ -1,7 +1,7 @@
-use crate::CPUs::PredictionAlgorithms;
+use crate::cpu::PredictionAlgorithms;
 
-pub const N_ISSUE: usize = 8;
-pub const CDB_WIDTH: usize = 10;
+pub const N_ISSUE: usize = 4;
+pub const CDB_WIDTH: usize = 4;
 pub const LQ_SIZE: usize = 16;
 pub const N_LS_EXECS: usize = N_ISSUE;
 pub const N_ALUSHIFTERS: usize = N_ISSUE;

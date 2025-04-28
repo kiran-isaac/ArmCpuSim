@@ -77,7 +77,7 @@ pub fn decode2(i: I) -> Vec<I> {
                     sp_offset += 4
                 }
             }
-        },
+        }
         STMIA => {
             let target = i.rn;
             let mut target_offset = 0;

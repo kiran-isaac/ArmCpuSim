@@ -1,10 +1,9 @@
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
-mod CPUs;
 mod binary;
 mod components;
+mod cpu;
 mod decode;
-mod execute;
 mod log;
 mod model;
 mod system;
@@ -13,7 +12,7 @@ mod test;
 
 extern crate ratatui;
 
-use std::collections::HashSet;
+use cpu::*;
 use decode::*;
 use model::*;
 use ratatui::backend::{Backend, CrosstermBackend};
@@ -28,8 +27,6 @@ use std::io;
 use std::io::{stdout, Write};
 use std::panic::{set_hook, take_hook};
 use std::process::exit;
-use CPUs::*;
-
 
 fn main() -> io::Result<()> {
     // let sdl_context = sdl2::init().unwrap();
@@ -42,10 +39,10 @@ fn main() -> io::Result<()> {
     let mut terminal = ratatui::init();
     let mut registers = Registers::new();
     let app_path = std::env::args().nth(1).unwrap();
-    
-    let other_args =  std::env::args().skip(2).collect::<Vec<String>>();
+
+    let other_args = std::env::args().skip(2).collect::<Vec<String>>();
     let mut FAST = true;
-    
+
     for arg in other_args.into_iter() {
         if arg == "--tui" {
             FAST = false;
@@ -63,33 +60,33 @@ fn main() -> io::Result<()> {
 
     state.regs.pc = state.mem.entrypoint as u32;
 
-    let mut log_file = File::create(String::from(if STALL_ON_BRANCH {
-        "traces/log_stall.txt"
-    } else if PREDICT == PredictionAlgorithms::AlwaysTaken {
-        "traces/log_taken.txt"
-    } else {
-        "traces/log_un.txt"
-    }) + &format!("{}", N_ISSUE))?;
+    let mut log_file = File::create(
+        String::from(if STALL_ON_BRANCH {
+            "traces/log_stall.txt"
+        } else if PREDICT == PredictionAlgorithms::AlwaysTaken {
+            "traces/log_taken.txt"
+        } else {
+            "traces/log_un.txt"
+        }) + &format!("{}", N_ISSUE),
+    )?;
 
     let mut cpu = OoOSpeculative::new(
         state.clone(),
         "traces/trace.csv",
         |i: String| {
             if FAST {
-
             } else {
                 log_file.write((i + "\n").as_bytes()).unwrap();
             }
-        },
-        "traces/stack_dump.txt",
+        }
     );
 
     let mut complete = false;
 
     loop {
         cpu.tick();
-        
-        let quit = |cpu : &OoOSpeculative| {
+
+        let quit = |cpu: &OoOSpeculative| {
             restore_tui().unwrap();
 
             let ipc = (cpu.instructions_committed as f64) / (cpu.epoch as f64);
@@ -101,13 +98,13 @@ fn main() -> io::Result<()> {
             );
             println!("output: \n{}", cpu.output);
         };
-        
+
         if let Some(exit_code) = cpu.halt {
             println!("Program terminated with code {}", exit_code);
             quit(&cpu);
             exit(exit_code);
         }
-        
+
         if FAST {
             continue;
         }

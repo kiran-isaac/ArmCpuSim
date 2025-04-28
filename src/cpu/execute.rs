@@ -1,20 +1,20 @@
-use std::cmp::Ordering;
-use std::collections::HashSet;
 use super::*;
 use crate::binary::{bit_as_bool, briz, signed_to_unsigned_bitcast, unsigned_to_signed_bitcast};
 use crate::components::shift::{shift_with_carry, ShiftType};
 use crate::components::ALU::{ALUOperation, CalcResult, ALU};
 use crate::IT::*;
+use std::cmp::Ordering;
+use std::collections::HashSet;
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn execute(&mut self) {
         let mut can_go = Vec::with_capacity(N_LS_EXECS);
         for (i, entry) in self.load_queue.iter().enumerate() {
-            if self.rob.load_can_go(entry)   {
+            if self.rob.load_can_go(entry) {
                 can_go.push((i, entry.clone()));
             }
         }
-        
+
         // Sort by ROB entry
         can_go.sort_by(|a, b| {
             if self.rob.entry_is_before(a.1.rob_entry, b.1.rob_entry) {
@@ -23,7 +23,7 @@ impl<'a> OoOSpeculative<'a> {
                 Ordering::Greater
             }
         });
-        
+
         let mut went = HashSet::new();
         for (i, ready_entry) in can_go {
             went.insert(i);
@@ -45,19 +45,19 @@ impl<'a> OoOSpeculative<'a> {
                 LDRSB => match self.state.mem.get_byte(load_address) {
                     Ok(byte) => Ok(briz(byte as u32, 0, 6)
                         + (if bit_as_bool(byte as u32, 7) {
-                        0x80000000
-                    } else {
-                        0
-                    })),
+                            0x80000000
+                        } else {
+                            0
+                        })),
                     Err(e) => Err(e),
                 },
                 LDRSH => match self.state.mem.get_halfword(load_address) {
                     Ok(byte) => Ok(briz(byte as u32, 0, 14)
                         + (if bit_as_bool(byte as u32, 15) {
-                        0x80000000
-                    } else {
-                        0
-                    })),
+                            0x80000000
+                        } else {
+                            0
+                        })),
                     Err(e) => Err(e),
                 },
                 _ => unreachable!(),
@@ -81,7 +81,7 @@ impl<'a> OoOSpeculative<'a> {
                 },
             ));
         }
-        
+
         let mut new_load_queue = VecDeque::new();
         for (i, e) in self.load_queue.iter().enumerate() {
             if !went.contains(&i) {
@@ -89,28 +89,28 @@ impl<'a> OoOSpeculative<'a> {
             }
         }
         self.load_queue = new_load_queue;
-        
+
         for _ in 0..N_ALUSHIFTERS {
             if let Some(rs_index) = self.rs_alu_shift.get_oldest_ready(&self.rob, false) {
                 self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut 0);
                 self.rs_alu_shift.vec[rs_index].busy = false;
             }
         }
-        
+
         for _ in 0..N_MULS {
             if let Some(rs_index) = self.rs_mul.get_oldest_ready(&self.rob, false) {
                 self.execute_mul(&self.rs_mul.vec[rs_index].clone(), &mut 0);
                 self.rs_mul.vec[rs_index].busy = false;
             }
         }
-        
+
         for _ in 0..N_CONTROL {
             if let Some(rs_index) = self.rs_control.get_oldest_ready(&self.rob, false) {
                 self.execute_control(&self.rs_control.vec[rs_index].clone(), &mut 0);
                 self.rs_control.vec[rs_index].busy = false;
             }
         }
-        
+
         for _ in 0..N_LS_EXECS {
             // No loads if the queue is full
             let no_loads = self.load_queue.len() >= LQ_SIZE;

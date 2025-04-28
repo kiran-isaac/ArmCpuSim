@@ -1,8 +1,6 @@
 use super::*;
 use crate::binary::briz;
 use crate::decode::{decode_b1, decode_b2, decode_bl};
-use std::cmp::PartialEq;
-use std::panic::panic_any;
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn fetch(&mut self) {
@@ -72,7 +70,7 @@ impl<'a> OoOSpeculative<'a> {
 
         // B (T1)
         // if its 0b1111 then its svc
-        if ((i & 0b1111_0000_0000_0000) == 0b1101_0000_0000_0000) {
+        if (i & 0b1111_0000_0000_0000) == 0b1101_0000_0000_0000 {
             return if briz(i, 8, 11) == 0b1111 {
                 Some((IT::SVC, 0))
             } else {
@@ -82,21 +80,23 @@ impl<'a> OoOSpeculative<'a> {
         }
 
         // B (T2)
-        if ((i & 0b1111_1000_0000_0000) == 0b1110_0000_0000_0000) {
+        if (i & 0b1111_1000_0000_0000) == 0b1110_0000_0000_0000 {
             let i = decode_b2(i);
             return Some((IT::B, i.imms as u32));
         }
 
         // BX or POP(15)
-        if ((i & 0b1111_1111_1000_0000) == 0b0100_0111_0000_0000) || (i & 0b1111_1111_0000_0000) == 0b1011_1101_0000_0000  {
+        if ((i & 0b1111_1111_1000_0000) == 0b0100_0111_0000_0000)
+            || (i & 0b1111_1111_0000_0000) == 0b1011_1101_0000_0000
+        {
             return Some((IT::BX, 0));
         }
 
         // BX
-        if ((i & 0b1111_1111_1000_0000) == 0b0100_0111_1000_0000) {
+        if (i & 0b1111_1111_1000_0000) == 0b0100_0111_1000_0000 {
             return Some((IT::BLX, 0));
         }
-        // 
+        //
         // // Pop (15)
         // if (i & 0b1111_1111_0000_0000) == 0b1011_1101_0000_0000 {
         //     return Some((IT::POP, 0));

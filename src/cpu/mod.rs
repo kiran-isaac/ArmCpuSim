@@ -4,15 +4,20 @@ mod decode;
 mod execute;
 mod fetch;
 mod issue;
-mod wb;
 mod parameters;
+mod wb;
 
-pub use parameters::*;
-use super::*;
+use crate::binary::is_32_bit;
+use crate::components::ROB::ROB;
 use crate::components::ROB::{ROBEntryDest, ROBStatus};
+use crate::components::RS::*;
 use crate::decode::IT;
+use crate::decode::{decode, decode2, get_issue_type, IssueType, I};
+use crate::log::Tracer;
+use crate::model::{ASPRUpdate, ProcessorState};
 use crate::model::Registers;
-use crate::{components::ALU::ASPRUpdate, components::ROB::ROB};
+pub use parameters::*;
+
 use ratatui::layout::Margin;
 use ratatui::prelude::Alignment;
 use ratatui::widgets::{Borders, Padding, Paragraph};
@@ -28,8 +33,6 @@ pub enum PredictionAlgorithms {
     AlwaysTaken,
     AlwaysUntaken,
 }
-
-
 
 #[derive(Clone, Copy)]
 struct CDBRecord {
@@ -114,7 +117,7 @@ pub struct OoOSpeculative<'a> {
 }
 
 impl<'a> OoOSpeculative<'a> {
-    pub fn new<F>(state: ProcessorState, trace_file: &str, log_fn: F, stack_dump_file: &str) -> Self
+    pub fn new<F>(state: ProcessorState, trace_file: &str, log_fn: F) -> Self
     where
         F: FnMut(String) + 'a,
     {
@@ -130,7 +133,7 @@ impl<'a> OoOSpeculative<'a> {
             iq: VecDeque::new(),
 
             rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 12),
-            rs_mul: RSSet::new(IssueType::MUL,  8),
+            rs_mul: RSSet::new(IssueType::MUL, 8),
             rs_control: RSSet::new(IssueType::Control, 8),
             rs_ls: RSSet::new(IssueType::LoadStore, 12),
 
@@ -177,7 +180,6 @@ impl<'a> OoOSpeculative<'a> {
 
         self.wb();
         self.execute();
-
 
         if self.rob.is_full() {
             self.stall(StallReason::FullRob);
@@ -230,9 +232,14 @@ impl<'a> OoOSpeculative<'a> {
             vertical: 1,
         });
 
-        let [fb_area, iq_area, rs_area, mem_top_border, mem_area] =
-            Layout::vertical([Length((2 + N_ISSUE) as u16), Length(5), Length(10), Length(1), Fill(1)])
-                .areas(right_area);
+        let [fb_area, iq_area, rs_area, mem_top_border, mem_area] = Layout::vertical([
+            Length((2 + N_ISSUE) as u16),
+            Length(5),
+            Length(10),
+            Length(1),
+            Fill(1),
+        ])
+        .areas(right_area);
         let [epoch_area, rst_area, stall_area, call_stack_area] =
             Layout::vertical([Length(4), Length(22), Length(5), Fill(1)]).areas(left_area);
 
@@ -286,7 +293,7 @@ impl<'a> OoOSpeculative<'a> {
             rob_area,
         );
 
-         let mem_string = self.state.mem.dump(
+        let mem_string = self.state.mem.dump(
             mem_area.width.into(),
             (mem_area.height - 2).into(),
             0x22000000,
@@ -309,12 +316,14 @@ impl<'a> OoOSpeculative<'a> {
         frame.render_widget(
             Paragraph::new(format!(
                 "{}",
-                (0..N_ISSUE).map(|j| {
-                    match &self.fb[j] {
-                        Some((pc, i)) => format!("{:08X}   Spec PC: {:08X?}", i, pc),
-                        None => "-".to_string(),
-                    }
-                }).join("\n"),
+                (0..N_ISSUE)
+                    .map(|j| {
+                        match &self.fb[j] {
+                            Some((pc, i)) => format!("{:08X}   Spec PC: {:08X?}", i, pc),
+                            None => "-".to_string(),
+                        }
+                    })
+                    .join("\n"),
             ))
             .block(bottom_border("Fetch Buffer")),
             fb_area,

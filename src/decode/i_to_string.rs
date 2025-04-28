@@ -1,5 +1,4 @@
 use super::{I, IT, IT::*};
-use crate::components::ROB::ROBEntryDest::Register;
 use crate::model::Registers;
 use std::fmt::Display;
 

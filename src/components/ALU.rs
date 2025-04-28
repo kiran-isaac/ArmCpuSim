@@ -1,4 +1,5 @@
 use crate::binary::{bit_as_bool, briz};
+use crate::model::ASPRUpdate;
 
 fn add_with_carry(a: u32, b: u32, c: u8) -> (u32, u8, u8) {
     let unsigned_sum = (a as u64).wrapping_add(b as u64).wrapping_add(c as u64);
@@ -32,25 +33,6 @@ pub enum ALUOperation {
     UXTB,
     SXTB,
     SXTH,
-}
-
-#[derive(Clone, Copy)]
-pub struct ASPRUpdate {
-    pub n: Option<bool>,
-    pub z: Option<bool>,
-    pub c: Option<bool>,
-    pub v: Option<bool>,
-}
-
-impl ASPRUpdate {
-    pub fn no_update() -> Self {
-        ASPRUpdate {
-            n: None,
-            z: None,
-            c: None,
-            v: None,
-        }
-    }
 }
 
 pub struct CalcResult {
