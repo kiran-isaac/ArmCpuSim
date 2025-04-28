@@ -4,7 +4,12 @@ impl<'a> OoOSpeculative<'a> {
     pub(super) fn issue(&mut self) {
         if self.iq.len() <= 0 {
             return;
+        }        
+        if self.rob.is_full() {
+            self.stall(StallReason::FullRob);
+            return;
         }
+
         let iqe = self.iq.get(0).unwrap();
 
         let dest = self.rob.issue_receive(&iqe.i, iqe.pc);

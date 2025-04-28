@@ -29,6 +29,8 @@ use std::panic::{set_hook, take_hook};
 use std::process::exit;
 use CPUs::*;
 
+const FAST: bool = false;
+
 fn main() -> io::Result<()> {
     // let sdl_context = sdl2::init().unwrap();
     // let video_subsystem = sdl_context.video().unwrap();
@@ -64,7 +66,11 @@ fn main() -> io::Result<()> {
         state.clone(),
         "traces/trace.csv",
         |i: String| {
-            log_file.write((i + "\n").as_bytes()).unwrap();
+            if FAST {
+
+            } else {
+                log_file.write((i + "\n").as_bytes()).unwrap();
+            }
         },
         "traces/stack_dump.txt",
     );
@@ -83,12 +89,17 @@ fn main() -> io::Result<()> {
             let ipc = (cpu.instructions_committed as f64) / (cpu.epoch as f64);
             println!(
                 "Cycles: {}\nInstructions: {}\nIPC: {}, Mispredicts: {}, Correct Predicts: {}, Prediction accuracy: {}",
-                cpu.epoch, cpu.instructions_committed, ipc, cpu.mispredicts, cpu.correct_predicts, 
+                cpu.epoch, cpu.instructions_committed, ipc, cpu.mispredicts, cpu.correct_predicts,
                 ((cpu.correct_predicts as f64) / ((cpu.correct_predicts as f64) + (cpu.mispredicts as f64))
                 )
             );
+            println!("output: \n{}", cpu.output);
             return Ok(());
         }
+        if FAST {
+            continue;
+        }
+
         terminal.draw(|f| cpu.render(f))?;
 
         if complete {

@@ -30,7 +30,12 @@ impl<'a> OoOSpeculative<'a> {
 
                     if control_instruction.is_serializing() {
                         self.fetch_stall = true;
+                        self.spec_pc += pc_increment;
                         continue;
+                    }
+
+                    if control_instruction != IT::B && control_instruction != IT::BL {
+                        panic!()
                     }
 
                     // BL or B
@@ -38,9 +43,6 @@ impl<'a> OoOSpeculative<'a> {
                         self.spec_pc = self.spec_pc.wrapping_add(control_offset).wrapping_add(4);
                         continue;
                     } else {
-                        if control_instruction != IT::B && control_instruction != IT::BL {
-                            panic!()
-                        }
                         self.spec_pc += 4;
                         // if its a BL only fetch 1
                         if control_instruction == IT::BL {

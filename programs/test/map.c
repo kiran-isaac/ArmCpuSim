@@ -13,15 +13,22 @@ int add_one(int x) {
     return x + 1;
 }
 
+int square(int x) {
+    return x * x;
+}
+
 int main() {
-    malloc(1);
-//    *x = 10;
-////    volatile int arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-////    int len = sizeof(arr) / sizeof(arr[0]);
-////    map(arr, len, add_one);
-////
-////    for (char i = 0; i < len; i++) {
-////        svc_putint(arr[i]);
-////    }
-//    svc_exit(*x);
+    volatile int arr[10000];
+    int len = sizeof(arr) / sizeof(arr[0]);
+    for (unsigned i = 0; i < len; i++) {
+        arr[i] = (int) (i + 1);
+    }
+    map(arr, len, square);
+
+    for (unsigned i = 0; i < len; i++) {
+        svc_putint(arr[i]);
+        svc_puts("\n");
+    }
+
+    svc_exit(0);
 }

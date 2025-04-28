@@ -148,7 +148,7 @@ impl<'a> OoOSpeculative<'a> {
                         if c == 0 {
                             break;
                         }
-                        print!("{}", c as char);
+                        self.output += &format!("{}", c as char);
                         addr += 1;
                     }
                 }
@@ -169,8 +169,7 @@ impl<'a> OoOSpeculative<'a> {
                 //     state.mem.set_byte_nolog(addr + i, 0);
                 // }
                 3 => {
-                    let value = r0;
-                    print!("{}", value);
+                    self.output += &format!("{}", r0);
                 }
                 _ => panic!("Invalid svc"),
             }

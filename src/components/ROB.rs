@@ -175,9 +175,6 @@ impl ROB {
                 ROBEntryDest::Register(i.rt, false)
             }
 
-            // Special case
-            SetPC => ROBEntryDest::Register(15, false),
-
             _ => panic!("ROB cannot add {:?}", i),
         };
 

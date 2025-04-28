@@ -27,14 +27,14 @@ pub enum PredictionAlgorithms {
     AlwaysUntaken,
 }
 
-pub const N_ISSUE: usize = 1;
+pub const N_ISSUE: usize = 2;
 const CDB_WIDTH: usize = 4;
 const LQ_SIZE: usize = 8;
 pub const N_LS_EXECS: usize = 3;
 pub const N_ALUSHIFTERS: usize = 3;
 pub const N_MULS: usize = 1;
 pub const N_CONTROL: usize = 2;
-pub const STALL_ON_BRANCH: bool = true;
+pub const STALL_ON_BRANCH: bool = false;
 pub const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
 pub const ROB_ENTRIES: usize = 64;
 pub const FLUSH_DELAY: u32 = 2;
@@ -90,6 +90,8 @@ pub struct OoOSpeculative<'a> {
     rs_ls: RSSet,
     rs_control: RSSet,
 
+    pub output: String,
+
     flush_delay: u32,
     flushing: bool,
     spec_pc: u32,
@@ -126,6 +128,7 @@ impl<'a> OoOSpeculative<'a> {
     {
         let rob = ROB::new();
         Self {
+            output: String::new(),
             log_fn: Box::new(log_fn),
 
             tracer: Tracer::new(trace_file, &state.regs),
@@ -134,10 +137,10 @@ impl<'a> OoOSpeculative<'a> {
             fb: [None; N_ISSUE],
             iq: VecDeque::new(),
 
-            rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 8),
-            rs_mul: RSSet::new(IssueType::MUL, 4),
-            rs_control: RSSet::new(IssueType::Control, 4),
-            rs_ls: RSSet::new(IssueType::LoadStore, 8),
+            rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 16),
+            rs_mul: RSSet::new(IssueType::MUL,  16),
+            rs_control: RSSet::new(IssueType::Control, 16),
+            rs_ls: RSSet::new(IssueType::LoadStore, 16),
 
             rob,
             flush_delay: 0,
@@ -182,7 +185,7 @@ impl<'a> OoOSpeculative<'a> {
 
         self.wb();
         self.execute();
-        
+
 
         if self.rob.is_full() {
             self.stall(StallReason::FullRob);

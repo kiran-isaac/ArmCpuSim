@@ -1,9 +1,7 @@
 use super::*;
 use crate::binary::unsigned_to_signed_bitcast;
 use crate::components::ROB::ROBStatus::EMPTY;
-use crate::decode::IT::{
-    STRBImm, STRBReg, STRHImm, STRHReg, STRImm, STRReg, SetPC, B, BL, BLX, BX,
-};
+use crate::decode::IT::*;
 use std::process::exit;
 
 impl<'a> OoOSpeculative<'a> {
@@ -76,6 +74,10 @@ impl<'a> OoOSpeculative<'a> {
             BX | BLX => {
                 self.spec_pc = (head.target_address >> 1) << 1;
                 self.flush_on_mispredict();
+            }
+            
+            SVC => {
+                self.fetch_stall = false;
             }
 
             _ => {}
