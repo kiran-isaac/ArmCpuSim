@@ -4,10 +4,13 @@ use crate::decode::{decode_b1, decode_b2, decode_bl};
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn fetch(&mut self) {
-        for i in 0..N_ISSUE {
-            if self.fb[i].is_none() && !self.fetch_stall {
+        let mut bytes_fetched: u32 = 0;
+        let mut i = 0;
+        while !self.fetch_stall && bytes_fetched <= FETCH_WIDTH - 2 {
+            if self.fb[i].is_none() {
                 let fetched = self.state.mem.get_instruction(self.spec_pc);
                 let pc_increment = if is_32_bit(fetched) { 4 } else { 2 };
+                bytes_fetched += pc_increment;
 
                 /* The use of 0b1111 as a register specifier is not normally permitted in Thumb instructions. When a value of 0b1111 is
                    permitted, a variety of meanings is possible. For register reads, these meanings are:
@@ -21,10 +24,8 @@ impl<'a> OoOSpeculative<'a> {
                 if let Some((control_instruction, control_offset)) =
                     Self::pre_decode(self.spec_pc, fetched)
                 {
-                    // if control_instruction == IT::B {
-                    //     self.fb = Some((self.spec_pc + 4, fetched));
-                    // } else {
                     self.fb[i] = Some((self.spec_pc + pc_increment, fetched));
+                    i += 1;
 
                     if control_instruction.is_serializing() {
                         self.fetch_stall = true;
@@ -39,20 +40,13 @@ impl<'a> OoOSpeculative<'a> {
                     // BL or B
                     if PREDICT == PredictionAlgorithms::AlwaysTaken {
                         self.spec_pc = self.spec_pc.wrapping_add(control_offset).wrapping_add(4);
-                        continue;
                     } else {
                         self.spec_pc += 4;
-                        // if its a BL only fetch 1
-                        if control_instruction == IT::BL {
-                            return;
-                        } else if control_instruction == IT::B {
-                            continue;
-                        } else {
-                            unreachable!()
-                        }
                     }
+                    continue;
                 } else {
                     self.fb[i] = Some((self.spec_pc + pc_increment, fetched));
+                    i += 1;
                 }
                 self.spec_pc += pc_increment;
             }

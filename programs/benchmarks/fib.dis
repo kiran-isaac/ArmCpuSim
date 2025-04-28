@@ -1,0 +1,3081 @@
+
+benchmarks/fib.out:	file format elf32-littlearm
+
+Disassembly of section .text:
+
+00000000 <sbrk>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: b083         	sub	sp, #0xc
+       2: 9001         	str	r0, [sp, #0x4]
+;     char* prev_heap_ptr = heap_ptr;
+       4: 480f         	ldr	r0, [pc, #0x3c]         @ 0x44 <sbrk+0x44>
+       6: 6800         	ldr	r0, [r0]
+       8: 9000         	str	r0, [sp]
+;     if (increment > 0) {
+       a: 9801         	ldr	r0, [sp, #0x4]
+       c: 2801         	cmp	r0, #0x1
+       e: db12         	blt	0x36 <sbrk+0x36>        @ imm = #0x24
+      10: e7ff         	b	0x12 <sbrk+0x12>        @ imm = #-0x2
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 480c         	ldr	r0, [pc, #0x30]         @ 0x44 <sbrk+0x44>
+      14: 6800         	ldr	r0, [r0]
+      16: 9901         	ldr	r1, [sp, #0x4]
+      18: 1840         	adds	r0, r0, r1
+      1a: 490b         	ldr	r1, [pc, #0x2c]         @ 0x48 <sbrk+0x48>
+      1c: 4288         	cmp	r0, r1
+      1e: d904         	bls	0x2a <sbrk+0x2a>        @ imm = #0x8
+      20: e7ff         	b	0x22 <sbrk+0x22>        @ imm = #-0x2
+      22: 2000         	movs	r0, #0x0
+      24: 43c0         	mvns	r0, r0
+;             return (void*)-1;  // Return error if the heap is full
+      26: 9002         	str	r0, [sp, #0x8]
+      28: e008         	b	0x3c <sbrk+0x3c>        @ imm = #0x10
+;         heap_ptr += increment;
+      2a: 9a01         	ldr	r2, [sp, #0x4]
+      2c: 4905         	ldr	r1, [pc, #0x14]         @ 0x44 <sbrk+0x44>
+      2e: 6808         	ldr	r0, [r1]
+      30: 1880         	adds	r0, r0, r2
+      32: 6008         	str	r0, [r1]
+;     }
+      34: e7ff         	b	0x36 <sbrk+0x36>        @ imm = #-0x2
+;     return (void*)prev_heap_ptr;
+      36: 9800         	ldr	r0, [sp]
+      38: 9002         	str	r0, [sp, #0x8]
+      3a: e7ff         	b	0x3c <sbrk+0x3c>        @ imm = #-0x2
+; }
+      3c: 9802         	ldr	r0, [sp, #0x8]
+      3e: b003         	add	sp, #0xc
+      40: 4770         	bx	lr
+      42: 46c0         	mov	r8, r8
+      44: 00 00 00 20  	.word	0x20000000
+      48: 00 00 f8 21  	.word	0x21f80000
+
+0000004c <fibonacci>:
+; unsigned long long fibonacci(int n) {
+      4c: b08c         	sub	sp, #0x30
+      4e: 9009         	str	r0, [sp, #0x24]
+;     if (n <= 0) return 0;
+      50: 9809         	ldr	r0, [sp, #0x24]
+      52: 2800         	cmp	r0, #0x0
+      54: dc04         	bgt	0x60 <fibonacci+0x14>   @ imm = #0x8
+      56: e7ff         	b	0x58 <fibonacci+0xc>    @ imm = #-0x2
+      58: 2000         	movs	r0, #0x0
+;     if (n <= 0) return 0;
+      5a: 900b         	str	r0, [sp, #0x2c]
+      5c: 900a         	str	r0, [sp, #0x28]
+      5e: e030         	b	0xc2 <fibonacci+0x76>   @ imm = #0x60
+;     if (n == 1) return 1;
+      60: 9809         	ldr	r0, [sp, #0x24]
+      62: 2801         	cmp	r0, #0x1
+      64: d105         	bne	0x72 <fibonacci+0x26>   @ imm = #0xa
+      66: e7ff         	b	0x68 <fibonacci+0x1c>   @ imm = #-0x2
+      68: 2000         	movs	r0, #0x0
+;     if (n == 1) return 1;
+      6a: 900b         	str	r0, [sp, #0x2c]
+      6c: 2001         	movs	r0, #0x1
+      6e: 900a         	str	r0, [sp, #0x28]
+      70: e027         	b	0xc2 <fibonacci+0x76>   @ imm = #0x4e
+      72: 2000         	movs	r0, #0x0
+;     unsigned long long a = 0, b = 1, temp;
+      74: 9007         	str	r0, [sp, #0x1c]
+      76: 9006         	str	r0, [sp, #0x18]
+      78: 9005         	str	r0, [sp, #0x14]
+      7a: 2001         	movs	r0, #0x1
+      7c: 9004         	str	r0, [sp, #0x10]
+      7e: 2002         	movs	r0, #0x2
+;     for (int i = 2; i <= n; ++i) {
+      80: 9001         	str	r0, [sp, #0x4]
+      82: e7ff         	b	0x84 <fibonacci+0x38>   @ imm = #-0x2
+      84: 9801         	ldr	r0, [sp, #0x4]
+      86: 9909         	ldr	r1, [sp, #0x24]
+      88: 4288         	cmp	r0, r1
+      8a: dc15         	bgt	0xb8 <fibonacci+0x6c>   @ imm = #0x2a
+      8c: e7ff         	b	0x8e <fibonacci+0x42>   @ imm = #-0x2
+;         temp = a + b;
+      8e: 9807         	ldr	r0, [sp, #0x1c]
+      90: 9906         	ldr	r1, [sp, #0x18]
+      92: 9a05         	ldr	r2, [sp, #0x14]
+      94: 9b04         	ldr	r3, [sp, #0x10]
+      96: 18c9         	adds	r1, r1, r3
+      98: 4150         	adcs	r0, r2
+      9a: 9102         	str	r1, [sp, #0x8]
+      9c: 9003         	str	r0, [sp, #0xc]
+;         a = b;
+      9e: 9804         	ldr	r0, [sp, #0x10]
+      a0: 9905         	ldr	r1, [sp, #0x14]
+      a2: 9107         	str	r1, [sp, #0x1c]
+      a4: 9006         	str	r0, [sp, #0x18]
+;         b = temp;
+      a6: 9802         	ldr	r0, [sp, #0x8]
+      a8: 9903         	ldr	r1, [sp, #0xc]
+      aa: 9105         	str	r1, [sp, #0x14]
+      ac: 9004         	str	r0, [sp, #0x10]
+;     }
+      ae: e7ff         	b	0xb0 <fibonacci+0x64>   @ imm = #-0x2
+;     for (int i = 2; i <= n; ++i) {
+      b0: 9801         	ldr	r0, [sp, #0x4]
+      b2: 1c40         	adds	r0, r0, #0x1
+      b4: 9001         	str	r0, [sp, #0x4]
+      b6: e7e5         	b	0x84 <fibonacci+0x38>   @ imm = #-0x36
+;     return b;
+      b8: 9804         	ldr	r0, [sp, #0x10]
+      ba: 9905         	ldr	r1, [sp, #0x14]
+      bc: 910b         	str	r1, [sp, #0x2c]
+      be: 900a         	str	r0, [sp, #0x28]
+      c0: e7ff         	b	0xc2 <fibonacci+0x76>   @ imm = #-0x2
+; }
+      c2: 980a         	ldr	r0, [sp, #0x28]
+      c4: 990b         	ldr	r1, [sp, #0x2c]
+      c6: b00c         	add	sp, #0x30
+      c8: 4770         	bx	lr
+
+000000ca <main>:
+; int main() {
+      ca: b580         	push	{r7, lr}
+      cc: af00         	add	r7, sp, #0x0
+      ce: b0e8         	sub	sp, #0x1a0
+      d0: 2000         	movs	r0, #0x0
+      d2: 9001         	str	r0, [sp, #0x4]
+      d4: 9067         	str	r0, [sp, #0x19c]
+      d6: 2019         	movs	r0, #0x19
+      d8: 0101         	lsls	r1, r0, #0x4
+      da: a803         	add	r0, sp, #0xc
+; 	unsigned arr[N] = {0};
+      dc: f000 f82e    	bl	0x13c <bzero>           @ imm = #0x5c
+      e0: 9801         	ldr	r0, [sp, #0x4]
+; 	for (unsigned i = 0; i < N; i++) {
+      e2: 9002         	str	r0, [sp, #0x8]
+      e4: e7ff         	b	0xe6 <main+0x1c>        @ imm = #-0x2
+      e6: 9802         	ldr	r0, [sp, #0x8]
+      e8: 2863         	cmp	r0, #0x63
+      ea: d80d         	bhi	0x108 <main+0x3e>       @ imm = #0x1a
+      ec: e7ff         	b	0xee <main+0x24>        @ imm = #-0x2
+; 		arr[i] = fibonacci(i + 1);
+      ee: 9802         	ldr	r0, [sp, #0x8]
+      f0: 1c40         	adds	r0, r0, #0x1
+      f2: f7ff ffab    	bl	0x4c <fibonacci>        @ imm = #-0xaa
+      f6: 9902         	ldr	r1, [sp, #0x8]
+      f8: 008a         	lsls	r2, r1, #0x2
+      fa: a903         	add	r1, sp, #0xc
+      fc: 5088         	str	r0, [r1, r2]
+; 	}
+      fe: e7ff         	b	0x100 <main+0x36>       @ imm = #-0x2
+; 	for (unsigned i = 0; i < N; i++) {
+     100: 9802         	ldr	r0, [sp, #0x8]
+     102: 1c40         	adds	r0, r0, #0x1
+     104: 9002         	str	r0, [sp, #0x8]
+     106: e7ee         	b	0xe6 <main+0x1c>        @ imm = #-0x24
+;     svc_putint(arr[N - 1]);
+     108: 9866         	ldr	r0, [sp, #0x198]
+     10a: f000 f806    	bl	0x11a <svc_putint>      @ imm = #0xc
+     10e: 2000         	movs	r0, #0x0
+; 	svc_exit(0);
+     110: f000 f80b    	bl	0x12a <svc_exit>        @ imm = #0x16
+; }
+     114: 9867         	ldr	r0, [sp, #0x19c]
+     116: b068         	add	sp, #0x1a0
+     118: bd80         	pop	{r7, pc}
+
+0000011a <svc_putint>:
+; static inline void svc_putint(int n) {
+     11a: b082         	sub	sp, #0x8
+     11c: 9001         	str	r0, [sp, #0x4]
+;      register int r0 __asm__("r0") = n;
+     11e: 9801         	ldr	r0, [sp, #0x4]
+     120: 9000         	str	r0, [sp]
+;      __asm volatile ("svc 3" :  : "r"(r0) : "memory");
+     122: 9800         	ldr	r0, [sp]
+     124: df03         	svc	#0x3
+; }
+     126: b002         	add	sp, #0x8
+     128: 4770         	bx	lr
+
+0000012a <svc_exit>:
+; static inline void svc_exit(unsigned code) {
+     12a: b082         	sub	sp, #0x8
+     12c: 9001         	str	r0, [sp, #0x4]
+;     register unsigned r0 __asm__("r0") = code;
+     12e: 9801         	ldr	r0, [sp, #0x4]
+     130: 9000         	str	r0, [sp]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+     132: 9800         	ldr	r0, [sp]
+     134: df00         	svc	#0x0
+; };
+     136: b002         	add	sp, #0x8
+     138: 4770         	bx	lr
+     13a: d4d4         	bmi	0xe6 <main+0x1c>        @ imm = #-0x58
+
+0000013c <bzero>:
+     13c: b580         	push	{r7, lr}
+     13e: af00         	add	r7, sp, #0x0
+     140: 460a         	mov	r2, r1
+     142: 2100         	movs	r1, #0x0
+     144: f000 f802    	bl	0x14c <memset>          @ imm = #0x4
+     148: bd80         	pop	{r7, pc}
+     14a: d4d4         	bmi	0xf6 <main+0x2c>        @ imm = #-0x58
+
+0000014c <memset>:
+     14c: 2300         	movs	r3, #0x0
+     14e: 429a         	cmp	r2, r3
+     150: d002         	beq	0x158 <memset+0xc>      @ imm = #0x4
+     152: 54c1         	strb	r1, [r0, r3]
+     154: 1c5b         	adds	r3, r3, #0x1
+     156: e7fa         	b	0x14e <memset+0x2>      @ imm = #-0xc
+     158: 4770         	bx	lr
+
+0000015a <__text_end>:
+     15a: d4d4         	bmi	0x106 <main+0x3c>       @ imm = #-0x58
+     15c: d4d4         	bmi	0x108 <main+0x3e>       @ imm = #-0x58
+     15e: d4d4         	bmi	0x10a <main+0x40>       @ imm = #-0x58
+
+Disassembly of section .data:
+
+20000000 <heap_ptr>:
+20000000: 0008         	movs	r0, r1
+20000002: 2000         	movs	r0, #0x0
+20000004: 0000         	movs	r0, r0
+20000006: 0000         	movs	r0, r0
+
+Disassembly of section .heap:
+
+20000008 <.heap>:
+...
+
+Disassembly of section .stack:
+
+20080008 <.stack>:
+...
+
+Disassembly of section .comment:
+
+00000000 <.comment>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 6300         	str	r0, [r0, #0x30]
+       2: 616c         	str	r4, [r5, #0x14]
+;     char* prev_heap_ptr = heap_ptr;
+       4: 676e         	str	r6, [r5, #0x74]
+       6: 7620         	strb	r0, [r4, #0x18]
+       8: 7265         	strb	r5, [r4, #0x9]
+;     if (increment > 0) {
+       a: 6973         	ldr	r3, [r6, #0x14]
+       c: 6e6f         	ldr	r7, [r5, #0x64]
+       e: 3120         	adds	r1, #0x20
+      10: 2e39         	cmp	r6, #0x39
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 2e31         	cmp	r6, #0x31
+      14: 0035         	movs	r5, r6
+      16: 694c         	ldr	r4, [r1, #0x14]
+      18: 6b6e         	ldr	r6, [r5, #0x34]
+      1a: 7265         	strb	r5, [r4, #0x9]
+      1c: 203a         	movs	r0, #0x3a
+      1e: 4c4c         	ldr	r4, [pc, #0x130]        @ 0x150 <memset+0x4>
+      20: 2044         	movs	r0, #0x44
+      22: 3931         	subs	r1, #0x31
+      24: 312e         	adds	r1, #0x2e
+;             return (void*)-1;  // Return error if the heap is full
+      26: 352e         	adds	r5, #0x2e
+      28: 00           	<unknown>
+
+Disassembly of section .debug_info:
+
+00000000 <.debug_info>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 013e         	lsls	r6, r7, #0x4
+       2: 0000         	movs	r0, r0
+;     char* prev_heap_ptr = heap_ptr;
+       4: 0005         	movs	r5, r0
+       6: 0401         	lsls	r1, r0, #0x10
+       8: 0000         	movs	r0, r0
+;     if (increment > 0) {
+       a: 0000         	movs	r0, r0
+       c: 0001         	movs	r1, r0
+       e: 001d         	movs	r5, r3
+      10: 0801         	lsrs	r1, r0, #0x20
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 0000         	movs	r0, r0
+      14: 0000         	movs	r0, r0
+      16: 0000         	movs	r0, r0
+      18: 0200         	lsls	r0, r0, #0x8
+      1a: 3a01         	subs	r2, #0x1
+      1c: 0001         	movs	r1, r0
+      1e: 0800         	lsrs	r0, r0, #0x20
+      20: 0000         	movs	r0, r0
+      22: 0200         	lsls	r0, r0, #0x8
+      24: 2e03         	cmp	r6, #0x3
+;             return (void*)-1;  // Return error if the heap is full
+      26: 0000         	movs	r0, r0
+      28: 0100         	lsls	r0, r0, #0x4
+;         heap_ptr += increment;
+      2a: 0209         	lsls	r1, r1, #0x8
+      2c: 00a1         	lsls	r1, r4, #0x2
+      2e: 3303         	adds	r3, #0x3
+      30: 0000         	movs	r0, r0
+      32: 0400         	lsls	r0, r0, #0x10
+;     }
+      34: 0804         	lsrs	r4, r0, #0x20
+;     return (void*)prev_heap_ptr;
+      36: 0501         	lsls	r1, r0, #0x14
+      38: 0106         	lsls	r6, r0, #0x4
+      3a: 004c         	lsls	r4, r1, #0x1
+; }
+      3c: 0000         	movs	r0, r0
+      3e: 5701         	ldrsb	r1, [r0, r4]
+      40: 0105         	lsls	r5, r0, #0x4
+      42: 371a         	adds	r7, #0x1a
+      44: 0000         	movs	r0, r0
+      46: 0700         	lsls	r0, r0, #0x1c
+      48: 7d02         	ldrb	r2, [r0, #0x14]
+      4a: 0c04         	lsrs	r4, r0, #0x10
+; unsigned long long fibonacci(int n) {
+      4c: 1a01         	subs	r1, r0, r0
+      4e: 0125         	lsls	r5, r4, #0x4
+;     if (n <= 0) return 0;
+      50: 0000         	movs	r0, r0
+      52: 0208         	lsls	r0, r1, #0x8
+      54: 007d         	lsls	r5, r7, #0x1
+      56: 010e         	lsls	r6, r1, #0x4
+      58: 2e1b         	cmp	r6, #0x1b
+;     if (n <= 0) return 0;
+      5a: 0000         	movs	r0, r0
+      5c: 0000         	movs	r0, r0
+      5e: 0206         	lsls	r6, r0, #0x8
+;     if (n == 1) return 1;
+      60: 007e         	lsls	r6, r7, #0x1
+      62: 0000         	movs	r0, r0
+      64: 5701         	ldrsb	r1, [r0, r4]
+      66: 0206         	lsls	r6, r0, #0x8
+      68: 1d05         	adds	r5, r0, #0x4
+;     if (n == 1) return 1;
+      6a: 0001         	movs	r1, r0
+      6c: 0700         	lsls	r0, r0, #0x1c
+      6e: 7d02         	ldrb	r2, [r0, #0x14]
+      70: 0f24         	lsrs	r4, r4, #0x1c
+      72: 0502         	lsls	r2, r0, #0x14
+;     unsigned long long a = 0, b = 1, temp;
+      74: 0121         	lsls	r1, r4, #0x4
+      76: 0000         	movs	r0, r0
+      78: 0208         	lsls	r0, r1, #0x8
+      7a: 187d         	adds	r5, r7, r1
+      7c: 0210         	lsls	r0, r2, #0x8
+      7e: 1d09         	adds	r1, r1, #0x4
+;     for (int i = 2; i <= n; ++i) {
+      80: 0001         	movs	r1, r0
+      82: 0800         	lsrs	r0, r0, #0x20
+      84: 7d02         	ldrb	r2, [r0, #0x14]
+      86: 1110         	asrs	r0, r2, #0x4
+      88: 0902         	lsrs	r2, r0, #0x4
+      8a: 011d         	lsls	r5, r3, #0x4
+      8c: 0000         	movs	r0, r0
+;         temp = a + b;
+      8e: 0208         	lsls	r0, r1, #0x8
+      90: 087d         	lsrs	r5, r7, #0x1
+      92: 0212         	lsls	r2, r2, #0x8
+      94: 1d09         	adds	r1, r1, #0x4
+      96: 0001         	movs	r1, r0
+      98: 0900         	lsrs	r0, r0, #0x4
+      9a: 3803         	subs	r0, #0x3
+      9c: 0000         	movs	r0, r0
+;         a = b;
+      9e: 0800         	lsrs	r0, r0, #0x20
+      a0: 7d02         	ldrb	r2, [r0, #0x14]
+      a2: 1304         	asrs	r4, r0, #0xc
+      a4: 0a02         	lsrs	r2, r0, #0x8
+;         b = temp;
+      a6: 0121         	lsls	r1, r4, #0x4
+      a8: 0000         	movs	r0, r0
+      aa: 0000         	movs	r0, r0
+      ac: 040a         	lsls	r2, r1, #0x10
+;     }
+      ae: 0050         	lsls	r0, r2, #0x1
+;     for (int i = 2; i <= n; ++i) {
+      b0: 0000         	movs	r0, r0
+      b2: 5701         	ldrsb	r1, [r0, r4]
+      b4: 0208         	lsls	r0, r1, #0x8
+      b6: 2112         	movs	r1, #0x12
+;     return b;
+      b8: 0001         	movs	r1, r0
+      ba: 0800         	lsrs	r0, r0, #0x20
+      bc: 7d02         	ldrb	r2, [r0, #0x14]
+      be: 140c         	asrs	r4, r1, #0x10
+      c0: 1302         	asrs	r2, r0, #0xc
+; }
+      c2: 012d         	lsls	r5, r5, #0x4
+      c4: 0000         	movs	r0, r0
+      c6: 0509         	lsls	r1, r1, #0x14
+      c8: 0026         	movs	r6, r4
+; int main() {
+      ca: 0000         	movs	r0, r0
+      cc: 0208         	lsls	r0, r1, #0x8
+      ce: 087d         	lsrs	r5, r7, #0x1
+      d0: 0213         	lsls	r3, r2, #0x8
+      d2: 3914         	subs	r1, #0x14
+      d4: 0001         	movs	r1, r0
+      d6: 0000         	movs	r0, r0
+      d8: 0b00         	lsrs	r0, r0, #0xc
+      da: 1006         	asrs	r6, r0, #0x20
+; 	unsigned arr[N] = {0};
+      dc: 0000         	movs	r0, r0
+      de: 0100         	lsls	r0, r0, #0x4
+      e0: 0a57         	lsrs	r7, r2, #0x9
+; 	for (unsigned i = 0; i < N; i++) {
+      e2: 1501         	asrs	r1, r0, #0x14
+      e4: 0207         	lsls	r7, r0, #0x8
+      e6: 047d         	lsls	r5, r7, #0x11
+      e8: 010f         	lsls	r7, r1, #0x4
+      ea: 2115         	movs	r1, #0x15
+      ec: 0001         	movs	r1, r0
+; 		arr[i] = fibonacci(i + 1);
+      ee: 0800         	lsrs	r0, r0, #0x20
+      f0: 7d02         	ldrb	r2, [r0, #0x14]
+      f2: 1700         	asrs	r0, r0, #0x1c
+      f4: 1601         	asrs	r1, r0, #0x18
+      f6: 0121         	lsls	r1, r4, #0x4
+      f8: 0000         	movs	r0, r0
+      fa: 0b00         	lsrs	r0, r0, #0xc
+      fc: 1007         	asrs	r7, r0, #0x20
+; 	}
+      fe: 0000         	movs	r0, r0
+; 	for (unsigned i = 0; i < N; i++) {
+     100: 0100         	lsls	r0, r0, #0x4
+     102: 0b57         	lsrs	r7, r2, #0xd
+     104: 0b01         	lsrs	r1, r0, #0xc
+     106: 0207         	lsls	r7, r0, #0x8
+;     svc_putint(arr[N - 1]);
+     108: 047d         	lsls	r5, r7, #0x11
+     10a: 0118         	lsls	r0, r3, #0x4
+     10c: 390b         	subs	r1, #0xb
+     10e: 0001         	movs	r1, r0
+; 	svc_exit(0);
+     110: 0800         	lsrs	r0, r0, #0x20
+     112: 7d02         	ldrb	r2, [r0, #0x14]
+; }
+     114: 1700         	asrs	r0, r0, #0x1c
+     116: 0c01         	lsrs	r1, r0, #0x10
+     118: 0139         	lsls	r1, r7, #0x4
+; static inline void svc_putint(int n) {
+     11a: 0000         	movs	r0, r0
+     11c: 0400         	lsls	r0, r0, #0x10
+;      register int r0 __asm__("r0") = n;
+     11e: 0707         	lsls	r7, r0, #0x1c
+     120: 0408         	lsls	r0, r1, #0x10
+;      __asm volatile ("svc 3" :  : "r"(r0) : "memory");
+     122: 0509         	lsls	r1, r1, #0x14
+     124: 0c04         	lsrs	r4, r0, #0x10
+; }
+     126: 0121         	lsls	r1, r4, #0x4
+     128: 0000         	movs	r0, r0
+; static inline void svc_exit(unsigned code) {
+     12a: 030d         	lsls	r5, r1, #0xc
+     12c: 0d12         	lsrs	r2, r2, #0x14
+;     register unsigned r0 __asm__("r0") = code;
+     12e: 0139         	lsls	r1, r7, #0x4
+     130: 0000         	movs	r0, r0
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+     132: 3d0e         	subs	r5, #0xe
+     134: 0001         	movs	r1, r0
+; };
+     136: 6400         	str	r0, [r0, #0x40]
+     138: 0400         	lsls	r0, r0, #0x10
+     13a: 0715         	lsls	r5, r2, #0x1c
+     13c: 0f04         	lsrs	r4, r0, #0x1c
+     13e: 0816         	lsrs	r6, r2, #0x20
+     140: 0007         	movs	r7, r0
+     142: 004f         	lsls	r7, r1, #0x1
+     144: 0000         	movs	r0, r0
+     146: 0005         	movs	r5, r0
+     148: 0401         	lsls	r1, r0, #0x10
+     14a: 00cc         	lsls	r4, r1, #0x3
+     14c: 0000         	movs	r0, r0
+     14e: 0001         	movs	r1, r0
+     150: 001d         	movs	r5, r3
+     152: 7401         	strb	r1, [r0, #0x10]
+     154: 0000         	movs	r0, r0
+     156: cf00         	<unknown>
+     158: 0001         	movs	r1, r0
+     15a: 0200         	lsls	r0, r0, #0x8
+     15c: 0e00         	lsrs	r0, r0, #0x18
+     15e: 0000         	movs	r0, r0
+     160: 3000         	adds	r0, #0x0
+     162: 0000         	movs	r0, r0
+     164: 0c00         	lsrs	r0, r0, #0x10
+     166: 0000         	movs	r0, r0
+     168: 0200         	lsls	r0, r0, #0x8
+     16a: 0e00         	lsrs	r0, r0, #0x18
+     16c: 0000         	movs	r0, r0
+     16e: 0100         	lsls	r0, r0, #0x4
+     170: 0357         	lsls	r7, r2, #0xd
+     172: 3101         	adds	r1, #0x1
+     174: 0003         	movs	r3, r0
+     176: 0104         	lsls	r4, r0, #0x4
+     178: 4531         	cmp	r1, r6
+     17a: 0000         	movs	r0, r0
+     17c: 0300         	lsls	r0, r0, #0xc
+     17e: 0501         	lsls	r1, r0, #0x14
+     180: 3101         	adds	r1, #0x1
+     182: 0046         	lsls	r6, r0, #0x1
+     184: 0000         	movs	r0, r0
+     186: 0400         	lsls	r0, r0, #0x10
+     188: 4e05         	ldr	r6, [pc, #0x14]         @ 0x1a0 <.debug_info+0x1a0>
+     18a: 0000         	movs	r0, r0
+     18c: 0700         	lsls	r0, r0, #0x1c
+     18e: 1202         	asrs	r2, r0, #0x8
+     190: 0606         	lsls	r6, r0, #0x18
+     192: 0407         	lsls	r7, r0, #0x10
+     194: 7400         	strb	r0, [r0, #0x10]
+     196: 0000         	movs	r0, r0
+     198: 0500         	lsls	r0, r0, #0x14
+     19a: 0100         	lsls	r0, r0, #0x4
+     19c: 2a04         	cmp	r2, #0x4
+     19e: 0001         	movs	r1, r0
+     1a0: 0100         	lsls	r0, r0, #0x4
+     1a2: 1d00         	adds	r0, r0, #0x4
+     1a4: 0100         	lsls	r0, r0, #0x4
+     1a6: 009c         	lsls	r4, r3, #0x2
+     1a8: 0000         	movs	r0, r0
+     1aa: 025b         	lsls	r3, r3, #0x9
+     1ac: 0000         	movs	r0, r0
+     1ae: 0002         	movs	r2, r0
+     1b0: 000e         	movs	r6, r1
+     1b2: 0000         	movs	r0, r0
+     1b4: 003c         	movs	r4, r7
+     1b6: 0000         	movs	r0, r0
+     1b8: 0039         	movs	r1, r7
+     1ba: 0000         	movs	r0, r0
+     1bc: 2c02         	cmp	r4, #0x2
+     1be: 0000         	movs	r0, r0
+     1c0: 0300         	lsls	r0, r0, #0xc
+     1c2: 0803         	lsrs	r3, r0, #0x20
+     1c4: 0401         	lsls	r1, r0, #0x10
+     1c6: 0e00         	lsrs	r0, r0, #0x18
+     1c8: 0000         	movs	r0, r0
+     1ca: 0100         	lsls	r0, r0, #0x4
+     1cc: 0457         	lsls	r7, r2, #0x11
+     1ce: 3901         	subs	r1, #0x1
+     1d0: 0066         	lsls	r6, r4, #0x1
+     1d2: 0000         	movs	r0, r0
+     1d4: 0105         	lsls	r5, r0, #0x4
+     1d6: 0550         	lsls	r0, r2, #0x15
+     1d8: 3901         	subs	r1, #0x1
+     1da: 0066         	lsls	r6, r4, #0x1
+     1dc: 0000         	movs	r0, r0
+     1de: 0105         	lsls	r5, r0, #0x4
+     1e0: 0651         	lsls	r1, r2, #0x19
+     1e2: 3a01         	subs	r2, #0x1
+     1e4: 0067         	lsls	r7, r4, #0x1
+     1e6: 0000         	movs	r0, r0
+     1e8: 0006         	movs	r6, r0
+     1ea: 0108         	lsls	r0, r1, #0x4
+     1ec: 6b3b         	ldr	r3, [r7, #0x30]
+     1ee: 0000         	movs	r0, r0
+     1f0: 0700         	lsls	r0, r0, #0x1c
+     1f2: 0b01         	lsrs	r1, r0, #0xc
+     1f4: 3d01         	subs	r5, #0x1
+     1f6: 0027         	movs	r7, r4
+     1f8: 0000         	movs	r0, r0
+     1fa: 0800         	lsrs	r0, r0, #0x20
+     1fc: 0703         	lsls	r3, r0, #0x1c
+     1fe: 0405         	lsls	r5, r0, #0x10
+     200: 7309         	strb	r1, [r1, #0xc]
+     202: 0000         	movs	r0, r0
+     204: 0a00         	lsrs	r0, r0, #0x8
+     206: 1202         	asrs	r2, r0, #0x8
+     208: 0903         	lsrs	r3, r0, #0x4
+     20a: 0407         	lsls	r7, r0, #0x10
+     20c: 00           	<unknown>
+
+Disassembly of section .debug_abbrev:
+
+00000000 <.debug_abbrev>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 1101         	asrs	r1, r0, #0x4
+       2: 2501         	movs	r5, #0x1
+;     char* prev_heap_ptr = heap_ptr;
+       4: 1325         	asrs	r5, r4, #0xc
+       6: 0305         	lsls	r5, r0, #0xc
+       8: 7225         	strb	r5, [r4, #0x8]
+;     if (increment > 0) {
+       a: 1017         	asrs	r7, r2, #0x20
+       c: 1b17         	subs	r7, r2, r4
+       e: 1125         	asrs	r5, r4, #0x4
+      10: 121b         	asrs	r3, r3, #0x8
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 7306         	strb	r6, [r0, #0xc]
+      14: 0017         	movs	r7, r2
+      16: 0200         	lsls	r0, r0, #0x8
+      18: 0034         	movs	r4, r6
+      1a: 2503         	movs	r5, #0x3
+      1c: 1349         	asrs	r1, r1, #0xd
+      1e: 0b3a         	lsrs	r2, r7, #0xc
+      20: 0b3b         	lsrs	r3, r7, #0xc
+      22: 1802         	adds	r2, r0, r0
+      24: 0000         	movs	r0, r0
+;             return (void*)-1;  // Return error if the heap is full
+      26: 0f03         	lsrs	r3, r0, #0x1c
+      28: 4900         	ldr	r1, [pc, #0x0]          @ 0x2c <.debug_info+0x2c>
+;         heap_ptr += increment;
+      2a: 0013         	movs	r3, r2
+      2c: 0400         	lsls	r0, r0, #0x10
+      2e: 0024         	movs	r4, r4
+      30: 2503         	movs	r5, #0x3
+      32: 0b3e         	lsrs	r6, r7, #0xc
+;     }
+      34: 0b0b         	lsrs	r3, r1, #0xc
+;     return (void*)prev_heap_ptr;
+      36: 0000         	movs	r0, r0
+      38: 0f05         	lsrs	r5, r0, #0x1c
+      3a: 0000         	movs	r0, r0
+; }
+      3c: 0600         	lsls	r0, r0, #0x18
+      3e: 012e         	lsls	r6, r5, #0x4
+      40: 1b11         	subs	r1, r2, r4
+      42: 0612         	lsls	r2, r2, #0x18
+      44: 1840         	adds	r0, r0, r1
+      46: 2503         	movs	r5, #0x3
+      48: 0b3a         	lsrs	r2, r7, #0xc
+      4a: 0b3b         	lsrs	r3, r7, #0xc
+; unsigned long long fibonacci(int n) {
+      4c: 1927         	adds	r7, r4, r4
+      4e: 1349         	asrs	r1, r1, #0xd
+;     if (n <= 0) return 0;
+      50: 193f         	adds	r7, r7, r4
+      52: 0000         	movs	r0, r0
+      54: 0507         	lsls	r7, r0, #0x14
+      56: 0200         	lsls	r0, r0, #0x8
+      58: 0318         	lsls	r0, r3, #0xc
+;     if (n <= 0) return 0;
+      5a: 3a25         	subs	r2, #0x25
+      5c: 3b0b         	subs	r3, #0xb
+      5e: 490b         	ldr	r1, [pc, #0x2c]         @ 0x8c <.debug_info+0x8c>
+;     if (n == 1) return 1;
+      60: 0013         	movs	r3, r2
+      62: 0800         	lsrs	r0, r0, #0x20
+      64: 0034         	movs	r4, r6
+      66: 1802         	adds	r2, r0, r0
+      68: 2503         	movs	r5, #0x3
+;     if (n == 1) return 1;
+      6a: 0b3a         	lsrs	r2, r7, #0xc
+      6c: 0b3b         	lsrs	r3, r7, #0xc
+      6e: 1349         	asrs	r1, r1, #0xd
+      70: 0000         	movs	r0, r0
+      72: 0b09         	lsrs	r1, r1, #0xc
+;     unsigned long long a = 0, b = 1, temp;
+      74: 1101         	asrs	r1, r0, #0x4
+      76: 121b         	asrs	r3, r3, #0x8
+      78: 0006         	movs	r6, r0
+      7a: 0a00         	lsrs	r0, r0, #0x8
+      7c: 012e         	lsls	r6, r5, #0x4
+      7e: 1b11         	subs	r1, r2, r4
+;     for (int i = 2; i <= n; ++i) {
+      80: 0612         	lsls	r2, r2, #0x18
+      82: 1840         	adds	r0, r0, r1
+      84: 2503         	movs	r5, #0x3
+      86: 0b3a         	lsrs	r2, r7, #0xc
+      88: 0b3b         	lsrs	r3, r7, #0xc
+      8a: 1349         	asrs	r1, r1, #0xd
+      8c: 193f         	adds	r7, r7, r4
+;         temp = a + b;
+      8e: 0000         	movs	r0, r0
+      90: 2e0b         	cmp	r6, #0xb
+      92: 1101         	asrs	r1, r0, #0x4
+      94: 121b         	asrs	r3, r3, #0x8
+      96: 4006         	ands	r6, r0
+      98: 0318         	lsls	r0, r3, #0xc
+      9a: 3a25         	subs	r2, #0x25
+      9c: 3b0b         	subs	r3, #0xb
+;         a = b;
+      9e: 270b         	movs	r7, #0xb
+      a0: 0019         	movs	r1, r3
+      a2: 0c00         	lsrs	r0, r0, #0x10
+      a4: 0016         	movs	r6, r2
+;         b = temp;
+      a6: 1349         	asrs	r1, r1, #0xd
+      a8: 2503         	movs	r5, #0x3
+      aa: 0b3a         	lsrs	r2, r7, #0xc
+      ac: 0b3b         	lsrs	r3, r7, #0xc
+;     }
+      ae: 0000         	movs	r0, r0
+;     for (int i = 2; i <= n; ++i) {
+      b0: 010d         	lsls	r5, r1, #0x4
+      b2: 4901         	ldr	r1, [pc, #0x4]          @ 0xb8 <.debug_info+0xb8>
+      b4: 0013         	movs	r3, r2
+      b6: 0e00         	lsrs	r0, r0, #0x18
+;     return b;
+      b8: 0021         	movs	r1, r4
+      ba: 1349         	asrs	r1, r1, #0xd
+      bc: 0b37         	lsrs	r7, r6, #0xc
+      be: 0000         	movs	r0, r0
+      c0: 240f         	movs	r4, #0xf
+; }
+      c2: 0300         	lsls	r0, r0, #0xc
+      c4: 0b25         	lsrs	r5, r4, #0xc
+      c6: 3e0b         	subs	r6, #0xb
+      c8: 000b         	movs	r3, r1
+; int main() {
+      ca: 0000         	movs	r0, r0
+      cc: 1101         	asrs	r1, r0, #0x4
+      ce: 2501         	movs	r5, #0x1
+      d0: 1325         	asrs	r5, r4, #0xc
+      d2: 0305         	lsls	r5, r0, #0xc
+      d4: 7225         	strb	r5, [r4, #0x8]
+      d6: 1017         	asrs	r7, r2, #0x20
+      d8: 1b17         	subs	r7, r2, r4
+      da: 1125         	asrs	r5, r4, #0x4
+; 	unsigned arr[N] = {0};
+      dc: 121b         	asrs	r3, r3, #0x8
+      de: 7306         	strb	r6, [r0, #0xc]
+      e0: 8c17         	ldrh	r7, [r2, #0x20]
+; 	for (unsigned i = 0; i < N; i++) {
+      e2: 1701         	asrs	r1, r0, #0x1c
+      e4: 0000         	movs	r0, r0
+      e6: 2e02         	cmp	r6, #0x2
+      e8: 1101         	asrs	r1, r0, #0x4
+      ea: 121b         	asrs	r3, r3, #0x8
+      ec: 4006         	ands	r6, r0
+; 		arr[i] = fibonacci(i + 1);
+      ee: 7a18         	ldrb	r0, [r3, #0x8]
+      f0: 0319         	lsls	r1, r3, #0xc
+      f2: 3a25         	subs	r2, #0x25
+      f4: 3b0b         	subs	r3, #0xb
+      f6: 270b         	movs	r7, #0xb
+      f8: 3f19         	subs	r7, #0x19
+      fa: 0019         	movs	r1, r3
+      fc: 0300         	lsls	r0, r0, #0xc
+; 	}
+      fe: 0005         	movs	r5, r0
+; 	for (unsigned i = 0; i < N; i++) {
+     100: 2202         	movs	r2, #0x2
+     102: 2503         	movs	r5, #0x3
+     104: 0b3a         	lsrs	r2, r7, #0xc
+     106: 0b3b         	lsrs	r3, r7, #0xc
+;     svc_putint(arr[N - 1]);
+     108: 1349         	asrs	r1, r1, #0xd
+     10a: 0000         	movs	r0, r0
+     10c: 0f04         	lsrs	r4, r0, #0x1c
+     10e: 0000         	movs	r0, r0
+; 	svc_exit(0);
+     110: 0500         	lsls	r0, r0, #0x14
+     112: 0016         	movs	r6, r2
+; }
+     114: 1349         	asrs	r1, r1, #0xd
+     116: 2503         	movs	r5, #0x3
+     118: 0b3a         	lsrs	r2, r7, #0xc
+; static inline void svc_putint(int n) {
+     11a: 0b3b         	lsrs	r3, r7, #0xc
+     11c: 0000         	movs	r0, r0
+;      register int r0 __asm__("r0") = n;
+     11e: 2406         	movs	r4, #0x6
+     120: 0300         	lsls	r0, r0, #0xc
+;      __asm volatile ("svc 3" :  : "r"(r0) : "memory");
+     122: 3e25         	subs	r6, #0x25
+     124: 0b0b         	lsrs	r3, r1, #0xc
+; }
+     126: 000b         	movs	r3, r1
+     128: 0000         	movs	r0, r0
+; static inline void svc_exit(unsigned code) {
+     12a: 1101         	asrs	r1, r0, #0x4
+     12c: 2501         	movs	r5, #0x1
+;     register unsigned r0 __asm__("r0") = code;
+     12e: 1325         	asrs	r5, r4, #0xc
+     130: 0305         	lsls	r5, r0, #0xc
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+     132: 7225         	strb	r5, [r4, #0x8]
+     134: 1017         	asrs	r7, r2, #0x20
+; };
+     136: 1b17         	subs	r7, r2, r4
+     138: 1125         	asrs	r5, r4, #0x4
+     13a: 121b         	asrs	r3, r3, #0x8
+     13c: 7306         	strb	r6, [r0, #0xc]
+     13e: 8c17         	ldrh	r7, [r2, #0x20]
+     140: 1701         	asrs	r1, r0, #0x1c
+     142: 0000         	movs	r0, r0
+     144: 0f02         	lsrs	r2, r0, #0x1c
+     146: 4900         	ldr	r1, [pc, #0x0]          @ 0x148 <.debug_info+0x148>
+     148: 0013         	movs	r3, r2
+     14a: 0300         	lsls	r0, r0, #0xc
+     14c: 0024         	movs	r4, r4
+     14e: 2503         	movs	r5, #0x3
+     150: 0b3e         	lsrs	r6, r7, #0xc
+     152: 0b0b         	lsrs	r3, r1, #0xc
+     154: 0000         	movs	r0, r0
+     156: 2e04         	cmp	r6, #0x4
+     158: 1101         	asrs	r1, r0, #0x4
+     15a: 121b         	asrs	r3, r3, #0x8
+     15c: 4006         	ands	r6, r0
+     15e: 7a18         	ldrb	r0, [r3, #0x8]
+     160: 0319         	lsls	r1, r3, #0xc
+     162: 3a25         	subs	r2, #0x25
+     164: 3b0b         	subs	r3, #0xb
+     166: 270b         	movs	r7, #0xb
+     168: 4919         	ldr	r1, [pc, #0x64]         @ 0x1d0 <.debug_info+0x1d0>
+     16a: 3f13         	subs	r7, #0x13
+     16c: 0019         	movs	r1, r3
+     16e: 0500         	lsls	r0, r0, #0x14
+     170: 0005         	movs	r5, r0
+     172: 1802         	adds	r2, r0, r0
+     174: 2503         	movs	r5, #0x3
+     176: 0b3a         	lsrs	r2, r7, #0xc
+     178: 0b3b         	lsrs	r3, r7, #0xc
+     17a: 1349         	asrs	r1, r1, #0xd
+     17c: 0000         	movs	r0, r0
+     17e: 0506         	lsls	r6, r0, #0x14
+     180: 0200         	lsls	r0, r0, #0x8
+     182: 0322         	lsls	r2, r4, #0xc
+     184: 3a25         	subs	r2, #0x25
+     186: 3b0b         	subs	r3, #0xb
+     188: 490b         	ldr	r1, [pc, #0x2c]         @ 0x1b8 <.debug_info+0x1b8>
+     18a: 0013         	movs	r3, r2
+     18c: 0700         	lsls	r0, r0, #0x1c
+     18e: 0034         	movs	r4, r6
+     190: 2202         	movs	r2, #0x2
+     192: 2503         	movs	r5, #0x3
+     194: 0b3a         	lsrs	r2, r7, #0xc
+     196: 0b3b         	lsrs	r3, r7, #0xc
+     198: 1349         	asrs	r1, r1, #0xd
+     19a: 0000         	movs	r0, r0
+     19c: 0f08         	lsrs	r0, r1, #0x1c
+     19e: 0000         	movs	r0, r0
+     1a0: 0900         	lsrs	r0, r0, #0x4
+     1a2: 0016         	movs	r6, r2
+     1a4: 1349         	asrs	r1, r1, #0xd
+     1a6: 2503         	movs	r5, #0x3
+     1a8: 0b3a         	lsrs	r2, r7, #0xc
+     1aa: 0b3b         	lsrs	r3, r7, #0xc
+     1ac: 0000         	movs	r0, r0
+     1ae: 00           	<unknown>
+
+Disassembly of section .debug_line:
+
+00000000 <.debug_line>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 01cb         	lsls	r3, r1, #0x7
+       2: 0000         	movs	r0, r0
+;     char* prev_heap_ptr = heap_ptr;
+       4: 0005         	movs	r5, r0
+       6: 0004         	movs	r4, r0
+       8: 0082         	lsls	r2, r0, #0x2
+;     if (increment > 0) {
+       a: 0000         	movs	r0, r0
+       c: 0101         	lsls	r1, r0, #0x4
+       e: fb01 0d0e    	<unknown>
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 0100         	lsls	r0, r0, #0x4
+      14: 0101         	lsls	r1, r0, #0x4
+      16: 0001         	movs	r1, r0
+      18: 0000         	movs	r0, r0
+      1a: 0001         	movs	r1, r0
+      1c: 0100         	lsls	r0, r0, #0x4
+      1e: 0101         	lsls	r1, r0, #0x4
+      20: 041f         	lsls	r7, r3, #0x10
+      22: 0249         	lsls	r1, r1, #0x9
+      24: 0000         	movs	r0, r0
+;             return (void*)-1;  // Return error if the heap is full
+      26: 0000         	movs	r0, r0
+      28: 0000         	movs	r0, r0
+;         heap_ptr += increment;
+      2a: 0091         	lsls	r1, r2, #0x2
+      2c: 0000         	movs	r0, r0
+      2e: 0273         	lsls	r3, r6, #0x9
+      30: 0000         	movs	r0, r0
+      32: 0103         	lsls	r3, r0, #0x4
+;     }
+      34: 021f         	lsls	r7, r3, #0x8
+;     return (void*)prev_heap_ptr;
+      36: 050f         	lsls	r7, r1, #0x14
+      38: 041e         	lsls	r6, r3, #0x10
+      3a: 00e5         	lsls	r5, r4, #0x3
+; }
+      3c: 0000         	movs	r0, r0
+      3e: f400 3cb2    	<unknown>
+      42: 3ce3         	subs	r4, #0xe3
+      44: 3099         	adds	r0, #0x99
+      46: b91e         	<unknown>
+      48: 8775         	strh	r5, [r6, #0x3a]
+      4a: f18e 348a    	<unknown>
+; unsigned long long fibonacci(int n) {
+      4e: 8278         	strh	r0, [r7, #0x12]
+;     if (n <= 0) return 0;
+      50: 0002         	movs	r2, r0
+      52: 0100         	lsls	r0, r0, #0x4
+      54: b4f9         	push	{r0, r3, r4, r5, r6, r7}
+      56: 5110         	str	r0, [r2, r4]
+      58: 81db         	strh	r3, [r3, #0xe]
+;     if (n <= 0) return 0;
+      5a: 6976         	ldr	r6, [r6, #0x14]
+      5c: a991         	add	r1, sp, #0x244
+      5e: 3f64         	subs	r7, #0x64
+;     if (n == 1) return 1;
+      60: d53e         	bpl	0xe0 <.debug_line+0xe0> @ imm = #0x7c
+      62: 01a9         	lsls	r1, r5, #0x6
+      64: 028d         	lsls	r5, r1, #0xa
+      66: 0000         	movs	r0, r0
+      68: f402 3cb2    	<unknown>
+;     if (n == 1) return 1;
+      6c: 3ce3         	subs	r4, #0xe3
+      6e: 3099         	adds	r0, #0x99
+      70: b91e         	<unknown>
+      72: 8775         	strh	r5, [r6, #0x3a]
+;     unsigned long long a = 0, b = 1, temp;
+      74: f18e 348a    	<unknown>
+      78: 1f78         	subs	r0, r7, #0x5
+      7a: 0000         	movs	r0, r0
+      7c: 0300         	lsls	r0, r0, #0xc
+      7e: d32e         	blo	0xde <.debug_line+0xde> @ imm = #0x5c
+;     for (int i = 2; i <= n; ++i) {
+      80: 8947         	ldrh	r7, [r0, #0xa]
+      82: 3e38         	subs	r6, #0x38
+      84: e3a7         	b	0x7d6 <.debug_line+0x7d6> @ imm = #0x74e
+      86: d5a1         	bpl	0xffffffcc <.stack+0xffffffffdff7ffc4> @ imm = #-0xbe
+      88: 0f88         	lsrs	r0, r1, #0x1e
+      8a: c60f         	stm	r6!, {r0, r1, r2, r3}
+      8c: 7197         	strb	r7, [r2, #0x6]
+;         temp = a + b;
+      8e: 0500         	lsls	r0, r0, #0x14
+      90: 0002         	movs	r2, r0
+      92: 0000         	movs	r0, r0
+      94: 0300         	lsls	r0, r0, #0xc
+      96: 0119         	lsls	r1, r3, #0x4
+      98: 1b05         	subs	r5, r0, r4
+      9a: 4b0a         	ldr	r3, [pc, #0x28]         @ 0xc4 <.debug_line+0xc4>
+      9c: 0b05         	lsrs	r5, r0, #0xc
+;         a = b;
+      9e: 4a06         	ldr	r2, [pc, #0x18]         @ 0xb8 <.debug_line+0xb8>
+      a0: 0905         	lsrs	r5, r0, #0x4
+      a2: 3106         	adds	r1, #0x6
+      a4: 2e06         	cmp	r6, #0x6
+;         b = temp;
+      a6: 0d05         	lsrs	r5, r0, #0x14
+      a8: 6806         	ldr	r6, [r0]
+      aa: 1805         	adds	r5, r0, r0
+      ac: 4a06         	ldr	r2, [pc, #0x18]         @ 0xc8 <.debug_line+0xc8>
+;     }
+      ae: 1605         	asrs	r5, r0, #0x18
+;     for (int i = 2; i <= n; ++i) {
+      b0: 052e         	lsls	r6, r5, #0x14
+      b2: 2e22         	cmp	r6, #0x22
+      b4: 0d05         	lsrs	r5, r0, #0x14
+      b6: 032e         	lsls	r6, r5, #0xc
+;     return b;
+      b8: 6660         	str	r0, [r4, #0x64]
+      ba: 0306         	lsls	r6, r0, #0xc
+      bc: 4a21         	ldr	r2, [pc, #0x84]         @ 0x144 <.debug_line+0x144>
+      be: 1505         	asrs	r5, r0, #0x14
+      c0: 054e         	lsls	r6, r1, #0x15
+; }
+      c2: 0612         	lsls	r2, r2, #0x18
+      c4: 052e         	lsls	r6, r5, #0x14
+      c6: 0605         	lsls	r5, r0, #0x18
+      c8: 0583         	lsls	r3, r0, #0x16
+; int main() {
+      ca: 3113         	adds	r1, #0x13
+      cc: 0505         	lsls	r5, r0, #0x14
+      ce: 2e06         	cmp	r6, #0x6
+      d0: 0105         	lsls	r5, r0, #0x4
+      d2: 4b06         	ldr	r3, [pc, #0x18]         @ 0xec <.debug_line+0xec>
+      d4: 0b06         	lsrs	r6, r0, #0xc
+      d6: 032e         	lsls	r6, r5, #0xc
+      d8: 6656         	str	r6, [r2, #0x64]
+      da: 0204         	lsls	r4, r0, #0x8
+; 	unsigned arr[N] = {0};
+      dc: 0005         	movs	r5, r0
+      de: 8706         	strh	r6, [r0, #0x38]
+      e0: 0905         	lsrs	r5, r0, #0x4
+; 	for (unsigned i = 0; i < N; i++) {
+      e2: 4b0a         	ldr	r3, [pc, #0x28]         @ 0x10c <.debug_line+0x10c>
+      e4: 2e06         	cmp	r6, #0x6
+      e6: 7a03         	ldrb	r3, [r0, #0x8]
+      e8: 0566         	lsls	r6, r4, #0x15
+      ea: 3411         	adds	r4, #0x11
+      ec: 0905         	lsrs	r5, r0, #0x4
+; 		arr[i] = fibonacci(i + 1);
+      ee: 6706         	str	r6, [r0, #0x70]
+      f0: 2e06         	cmp	r6, #0x6
+      f2: 7903         	ldrb	r3, [r0, #0x4]
+      f4: 0566         	lsls	r6, r4, #0x15
+      f6: 3511         	adds	r5, #0x11
+      f8: 7903         	ldrb	r3, [r0, #0x4]
+      fa: 0582         	lsls	r2, r0, #0x16
+      fc: 0618         	lsls	r0, r3, #0x18
+; 	}
+      fe: 0903         	lsrs	r3, r0, #0x4
+; 	for (unsigned i = 0; i < N; i++) {
+     100: 052e         	lsls	r6, r5, #0x14
+     102: 061f         	lsls	r7, r3, #0x18
+     104: 054a         	lsls	r2, r1, #0x15
+     106: 060e         	lsls	r6, r1, #0x18
+;     svc_putint(arr[N - 1]);
+     108: 0583         	lsls	r3, r0, #0x16
+     10a: 060a         	lsls	r2, r1, #0x18
+     10c: 052e         	lsls	r6, r5, #0x14
+     10e: 2e15         	cmp	r6, #0x15
+; 	svc_exit(0);
+     110: 1a05         	subs	r5, r0, r0
+     112: 052e         	lsls	r6, r5, #0x14
+; }
+     114: 2e05         	cmp	r6, #0x5
+     116: 1005         	asrs	r5, r0, #0x20
+     118: 6706         	str	r6, [r0, #0x70]
+; static inline void svc_putint(int n) {
+     11a: 1405         	asrs	r5, r0, #0x10
+     11c: 4a06         	ldr	r2, [pc, #0x18]         @ 0x138 <.debug_line+0x138>
+;      register int r0 __asm__("r0") = n;
+     11e: 1205         	asrs	r5, r0, #0x8
+     120: 054a         	lsls	r2, r1, #0x15
+;      __asm volatile ("svc 3" :  : "r"(r0) : "memory");
+     122: 4a0e         	ldr	r2, [pc, #0x38]         @ 0x15c <.debug_line+0x15c>
+     124: 0d05         	lsrs	r5, r0, #0x14
+; }
+     126: 4b06         	ldr	r3, [pc, #0x18]         @ 0x140 <.debug_line+0x140>
+     128: 0b05         	lsrs	r5, r0, #0xc
+; static inline void svc_exit(unsigned code) {
+     12a: 4a06         	ldr	r2, [pc, #0x18]         @ 0x144 <.debug_line+0x144>
+     12c: 0d05         	lsrs	r5, r0, #0x14
+;     register unsigned r0 __asm__("r0") = code;
+     12e: 4b06         	ldr	r3, [pc, #0x18]         @ 0x148 <.debug_line+0x148>
+     130: 0b05         	lsrs	r5, r0, #0xc
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+     132: 4a06         	ldr	r2, [pc, #0x18]         @ 0x14c <.debug_line+0x14c>
+     134: 0505         	lsls	r5, r0, #0x14
+; };
+     136: 4b06         	ldr	r3, [pc, #0x18]         @ 0x150 <.debug_line+0x150>
+     138: 1d05         	adds	r5, r0, #0x4
+     13a: 052a         	lsls	r2, r5, #0x14
+     13c: 0605         	lsls	r5, r0, #0x18
+     13e: 0566         	lsls	r6, r4, #0x15
+     140: 060c         	lsls	r4, r1, #0x18
+     142: 0533         	lsls	r3, r6, #0x14
+     144: 0605         	lsls	r5, r0, #0x18
+     146: 054a         	lsls	r2, r1, #0x15
+     148: 0601         	lsls	r1, r0, #0x18
+     14a: 0667         	lsls	r7, r4, #0x19
+     14c: 4a0b         	ldr	r2, [pc, #0x2c]         @ 0x17c <.debug_line+0x17c>
+     14e: 0005         	movs	r5, r0
+     150: 4c06         	ldr	r4, [pc, #0x18]         @ 0x16c <.debug_line+0x16c>
+     152: 0b05         	lsrs	r5, r0, #0xc
+     154: 080a         	lsrs	r2, r1, #0x20
+     156: 0521         	lsls	r1, r4, #0x14
+     158: 6710         	str	r0, [r2, #0x70]
+     15a: 0705         	lsls	r5, r0, #0x1c
+     15c: 2e06         	cmp	r6, #0x6
+     15e: 1705         	asrs	r5, r0, #0x1c
+     160: 052e         	lsls	r6, r5, #0x14
+     162: 2e02         	cmp	r6, #0x2
+     164: 1605         	asrs	r5, r0, #0x18
+     166: 6706         	str	r6, [r0, #0x70]
+     168: 1805         	adds	r5, r0, r0
+     16a: 2e06         	cmp	r6, #0x6
+     16c: 0c05         	lsrs	r5, r0, #0x10
+     16e: 052e         	lsls	r6, r5, #0x14
+     170: 4a07         	ldr	r2, [pc, #0x1c]         @ 0x190 <.debug_line+0x190>
+     172: 0305         	lsls	r5, r0, #0xc
+     174: 052e         	lsls	r6, r5, #0x14
+     176: 4a0a         	ldr	r2, [pc, #0x28]         @ 0x1a0 <.debug_line+0x1a0>
+     178: 0205         	lsls	r5, r0, #0x8
+     17a: 2f06         	cmp	r7, #0x6
+     17c: 1f05         	subs	r5, r0, #0x4
+     17e: 052c         	lsls	r4, r5, #0x14
+     180: 0602         	lsls	r2, r0, #0x18
+     182: 0566         	lsls	r6, r4, #0x15
+     184: 0610         	lsls	r0, r2, #0x18
+     186: 0532         	lsls	r2, r6, #0x14
+     188: 0605         	lsls	r5, r0, #0x18
+     18a: 052e         	lsls	r6, r5, #0x14
+     18c: 0602         	lsls	r2, r0, #0x18
+     18e: 0567         	lsls	r7, r4, #0x15
+     190: 4b01         	ldr	r3, [pc, #0x4]          @ 0x198 <.debug_line+0x198>
+     192: 0b06         	lsrs	r6, r0, #0xc
+     194: 042e         	lsls	r6, r5, #0x10
+     196: 0501         	lsls	r1, r0, #0x14
+     198: 0600         	lsls	r0, r0, #0x18
+     19a: 0545         	lsls	r5, r0, #0x15
+     19c: 0a26         	lsrs	r6, r4, #0x8
+     19e: 054b         	lsls	r3, r1, #0x15
+     1a0: 0613         	lsls	r3, r2, #0x18
+     1a2: 052e         	lsls	r6, r5, #0x14
+     1a4: 0627         	lsls	r7, r4, #0x18
+     1a6: 052f         	lsls	r7, r5, #0x14
+     1a8: 0606         	lsls	r6, r0, #0x18
+     1aa: 052e         	lsls	r6, r5, #0x14
+     1ac: 0601         	lsls	r1, r0, #0x18
+     1ae: 2f0b         	cmp	r7, #0xb
+     1b0: 0005         	movs	r5, r0
+     1b2: 7303         	strb	r3, [r0, #0xc]
+     1b4: 054a         	lsls	r2, r1, #0x15
+     1b6: 0a2a         	lsrs	r2, r5, #0x8
+     1b8: 054b         	lsls	r3, r1, #0x15
+     1ba: 0617         	lsls	r7, r2, #0x18
+     1bc: 052e         	lsls	r6, r5, #0x14
+     1be: 0626         	lsls	r6, r4, #0x18
+     1c0: 052f         	lsls	r7, r5, #0x14
+     1c2: 0605         	lsls	r5, r0, #0x18
+     1c4: 052e         	lsls	r6, r5, #0x14
+     1c6: 0601         	lsls	r1, r0, #0x18
+     1c8: 2f0b         	cmp	r7, #0xb
+     1ca: 0402         	lsls	r2, r0, #0x10
+     1cc: 0100         	lsls	r0, r0, #0x4
+     1ce: 8801         	ldrh	r1, [r0]
+     1d0: 0000         	movs	r0, r0
+     1d2: 0500         	lsls	r0, r0, #0x14
+     1d4: 0400         	lsls	r0, r0, #0x10
+     1d6: 6900         	ldr	r0, [r0, #0x10]
+     1d8: 0000         	movs	r0, r0
+     1da: 0100         	lsls	r0, r0, #0x4
+     1dc: 0101         	lsls	r1, r0, #0x4
+     1de: 0efb         	lsrs	r3, r7, #0x1b
+     1e0: 000d         	movs	r5, r1
+     1e2: 0101         	lsls	r1, r0, #0x4
+     1e4: 0101         	lsls	r1, r0, #0x4
+     1e6: 0000         	movs	r0, r0
+     1e8: 0100         	lsls	r0, r0, #0x4
+     1ea: 0000         	movs	r0, r0
+     1ec: 0101         	lsls	r1, r0, #0x4
+     1ee: 1f01         	subs	r1, r0, #0x4
+     1f0: b003         	add	sp, #0xc
+     1f2: 0001         	movs	r1, r0
+     1f4: 3300         	adds	r3, #0x0
+     1f6: 0001         	movs	r1, r0
+     1f8: 9c00         	ldr	r4, [sp]
+     1fa: 0000         	movs	r0, r0
+     1fc: 0300         	lsls	r0, r0, #0xc
+     1fe: 1f01         	subs	r1, r0, #0x4
+     200: 0f02         	lsrs	r2, r0, #0x1c
+     202: 1e05         	subs	r5, r0, #0x0
+     204: 7403         	strb	r3, [r0, #0x10]
+     206: 0001         	movs	r1, r0
+     208: 0000         	movs	r0, r0
+     20a: 83e0         	strh	r0, [r4, #0x1e]
+     20c: f382 5f7e    	<unknown>
+     210: b00b         	add	sp, #0x2c
+     212: 915a         	str	r1, [sp, #0x168]
+     214: 1395         	asrs	r5, r2, #0xe
+     216: 2512         	movs	r5, #0x12
+     218: e003         	b	0x222 <.debug_line+0x222> @ imm = #0x6
+     21a: 0017         	movs	r7, r2
+     21c: 0000         	movs	r0, r0
+     21e: 9d01         	ldr	r5, [sp, #0x4]
+     220: 233f         	movs	r3, #0x3f
+     222: c48f         	stm	r4!, {r0, r1, r2, r3, r7}
+     224: fe4f 40bb    	<unknown>
+     228: 0239         	lsls	r1, r7, #0x8
+     22a: 6a90         	ldr	r0, [r2, #0x28]
+     22c: b9ae         	<unknown>
+     22e: 5c74         	ldrb	r4, [r6, r1]
+     230: 0000         	movs	r0, r0
+     232: 0200         	lsls	r0, r0, #0x8
+     234: 442c         	add	r4, r5
+     236: 21e8         	movs	r1, #0xe8
+     238: b1a2         	<unknown>
+     23a: 1c95         	adds	r5, r2, #0x2
+     23c: 2ede         	cmp	r6, #0xde
+     23e: fbb0 652e    	<unknown>
+     242: 6768         	str	r0, [r5, #0x74]
+     244: 0500         	lsls	r0, r0, #0x14
+     246: 3c02         	subs	r4, #0x2
+     248: 0001         	movs	r1, r0
+     24a: 0300         	lsls	r0, r0, #0xc
+     24c: 0131         	lsls	r1, r6, #0x4
+     24e: 0205         	lsls	r5, r0, #0x8
+     250: 830a         	strh	r2, [r1, #0x18]
+     252: 0105         	lsls	r5, r0, #0x4
+     254: 4b0b         	ldr	r3, [pc, #0x2c]         @ 0x284 <.debug_line+0x284>
+     256: 0202         	lsls	r2, r0, #0x8
+     258: 0100         	lsls	r0, r0, #0x4
+     25a: 8d01         	ldrh	r1, [r0, #0x28]
+     25c: 0000         	movs	r0, r0
+     25e: 0500         	lsls	r0, r0, #0x14
+     260: 0400         	lsls	r0, r0, #0x10
+     262: 6900         	ldr	r0, [r0, #0x10]
+     264: 0000         	movs	r0, r0
+     266: 0100         	lsls	r0, r0, #0x4
+     268: 0101         	lsls	r1, r0, #0x4
+     26a: 0efb         	lsrs	r3, r7, #0x1b
+     26c: 000d         	movs	r5, r1
+     26e: 0101         	lsls	r1, r0, #0x4
+     270: 0101         	lsls	r1, r0, #0x4
+     272: 0000         	movs	r0, r0
+     274: 0100         	lsls	r0, r0, #0x4
+     276: 0000         	movs	r0, r0
+     278: 0101         	lsls	r1, r0, #0x4
+     27a: 1f01         	subs	r1, r0, #0x4
+     27c: b003         	add	sp, #0xc
+     27e: 0001         	movs	r1, r0
+     280: 3300         	adds	r3, #0x0
+     282: 0001         	movs	r1, r0
+     284: 9c00         	ldr	r4, [sp]
+     286: 0000         	movs	r0, r0
+     288: 0300         	lsls	r0, r0, #0xc
+     28a: 1f01         	subs	r1, r0, #0x4
+     28c: 0f02         	lsrs	r2, r0, #0x1c
+     28e: 1e05         	subs	r5, r0, #0x0
+     290: f603 0000    	<unknown>
+     294: 0000         	movs	r0, r0
+     296: f59c 87c7    	<unknown>
+     29a: 3bfd         	subs	r3, #0xfd
+     29c: 17f1         	asrs	r1, r6, #0x1f
+     29e: 7611         	strb	r1, [r2, #0x18]
+     2a0: 7c9b         	ldrb	r3, [r3, #0x12]
+     2a2: 86bd         	strh	r5, [r7, #0x34]
+     2a4: 2ec7         	cmp	r6, #0xc7
+     2a6: 0088         	lsls	r0, r1, #0x2
+     2a8: 0000         	movs	r0, r0
+     2aa: 5001         	str	r1, [r0, r0]
+     2ac: 698f         	ldr	r7, [r1, #0x18]
+     2ae: 50a5         	str	r5, [r4, r2]
+     2b0: 0c52         	lsrs	r2, r2, #0x11
+     2b2: 6bee         	ldr	r6, [r5, #0x3c]
+     2b4: 7386         	strb	r6, [r0, #0xe]
+     2b6: a1e3         	adr	r1, #908 <.debug_line+0x39d>
+     2b8: fd95 5c13    	<unknown>
+     2bc: 0000         	movs	r0, r0
+     2be: 0200         	lsls	r0, r0, #0x8
+     2c0: 442c         	add	r4, r5
+     2c2: 21e8         	movs	r1, #0xe8
+     2c4: b1a2         	<unknown>
+     2c6: 1c95         	adds	r5, r2, #0x2
+     2c8: 2ede         	cmp	r6, #0xde
+     2ca: fbb0 652e    	<unknown>
+     2ce: 6768         	str	r0, [r5, #0x74]
+     2d0: 0500         	lsls	r0, r0, #0x14
+     2d2: 4c02         	ldr	r4, [pc, #0x8]          @ 0x2dc <.debug_line+0x2dc>
+     2d4: 0001         	movs	r1, r0
+     2d6: 0300         	lsls	r0, r0, #0xc
+     2d8: 013b         	lsls	r3, r7, #0x4
+     2da: 0305         	lsls	r5, r0, #0xc
+     2dc: 030a         	lsls	r2, r1, #0xc
+     2de: 2e33         	cmp	r6, #0x33
+     2e0: 0a05         	lsrs	r5, r0, #0x8
+     2e2: 054b         	lsls	r3, r1, #0x15
+     2e4: 2d03         	cmp	r5, #0x3
+     2e6: 024d         	lsls	r5, r1, #0x9
+     2e8: 0002         	movs	r2, r0
+     2ea: 0101         	lsls	r1, r0, #0x4
+
+Disassembly of section .debug_frame:
+
+00000000 <.debug_frame>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 0010         	movs	r0, r2
+       2: 0000         	movs	r0, r0
+;     char* prev_heap_ptr = heap_ptr;
+       4: ffff ffff    	<unknown>
+       8: 0004         	movs	r4, r0
+;     if (increment > 0) {
+       a: 0004         	movs	r4, r0
+       c: 7c01         	ldrb	r1, [r0, #0x10]
+       e: 0c0e         	lsrs	r6, r1, #0x10
+      10: 000d         	movs	r5, r1
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 0000         	movs	r0, r0
+      14: 0010         	movs	r0, r2
+		...
+      1e: 0000         	movs	r0, r0
+      20: 004c         	lsls	r4, r1, #0x1
+      22: 0000         	movs	r0, r0
+      24: 0e42         	lsrs	r2, r0, #0x19
+;             return (void*)-1;  // Return error if the heap is full
+      26: 000c         	movs	r4, r1
+      28: 0010         	movs	r0, r2
+;         heap_ptr += increment;
+      2a: 0000         	movs	r0, r0
+      2c: 0000         	movs	r0, r0
+      2e: 0000         	movs	r0, r0
+      30: 004c         	lsls	r4, r1, #0x1
+      32: 0000         	movs	r0, r0
+;     }
+      34: 007e         	lsls	r6, r7, #0x1
+;     return (void*)prev_heap_ptr;
+      36: 0000         	movs	r0, r0
+      38: 0e42         	lsrs	r2, r0, #0x19
+      3a: 0030         	movs	r0, r6
+; }
+      3c: 0018         	movs	r0, r3
+      3e: 0000         	movs	r0, r0
+      40: 0000         	movs	r0, r0
+      42: 0000         	movs	r0, r0
+      44: 00ca         	lsls	r2, r1, #0x3
+      46: 0000         	movs	r0, r0
+      48: 0050         	lsls	r0, r2, #0x1
+      4a: 0000         	movs	r0, r0
+; unsigned long long fibonacci(int n) {
+      4c: 0e42         	lsrs	r2, r0, #0x19
+      4e: 8e08         	ldrh	r0, [r1, #0x30]
+;     if (n <= 0) return 0;
+      50: 8701         	strh	r1, [r0, #0x38]
+      52: 4202         	tst	r2, r0
+      54: 070d         	lsls	r5, r1, #0x1c
+      56: 0000         	movs	r0, r0
+      58: 0010         	movs	r0, r2
+;     if (n <= 0) return 0;
+      5a: 0000         	movs	r0, r0
+      5c: 0000         	movs	r0, r0
+      5e: 0000         	movs	r0, r0
+;     if (n == 1) return 1;
+      60: 011a         	lsls	r2, r3, #0x4
+      62: 0000         	movs	r0, r0
+      64: 0010         	movs	r0, r2
+      66: 0000         	movs	r0, r0
+      68: 0e42         	lsrs	r2, r0, #0x19
+;     if (n == 1) return 1;
+      6a: 0008         	movs	r0, r1
+      6c: 0010         	movs	r0, r2
+      6e: 0000         	movs	r0, r0
+      70: 0000         	movs	r0, r0
+      72: 0000         	movs	r0, r0
+;     unsigned long long a = 0, b = 1, temp;
+      74: 012a         	lsls	r2, r5, #0x4
+      76: 0000         	movs	r0, r0
+      78: 0010         	movs	r0, r2
+      7a: 0000         	movs	r0, r0
+      7c: 0e42         	lsrs	r2, r0, #0x19
+      7e: 0008         	movs	r0, r1
+;     for (int i = 2; i <= n; ++i) {
+      80: 0010         	movs	r0, r2
+      82: 0000         	movs	r0, r0
+      84: ffff ffff    	<unknown>
+      88: 0004         	movs	r4, r0
+      8a: 0004         	movs	r4, r0
+      8c: 7c01         	ldrb	r1, [r0, #0x10]
+;         temp = a + b;
+      8e: 0c0e         	lsrs	r6, r1, #0x10
+      90: 000d         	movs	r5, r1
+      92: 0000         	movs	r0, r0
+      94: 0018         	movs	r0, r3
+      96: 0000         	movs	r0, r0
+      98: 0080         	lsls	r0, r0, #0x2
+      9a: 0000         	movs	r0, r0
+      9c: 013c         	lsls	r4, r7, #0x4
+;         a = b;
+      9e: 0000         	movs	r0, r0
+      a0: 000e         	movs	r6, r1
+      a2: 0000         	movs	r0, r0
+      a4: 0e42         	lsrs	r2, r0, #0x19
+;         b = temp;
+      a6: 8e08         	ldrh	r0, [r1, #0x30]
+      a8: 8701         	strh	r1, [r0, #0x38]
+      aa: 4202         	tst	r2, r0
+      ac: 070d         	lsls	r5, r1, #0x1c
+;     }
+      ae: 0000         	movs	r0, r0
+;     for (int i = 2; i <= n; ++i) {
+      b0: 0010         	movs	r0, r2
+      b2: 0000         	movs	r0, r0
+      b4: ffff ffff    	<unknown>
+;     return b;
+      b8: 0004         	movs	r4, r0
+      ba: 0004         	movs	r4, r0
+      bc: 7c01         	ldrb	r1, [r0, #0x10]
+      be: 0c0e         	lsrs	r6, r1, #0x10
+      c0: 000d         	movs	r5, r1
+; }
+      c2: 0000         	movs	r0, r0
+      c4: 000c         	movs	r4, r1
+      c6: 0000         	movs	r0, r0
+      c8: 00b0         	lsls	r0, r6, #0x2
+; int main() {
+      ca: 0000         	movs	r0, r0
+      cc: 014c         	lsls	r4, r1, #0x5
+      ce: 0000         	movs	r0, r0
+      d0: 000e         	movs	r6, r1
+      d2: 0000         	movs	r0, r0
+
+Disassembly of section .debug_str:
+
+00000000 <.debug_str>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 6e75         	ldr	r5, [r6, #0x64]
+       2: 6973         	ldr	r3, [r6, #0x14]
+;     char* prev_heap_ptr = heap_ptr;
+       4: 6e67         	ldr	r7, [r4, #0x64]
+       6: 6465         	str	r5, [r4, #0x44]
+       8: 6c20         	ldr	r0, [r4, #0x40]
+;     if (increment > 0) {
+       a: 6e6f         	ldr	r7, [r5, #0x64]
+       c: 2067         	movs	r0, #0x67
+       e: 6f6c         	ldr	r4, [r5, #0x74]
+      10: 676e         	str	r6, [r5, #0x74]
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 6900         	ldr	r0, [r0, #0x10]
+      14: 636e         	str	r6, [r5, #0x34]
+      16: 6572         	str	r2, [r6, #0x54]
+      18: 656d         	str	r5, [r5, #0x54]
+      1a: 746e         	strb	r6, [r5, #0x11]
+      1c: 6900         	ldr	r0, [r0, #0x10]
+      1e: 6100         	str	r0, [r0, #0x10]
+      20: 6300         	str	r0, [r0, #0x30]
+      22: 646f         	str	r7, [r5, #0x44]
+      24: 0065         	lsls	r5, r4, #0x1
+;             return (void*)-1;  // Return error if the heap is full
+      26: 7470         	strb	r0, [r6, #0x11]
+      28: 6472         	str	r2, [r6, #0x44]
+;         heap_ptr += increment;
+      2a: 6669         	str	r1, [r5, #0x64]
+      2c: 5f66         	ldrsh	r6, [r4, r5]
+      2e: 0074         	lsls	r4, r6, #0x1
+      30: 006e         	lsls	r6, r5, #0x1
+      32: 6973         	ldr	r3, [r6, #0x14]
+;     }
+      34: 657a         	str	r2, [r7, #0x54]
+;     return (void*)prev_heap_ptr;
+      36: 745f         	strb	r7, [r3, #0x11]
+      38: 6300         	str	r0, [r0, #0x30]
+      3a: 616c         	str	r4, [r5, #0x14]
+; }
+      3c: 676e         	str	r6, [r5, #0x74]
+      3e: 7620         	strb	r0, [r4, #0x18]
+      40: 7265         	strb	r5, [r4, #0x9]
+      42: 6973         	ldr	r3, [r6, #0x14]
+      44: 6e6f         	ldr	r7, [r5, #0x64]
+      46: 3120         	adds	r1, #0x20
+      48: 2e39         	cmp	r6, #0x39
+      4a: 2e31         	cmp	r6, #0x31
+; unsigned long long fibonacci(int n) {
+      4c: 0035         	movs	r5, r6
+      4e: 7270         	strb	r0, [r6, #0x9]
+;     if (n <= 0) return 0;
+      50: 7665         	strb	r5, [r4, #0x19]
+      52: 685f         	ldr	r7, [r3, #0x4]
+      54: 6165         	str	r5, [r4, #0x14]
+      56: 5f70         	ldrsh	r0, [r6, r5]
+      58: 7470         	strb	r0, [r6, #0x11]
+;     if (n <= 0) return 0;
+      5a: 0072         	lsls	r2, r6, #0x1
+      5c: 0062         	lsls	r2, r4, #0x1
+      5e: 006d         	lsls	r5, r5, #0x1
+;     if (n == 1) return 1;
+      60: 0063         	lsls	r3, r4, #0x1
+      62: 0073         	lsls	r3, r6, #0x1
+      64: 3072         	adds	r0, #0x72
+      66: 6800         	ldr	r0, [r0]
+      68: 6165         	str	r5, [r4, #0x14]
+;     if (n == 1) return 1;
+      6a: 5f70         	ldrsh	r0, [r6, r5]
+      6c: 7470         	strb	r0, [r6, #0x11]
+      6e: 0072         	lsls	r2, r6, #0x1
+      70: 7673         	strb	r3, [r6, #0x19]
+      72: 5f63         	ldrsh	r3, [r4, r5]
+;     unsigned long long a = 0, b = 1, temp;
+      74: 7570         	strb	r0, [r6, #0x15]
+      76: 6974         	ldr	r4, [r6, #0x14]
+      78: 746e         	strb	r6, [r5, #0x11]
+      7a: 6d00         	ldr	r0, [r0, #0x50]
+      7c: 6961         	ldr	r1, [r4, #0x14]
+      7e: 006e         	lsls	r6, r5, #0x1
+;     for (int i = 2; i <= n; ++i) {
+      80: 7673         	strb	r3, [r6, #0x19]
+      82: 5f63         	ldrsh	r3, [r4, r5]
+      84: 7865         	ldrb	r5, [r4, #0x1]
+      86: 7469         	strb	r1, [r5, #0x11]
+      88: 7400         	strb	r0, [r0, #0x10]
+      8a: 6d65         	ldr	r5, [r4, #0x54]
+      8c: 0070         	lsls	r0, r6, #0x1
+;         temp = a + b;
+      8e: 6863         	ldr	r3, [r4, #0x4]
+      90: 7261         	strb	r1, [r4, #0x9]
+      92: 6900         	ldr	r0, [r0, #0x10]
+      94: 746e         	strb	r6, [r5, #0x11]
+      96: 6d00         	ldr	r0, [r0, #0x50]
+      98: 6d65         	ldr	r5, [r4, #0x54]
+      9a: 6573         	str	r3, [r6, #0x54]
+      9c: 0074         	lsls	r4, r6, #0x1
+;         a = b;
+      9e: 6562         	str	r2, [r4, #0x54]
+      a0: 636e         	str	r6, [r5, #0x34]
+      a2: 6d68         	ldr	r0, [r5, #0x54]
+      a4: 7261         	strb	r1, [r4, #0x9]
+;         b = temp;
+      a6: 736b         	strb	r3, [r5, #0xd]
+      a8: 665c         	str	r4, [r3, #0x64]
+      aa: 6269         	str	r1, [r5, #0x24]
+      ac: 632e         	str	r6, [r5, #0x30]
+;     }
+      ae: 6c00         	ldr	r0, [r0, #0x40]
+;     for (int i = 2; i <= n; ++i) {
+      b0: 6e65         	ldr	r5, [r4, #0x64]
+      b2: 7467         	strb	r7, [r4, #0x11]
+      b4: 0068         	lsls	r0, r5, #0x1
+      b6: 2e2e         	cmp	r6, #0x2e
+;     return b;
+      b8: 2e2f         	cmp	r6, #0x2f
+      ba: 2f2e         	cmp	r7, #0x2e
+      bc: 2e2e         	cmp	r6, #0x2e
+      be: 2e2f         	cmp	r6, #0x2f
+      c0: 2f2e         	cmp	r7, #0x2e
+; }
+      c2: 2e2e         	cmp	r6, #0x2e
+      c4: 732f         	strb	r7, [r5, #0xc]
+      c6: 6372         	str	r2, [r6, #0x34]
+      c8: 702f         	strb	r7, [r5]
+; int main() {
+      ca: 6369         	str	r1, [r5, #0x34]
+      cc: 6c6f         	ldr	r7, [r5, #0x44]
+      ce: 6269         	str	r1, [r5, #0x24]
+      d0: 2f63         	cmp	r7, #0x63
+      d2: 656e         	str	r6, [r5, #0x54]
+      d4: 6c77         	ldr	r7, [r6, #0x44]
+      d6: 6269         	str	r1, [r5, #0x24]
+      d8: 6c2f         	ldr	r7, [r5, #0x40]
+      da: 6269         	str	r1, [r5, #0x24]
+; 	unsigned arr[N] = {0};
+      dc: 2f63         	cmp	r7, #0x63
+      de: 616d         	str	r5, [r5, #0x14]
+      e0: 6863         	ldr	r3, [r4, #0x4]
+; 	for (unsigned i = 0; i < N; i++) {
+      e2: 6e69         	ldr	r1, [r5, #0x64]
+      e4: 2f65         	cmp	r7, #0x65
+      e6: 7261         	strb	r1, [r4, #0x9]
+      e8: 2f6d         	cmp	r7, #0x6d
+      ea: 656d         	str	r5, [r5, #0x54]
+      ec: 736d         	strb	r5, [r5, #0xd]
+; 		arr[i] = fibonacci(i + 1);
+      ee: 7465         	strb	r5, [r4, #0x11]
+      f0: 632e         	str	r6, [r5, #0x30]
+      f2: 7500         	strb	r0, [r0, #0x14]
+      f4: 736e         	strb	r6, [r5, #0xd]
+      f6: 6769         	str	r1, [r5, #0x74]
+      f8: 656e         	str	r6, [r5, #0x54]
+      fa: 2064         	movs	r0, #0x64
+      fc: 6e69         	ldr	r1, [r5, #0x64]
+; 	}
+      fe: 0074         	lsls	r4, r6, #0x1
+; 	for (unsigned i = 0; i < N; i++) {
+     100: 6966         	ldr	r6, [r4, #0x14]
+     102: 6f62         	ldr	r2, [r4, #0x74]
+     104: 616e         	str	r6, [r5, #0x14]
+     106: 6363         	str	r3, [r4, #0x34]
+;     svc_putint(arr[N - 1]);
+     108: 0069         	lsls	r1, r5, #0x1
+     10a: 5f5f         	ldrsh	r7, [r3, r5]
+     10c: 5241         	strh	r1, [r0, r1]
+     10e: 4152         	adcs	r2, r2
+; 	svc_exit(0);
+     110: 5f59         	ldrsh	r1, [r3, r5]
+     112: 4953         	ldr	r1, [pc, #0x14c]        @ 0x260 <.debug_line+0x260>
+; }
+     114: 455a         	cmp	r2, r11
+     116: 545f         	strb	r7, [r3, r1]
+     118: 5059         	str	r1, [r3, r1]
+; static inline void svc_putint(int n) {
+     11a: 5f45         	ldrsh	r5, [r0, r5]
+     11c: 005f         	lsls	r7, r3, #0x1
+;      register int r0 __asm__("r0") = n;
+     11e: 7a62         	ldrb	r2, [r4, #0x9]
+     120: 7265         	strb	r5, [r4, #0x9]
+;      __asm volatile ("svc 3" :  : "r"(r0) : "memory");
+     122: 006f         	lsls	r7, r5, #0x1
+     124: 2e2e         	cmp	r6, #0x2e
+; }
+     126: 2e2f         	cmp	r6, #0x2f
+     128: 2f2e         	cmp	r7, #0x2e
+; static inline void svc_exit(unsigned code) {
+     12a: 2e2e         	cmp	r6, #0x2e
+     12c: 2e2f         	cmp	r6, #0x2f
+;     register unsigned r0 __asm__("r0") = code;
+     12e: 2f2e         	cmp	r7, #0x2e
+     130: 2e2e         	cmp	r6, #0x2e
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+     132: 732f         	strb	r7, [r5, #0xc]
+     134: 6372         	str	r2, [r6, #0x34]
+; };
+     136: 702f         	strb	r7, [r5]
+     138: 6369         	str	r1, [r5, #0x34]
+     13a: 6c6f         	ldr	r7, [r5, #0x44]
+     13c: 6269         	str	r1, [r5, #0x24]
+     13e: 2f63         	cmp	r7, #0x63
+     140: 656e         	str	r6, [r5, #0x54]
+     142: 6c77         	ldr	r7, [r6, #0x44]
+     144: 6269         	str	r1, [r5, #0x24]
+     146: 6c2f         	ldr	r7, [r5, #0x40]
+     148: 6269         	str	r1, [r5, #0x24]
+     14a: 2f63         	cmp	r7, #0x63
+     14c: 616d         	str	r5, [r5, #0x14]
+     14e: 6863         	ldr	r3, [r4, #0x4]
+     150: 6e69         	ldr	r1, [r5, #0x64]
+     152: 2f65         	cmp	r7, #0x65
+     154: 7261         	strb	r1, [r4, #0x9]
+     156: 2f6d         	cmp	r7, #0x6d
+     158: 7a62         	ldrb	r2, [r4, #0x9]
+     15a: 7265         	strb	r5, [r4, #0x9]
+     15c: 2e6f         	cmp	r6, #0x6f
+     15e: 0063         	lsls	r3, r4, #0x1
+     160: 682f         	ldr	r7, [r5]
+     162: 6d6f         	ldr	r7, [r5, #0x54]
+     164: 2f65         	cmp	r7, #0x65
+     166: 656a         	str	r2, [r5, #0x54]
+     168: 6b6e         	ldr	r6, [r5, #0x34]
+     16a: 6e69         	ldr	r1, [r5, #0x64]
+     16c: 2f73         	cmp	r7, #0x73
+     16e: 6761         	str	r1, [r4, #0x74]
+     170: 6e65         	ldr	r5, [r4, #0x64]
+     172: 2f74         	cmp	r7, #0x74
+     174: 6f77         	ldr	r7, [r6, #0x74]
+     176: 6b72         	ldr	r2, [r6, #0x34]
+     178: 7073         	strb	r3, [r6, #0x1]
+     17a: 6361         	str	r1, [r4, #0x34]
+     17c: 2f65         	cmp	r7, #0x65
+     17e: 6c6c         	ldr	r4, [r5, #0x44]
+     180: 6d76         	ldr	r6, [r6, #0x54]
+     182: 652d         	str	r5, [r5, #0x50]
+     184: 626d         	str	r5, [r5, #0x24]
+     186: 6465         	str	r5, [r4, #0x44]
+     188: 6564         	str	r4, [r4, #0x54]
+     18a: 2f64         	cmp	r7, #0x64
+     18c: 6c6c         	ldr	r4, [r5, #0x44]
+     18e: 6d76         	ldr	r6, [r6, #0x54]
+     190: 312d         	adds	r1, #0x2d
+     192: 2f39         	cmp	r7, #0x39
+     194: 7562         	strb	r2, [r4, #0x15]
+     196: 6c69         	ldr	r1, [r5, #0x44]
+     198: 2d64         	cmp	r5, #0x64
+     19a: 6e61         	ldr	r1, [r4, #0x64]
+     19c: 2d64         	cmp	r5, #0x64
+     19e: 6574         	str	r4, [r6, #0x54]
+     1a0: 7473         	strb	r3, [r6, #0x11]
+     1a2: 622f         	str	r7, [r5, #0x20]
+     1a4: 6975         	ldr	r5, [r6, #0x14]
+     1a6: 646c         	str	r4, [r5, #0x44]
+     1a8: 702f         	strb	r7, [r5]
+     1aa: 6369         	str	r1, [r5, #0x34]
+     1ac: 6c6f         	ldr	r7, [r5, #0x44]
+     1ae: 6269         	str	r1, [r5, #0x24]
+     1b0: 2f63         	cmp	r7, #0x63
+     1b2: 7261         	strb	r1, [r4, #0x9]
+     1b4: 766d         	strb	r5, [r5, #0x19]
+     1b6: 6d36         	ldr	r6, [r6, #0x50]
+     1b8: 735f         	strb	r7, [r3, #0xd]
+     1ba: 666f         	str	r7, [r5, #0x64]
+     1bc: 5f74         	ldrsh	r4, [r6, r5]
+     1be: 6f6e         	ldr	r6, [r5, #0x74]
+     1c0: 7066         	strb	r6, [r4, #0x1]
+     1c2: 655f         	str	r7, [r3, #0x54]
+     1c4: 6e78         	ldr	r0, [r7, #0x64]
+     1c6: 725f         	strb	r7, [r3, #0x9]
+     1c8: 7474         	strb	r4, [r6, #0x11]
+     1ca: 2f69         	cmp	r7, #0x69
+     1cc: 7273         	strb	r3, [r6, #0x9]
+     1ce: 2f63         	cmp	r7, #0x63
+     1d0: 6970         	ldr	r0, [r6, #0x14]
+     1d2: 6f63         	ldr	r3, [r4, #0x74]
+     1d4: 696c         	ldr	r4, [r5, #0x14]
+     1d6: 6362         	str	r2, [r4, #0x34]
+     1d8: 615f         	str	r7, [r3, #0x14]
+     1da: 6d72         	ldr	r2, [r6, #0x54]
+     1dc: 3676         	adds	r6, #0x76
+     1de: 5f6d         	ldrsh	r5, [r5, r5]
+     1e0: 6f73         	ldr	r3, [r6, #0x74]
+     1e2: 7466         	strb	r6, [r4, #0x11]
+     1e4: 6e5f         	ldr	r7, [r3, #0x64]
+     1e6: 666f         	str	r7, [r5, #0x64]
+     1e8: 5f70         	ldrsh	r0, [r6, r5]
+     1ea: 7865         	ldrb	r5, [r4, #0x1]
+     1ec: 5f6e         	ldrsh	r6, [r5, r5]
+     1ee: 7472         	strb	r2, [r6, #0x11]
+     1f0: 6974         	ldr	r4, [r6, #0x14]
+     1f2: 622d         	str	r5, [r5, #0x20]
+     1f4: 6975         	ldr	r5, [r6, #0x14]
+     1f6: 646c         	str	r4, [r5, #0x44]
+     1f8: 7300         	strb	r0, [r0, #0xc]
+     1fa: 7262         	strb	r2, [r4, #0x9]
+     1fc: 006b         	lsls	r3, r5, #0x1
+     1fe: 3a43         	subs	r2, #0x43
+     200: 555c         	strb	r4, [r3, r5]
+     202: 6573         	str	r3, [r6, #0x54]
+     204: 7372         	strb	r2, [r6, #0xd]
+     206: 6b5c         	ldr	r4, [r3, #0x34]
+     208: 7269         	strb	r1, [r5, #0x9]
+     20a: 6e61         	ldr	r1, [r4, #0x64]
+     20c: 445c         	add	r4, r11
+     20e: 636f         	str	r7, [r5, #0x34]
+     210: 6d75         	ldr	r5, [r6, #0x54]
+     212: 6e65         	ldr	r5, [r4, #0x64]
+     214: 7374         	strb	r4, [r6, #0xd]
+     216: 445c         	add	r4, r11
+     218: 7665         	strb	r5, [r4, #0x19]
+     21a: 415c         	adcs	r4, r3
+     21c: 4143         	adcs	r3, r0
+     21e: 705c         	strb	r4, [r3, #0x1]
+     220: 6f72         	ldr	r2, [r6, #0x74]
+     222: 7267         	strb	r7, [r4, #0x9]
+     224: 6d61         	ldr	r1, [r4, #0x54]
+     226: 0073         	lsls	r3, r6, #0x1
+     228: 7261         	strb	r1, [r4, #0x9]
+     22a: 0072         	lsls	r2, r6, #0x1
+
+Disassembly of section .debug_addr:
+
+00000000 <.debug_addr>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 0024         	movs	r4, r4
+       2: 0000         	movs	r0, r0
+;     char* prev_heap_ptr = heap_ptr;
+       4: 0005         	movs	r5, r0
+       6: 0004         	movs	r4, r0
+       8: 0000         	movs	r0, r0
+;     if (increment > 0) {
+       a: 2000         	movs	r0, #0x0
+       c: 0000         	movs	r0, r0
+       e: 0000         	movs	r0, r0
+      10: 004c         	lsls	r4, r1, #0x1
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 0000         	movs	r0, r0
+      14: 0080         	lsls	r0, r0, #0x2
+      16: 0000         	movs	r0, r0
+      18: 00ca         	lsls	r2, r1, #0x3
+      1a: 0000         	movs	r0, r0
+      1c: 00e2         	lsls	r2, r4, #0x3
+      1e: 0000         	movs	r0, r0
+      20: 011a         	lsls	r2, r3, #0x4
+      22: 0000         	movs	r0, r0
+      24: 012a         	lsls	r2, r5, #0x4
+;             return (void*)-1;  // Return error if the heap is full
+      26: 0000         	movs	r0, r0
+      28: 0008         	movs	r0, r1
+;         heap_ptr += increment;
+      2a: 0000         	movs	r0, r0
+      2c: 0005         	movs	r5, r0
+      2e: 0004         	movs	r4, r0
+      30: 013c         	lsls	r4, r7, #0x4
+      32: 0000         	movs	r0, r0
+;     }
+      34: 0008         	movs	r0, r1
+;     return (void*)prev_heap_ptr;
+      36: 0000         	movs	r0, r0
+      38: 0005         	movs	r5, r0
+      3a: 0004         	movs	r4, r0
+; }
+      3c: 014c         	lsls	r4, r1, #0x5
+      3e: 0000         	movs	r0, r0
+
+Disassembly of section .debug_line_str:
+
+00000000 <.debug_line_str>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 6562         	str	r2, [r4, #0x54]
+       2: 636e         	str	r6, [r5, #0x34]
+;     char* prev_heap_ptr = heap_ptr;
+       4: 6d68         	ldr	r0, [r5, #0x54]
+       6: 7261         	strb	r1, [r4, #0x9]
+       8: 736b         	strb	r3, [r5, #0xd]
+;     if (increment > 0) {
+       a: 2e5c         	cmp	r6, #0x5c
+       c: 2f2e         	cmp	r7, #0x2e
+       e: 7973         	ldrb	r3, [r6, #0x5]
+      10: 6373         	str	r3, [r6, #0x34]
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 6c61         	ldr	r1, [r4, #0x44]
+      14: 736c         	strb	r4, [r5, #0xd]
+      16: 6200         	str	r0, [r0, #0x20]
+      18: 657a         	str	r2, [r7, #0x54]
+      1a: 6f72         	ldr	r2, [r6, #0x74]
+      1c: 632e         	str	r6, [r5, #0x30]
+      1e: 4c00         	ldr	r4, [pc, #0x0]          @ 0x20 <.debug_line+0x20>
+      20: 564c         	ldrsb	r4, [r1, r1]
+      22: 2d4d         	cmp	r5, #0x4d
+      24: 5445         	strb	r5, [r0, r1]
+;             return (void*)-1;  // Return error if the heap is full
+      26: 412d         	asrs	r5, r5
+      28: 6d72         	ldr	r2, [r6, #0x54]
+;         heap_ptr += increment;
+      2a: 312d         	adds	r1, #0x2d
+      2c: 2e39         	cmp	r6, #0x39
+      2e: 2e31         	cmp	r6, #0x31
+      30: 5c35         	ldrb	r5, [r6, r0]
+      32: 696c         	ldr	r4, [r5, #0x14]
+;     }
+      34: 5c62         	ldrb	r2, [r4, r1]
+;     return (void*)prev_heap_ptr;
+      36: 6c63         	ldr	r3, [r4, #0x44]
+      38: 6e61         	ldr	r1, [r4, #0x64]
+      3a: 5c67         	ldrb	r7, [r4, r1]
+; }
+      3c: 3931         	subs	r1, #0x31
+      3e: 695c         	ldr	r4, [r3, #0x14]
+      40: 636e         	str	r6, [r5, #0x34]
+      42: 756c         	strb	r4, [r5, #0x15]
+      44: 6564         	str	r4, [r4, #0x54]
+      46: 5f5c         	ldrsh	r4, [r3, r5]
+      48: 735f         	strb	r7, [r3, #0xd]
+      4a: 6474         	str	r4, [r6, #0x44]
+; unsigned long long fibonacci(int n) {
+      4c: 6564         	str	r4, [r4, #0x54]
+      4e: 5f66         	ldrsh	r6, [r4, r5]
+;     if (n <= 0) return 0;
+      50: 7470         	strb	r0, [r6, #0x11]
+      52: 6472         	str	r2, [r6, #0x44]
+      54: 6669         	str	r1, [r5, #0x64]
+      56: 5f66         	ldrsh	r6, [r4, r5]
+      58: 2e74         	cmp	r6, #0x74
+;     if (n <= 0) return 0;
+      5a: 0068         	lsls	r0, r5, #0x1
+      5c: 6c6c         	ldr	r4, [r5, #0x44]
+      5e: 6d76         	ldr	r6, [r6, #0x54]
+;     if (n == 1) return 1;
+      60: 6c2f         	ldr	r7, [r5, #0x40]
+      62: 6269         	str	r1, [r5, #0x24]
+      64: 632f         	str	r7, [r5, #0x30]
+      66: 616c         	str	r4, [r5, #0x14]
+      68: 676e         	str	r6, [r5, #0x74]
+;     if (n == 1) return 1;
+      6a: 312f         	adds	r1, #0x2f
+      6c: 2f39         	cmp	r7, #0x39
+      6e: 6e69         	ldr	r1, [r5, #0x64]
+      70: 6c63         	ldr	r3, [r4, #0x44]
+      72: 6475         	str	r5, [r6, #0x44]
+;     unsigned long long a = 0, b = 1, temp;
+      74: 2f65         	cmp	r7, #0x65
+      76: 5f5f         	ldrsh	r7, [r3, r5]
+      78: 7473         	strb	r3, [r6, #0x11]
+      7a: 6464         	str	r4, [r4, #0x44]
+      7c: 6665         	str	r5, [r4, #0x64]
+      7e: 735f         	strb	r7, [r3, #0xd]
+;     for (int i = 2; i <= n; ++i) {
+      80: 7a69         	ldrb	r1, [r5, #0x9]
+      82: 5f65         	ldrsh	r5, [r4, r5]
+      84: 2e74         	cmp	r6, #0x74
+      86: 0068         	lsls	r0, r5, #0x1
+      88: 656d         	str	r5, [r5, #0x54]
+      8a: 736d         	strb	r5, [r5, #0xd]
+      8c: 7465         	strb	r5, [r4, #0x11]
+;         temp = a + b;
+      8e: 632e         	str	r6, [r5, #0x30]
+      90: 6200         	str	r0, [r0, #0x20]
+      92: 6e65         	ldr	r5, [r4, #0x64]
+      94: 6863         	ldr	r3, [r4, #0x4]
+      96: 616d         	str	r5, [r5, #0x14]
+      98: 6b72         	ldr	r2, [r6, #0x34]
+      9a: 0073         	lsls	r3, r6, #0x1
+      9c: 682f         	ldr	r7, [r5]
+;         a = b;
+      9e: 6d6f         	ldr	r7, [r5, #0x54]
+      a0: 2f65         	cmp	r7, #0x65
+      a2: 656a         	str	r2, [r5, #0x54]
+      a4: 6b6e         	ldr	r6, [r5, #0x34]
+;         b = temp;
+      a6: 6e69         	ldr	r1, [r5, #0x64]
+      a8: 2f73         	cmp	r7, #0x73
+      aa: 6761         	str	r1, [r4, #0x74]
+      ac: 6e65         	ldr	r5, [r4, #0x64]
+;     }
+      ae: 2f74         	cmp	r7, #0x74
+;     for (int i = 2; i <= n; ++i) {
+      b0: 6f77         	ldr	r7, [r6, #0x74]
+      b2: 6b72         	ldr	r2, [r6, #0x34]
+      b4: 7073         	strb	r3, [r6, #0x1]
+      b6: 6361         	str	r1, [r4, #0x34]
+;     return b;
+      b8: 2f65         	cmp	r7, #0x65
+      ba: 6c6c         	ldr	r4, [r5, #0x44]
+      bc: 6d76         	ldr	r6, [r6, #0x54]
+      be: 652d         	str	r5, [r5, #0x50]
+      c0: 626d         	str	r5, [r5, #0x24]
+; }
+      c2: 6465         	str	r5, [r4, #0x44]
+      c4: 6564         	str	r4, [r4, #0x54]
+      c6: 2f64         	cmp	r7, #0x64
+      c8: 6c6c         	ldr	r4, [r5, #0x44]
+; int main() {
+      ca: 6d76         	ldr	r6, [r6, #0x54]
+      cc: 312d         	adds	r1, #0x2d
+      ce: 2f39         	cmp	r7, #0x39
+      d0: 7562         	strb	r2, [r4, #0x15]
+      d2: 6c69         	ldr	r1, [r5, #0x44]
+      d4: 2d64         	cmp	r5, #0x64
+      d6: 6e61         	ldr	r1, [r4, #0x64]
+      d8: 2d64         	cmp	r5, #0x64
+      da: 6574         	str	r4, [r6, #0x54]
+; 	unsigned arr[N] = {0};
+      dc: 7473         	strb	r3, [r6, #0x11]
+      de: 622f         	str	r7, [r5, #0x20]
+      e0: 6975         	ldr	r5, [r6, #0x14]
+; 	for (unsigned i = 0; i < N; i++) {
+      e2: 646c         	str	r4, [r5, #0x44]
+      e4: 6200         	str	r0, [r0, #0x20]
+      e6: 6e65         	ldr	r5, [r4, #0x64]
+      e8: 6863         	ldr	r3, [r4, #0x4]
+      ea: 616d         	str	r5, [r5, #0x14]
+      ec: 6b72         	ldr	r2, [r6, #0x34]
+; 		arr[i] = fibonacci(i + 1);
+      ee: 5c73         	ldrb	r3, [r6, r1]
+      f0: 6966         	ldr	r6, [r4, #0x14]
+      f2: 2e62         	cmp	r6, #0x62
+      f4: 0063         	lsls	r3, r4, #0x1
+      f6: 2e2e         	cmp	r6, #0x2e
+      f8: 2e2f         	cmp	r6, #0x2f
+      fa: 2f2e         	cmp	r7, #0x2e
+      fc: 2e2e         	cmp	r6, #0x2e
+; 	}
+      fe: 2e2f         	cmp	r6, #0x2f
+; 	for (unsigned i = 0; i < N; i++) {
+     100: 2f2e         	cmp	r7, #0x2e
+     102: 2e2e         	cmp	r6, #0x2e
+     104: 732f         	strb	r7, [r5, #0xc]
+     106: 6372         	str	r2, [r6, #0x34]
+;     svc_putint(arr[N - 1]);
+     108: 702f         	strb	r7, [r5]
+     10a: 6369         	str	r1, [r5, #0x34]
+     10c: 6c6f         	ldr	r7, [r5, #0x44]
+     10e: 6269         	str	r1, [r5, #0x24]
+; 	svc_exit(0);
+     110: 2f63         	cmp	r7, #0x63
+     112: 656e         	str	r6, [r5, #0x54]
+; }
+     114: 6c77         	ldr	r7, [r6, #0x44]
+     116: 6269         	str	r1, [r5, #0x24]
+     118: 6c2f         	ldr	r7, [r5, #0x40]
+; static inline void svc_putint(int n) {
+     11a: 6269         	str	r1, [r5, #0x24]
+     11c: 2f63         	cmp	r7, #0x63
+;      register int r0 __asm__("r0") = n;
+     11e: 616d         	str	r5, [r5, #0x14]
+     120: 6863         	ldr	r3, [r4, #0x4]
+;      __asm volatile ("svc 3" :  : "r"(r0) : "memory");
+     122: 6e69         	ldr	r1, [r5, #0x64]
+     124: 2f65         	cmp	r7, #0x65
+; }
+     126: 7261         	strb	r1, [r4, #0x9]
+     128: 2f6d         	cmp	r7, #0x6d
+; static inline void svc_exit(unsigned code) {
+     12a: 656d         	str	r5, [r5, #0x54]
+     12c: 736d         	strb	r5, [r5, #0xd]
+;     register unsigned r0 __asm__("r0") = code;
+     12e: 7465         	strb	r5, [r4, #0x11]
+     130: 632e         	str	r6, [r5, #0x30]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+     132: 2e00         	cmp	r6, #0x0
+     134: 2f2e         	cmp	r7, #0x2e
+; };
+     136: 2e2e         	cmp	r6, #0x2e
+     138: 2e2f         	cmp	r6, #0x2f
+     13a: 2f2e         	cmp	r7, #0x2e
+     13c: 2e2e         	cmp	r6, #0x2e
+     13e: 2e2f         	cmp	r6, #0x2f
+     140: 2f2e         	cmp	r7, #0x2e
+     142: 7273         	strb	r3, [r6, #0x9]
+     144: 2f63         	cmp	r7, #0x63
+     146: 6970         	ldr	r0, [r6, #0x14]
+     148: 6f63         	ldr	r3, [r4, #0x74]
+     14a: 696c         	ldr	r4, [r5, #0x14]
+     14c: 6362         	str	r2, [r4, #0x34]
+     14e: 6e2f         	ldr	r7, [r5, #0x60]
+     150: 7765         	strb	r5, [r4, #0x1d]
+     152: 696c         	ldr	r4, [r5, #0x14]
+     154: 2f62         	cmp	r7, #0x62
+     156: 696c         	ldr	r4, [r5, #0x14]
+     158: 6362         	str	r2, [r4, #0x34]
+     15a: 6d2f         	ldr	r7, [r5, #0x50]
+     15c: 6361         	str	r1, [r4, #0x34]
+     15e: 6968         	ldr	r0, [r5, #0x14]
+     160: 656e         	str	r6, [r5, #0x54]
+     162: 612f         	str	r7, [r5, #0x10]
+     164: 6d72         	ldr	r2, [r6, #0x54]
+     166: 2e2f         	cmp	r6, #0x2f
+     168: 2f2e         	cmp	r7, #0x2e
+     16a: 2e2e         	cmp	r6, #0x2e
+     16c: 732f         	strb	r7, [r5, #0xc]
+     16e: 7274         	strb	r4, [r6, #0x9]
+     170: 6e69         	ldr	r1, [r5, #0x64]
+     172: 0067         	lsls	r7, r4, #0x1
+     174: 2e2e         	cmp	r6, #0x2e
+     176: 2e2f         	cmp	r6, #0x2f
+     178: 2f2e         	cmp	r7, #0x2e
+     17a: 2e2e         	cmp	r6, #0x2e
+     17c: 2e2f         	cmp	r6, #0x2f
+     17e: 2f2e         	cmp	r7, #0x2e
+     180: 2e2e         	cmp	r6, #0x2e
+     182: 732f         	strb	r7, [r5, #0xc]
+     184: 6372         	str	r2, [r6, #0x34]
+     186: 702f         	strb	r7, [r5]
+     188: 6369         	str	r1, [r5, #0x34]
+     18a: 6c6f         	ldr	r7, [r5, #0x44]
+     18c: 6269         	str	r1, [r5, #0x24]
+     18e: 2f63         	cmp	r7, #0x63
+     190: 656e         	str	r6, [r5, #0x54]
+     192: 6c77         	ldr	r7, [r6, #0x44]
+     194: 6269         	str	r1, [r5, #0x24]
+     196: 6c2f         	ldr	r7, [r5, #0x40]
+     198: 6269         	str	r1, [r5, #0x24]
+     19a: 2f63         	cmp	r7, #0x63
+     19c: 616d         	str	r5, [r5, #0x14]
+     19e: 6863         	ldr	r3, [r4, #0x4]
+     1a0: 6e69         	ldr	r1, [r5, #0x64]
+     1a2: 2f65         	cmp	r7, #0x65
+     1a4: 7261         	strb	r1, [r4, #0x9]
+     1a6: 2f6d         	cmp	r7, #0x6d
+     1a8: 7a62         	ldrb	r2, [r4, #0x9]
+     1aa: 7265         	strb	r5, [r4, #0x9]
+     1ac: 2e6f         	cmp	r6, #0x6f
+     1ae: 0063         	lsls	r3, r4, #0x1
+     1b0: 682f         	ldr	r7, [r5]
+     1b2: 6d6f         	ldr	r7, [r5, #0x54]
+     1b4: 2f65         	cmp	r7, #0x65
+     1b6: 656a         	str	r2, [r5, #0x54]
+     1b8: 6b6e         	ldr	r6, [r5, #0x34]
+     1ba: 6e69         	ldr	r1, [r5, #0x64]
+     1bc: 2f73         	cmp	r7, #0x73
+     1be: 6761         	str	r1, [r4, #0x74]
+     1c0: 6e65         	ldr	r5, [r4, #0x64]
+     1c2: 2f74         	cmp	r7, #0x74
+     1c4: 6f77         	ldr	r7, [r6, #0x74]
+     1c6: 6b72         	ldr	r2, [r6, #0x34]
+     1c8: 7073         	strb	r3, [r6, #0x1]
+     1ca: 6361         	str	r1, [r4, #0x34]
+     1cc: 2f65         	cmp	r7, #0x65
+     1ce: 6c6c         	ldr	r4, [r5, #0x44]
+     1d0: 6d76         	ldr	r6, [r6, #0x54]
+     1d2: 652d         	str	r5, [r5, #0x50]
+     1d4: 626d         	str	r5, [r5, #0x24]
+     1d6: 6465         	str	r5, [r4, #0x44]
+     1d8: 6564         	str	r4, [r4, #0x54]
+     1da: 2f64         	cmp	r7, #0x64
+     1dc: 6c6c         	ldr	r4, [r5, #0x44]
+     1de: 6d76         	ldr	r6, [r6, #0x54]
+     1e0: 312d         	adds	r1, #0x2d
+     1e2: 2f39         	cmp	r7, #0x39
+     1e4: 7562         	strb	r2, [r4, #0x15]
+     1e6: 6c69         	ldr	r1, [r5, #0x44]
+     1e8: 2d64         	cmp	r5, #0x64
+     1ea: 6e61         	ldr	r1, [r4, #0x64]
+     1ec: 2d64         	cmp	r5, #0x64
+     1ee: 6574         	str	r4, [r6, #0x54]
+     1f0: 7473         	strb	r3, [r6, #0x11]
+     1f2: 622f         	str	r7, [r5, #0x20]
+     1f4: 6975         	ldr	r5, [r6, #0x14]
+     1f6: 646c         	str	r4, [r5, #0x44]
+     1f8: 702f         	strb	r7, [r5]
+     1fa: 6369         	str	r1, [r5, #0x34]
+     1fc: 6c6f         	ldr	r7, [r5, #0x44]
+     1fe: 6269         	str	r1, [r5, #0x24]
+     200: 2f63         	cmp	r7, #0x63
+     202: 7261         	strb	r1, [r4, #0x9]
+     204: 766d         	strb	r5, [r5, #0x19]
+     206: 6d36         	ldr	r6, [r6, #0x50]
+     208: 735f         	strb	r7, [r3, #0xd]
+     20a: 666f         	str	r7, [r5, #0x64]
+     20c: 5f74         	ldrsh	r4, [r6, r5]
+     20e: 6f6e         	ldr	r6, [r5, #0x74]
+     210: 7066         	strb	r6, [r4, #0x1]
+     212: 655f         	str	r7, [r3, #0x54]
+     214: 6e78         	ldr	r0, [r7, #0x64]
+     216: 725f         	strb	r7, [r3, #0x9]
+     218: 7474         	strb	r4, [r6, #0x11]
+     21a: 2f69         	cmp	r7, #0x69
+     21c: 7273         	strb	r3, [r6, #0x9]
+     21e: 2f63         	cmp	r7, #0x63
+     220: 6970         	ldr	r0, [r6, #0x14]
+     222: 6f63         	ldr	r3, [r4, #0x74]
+     224: 696c         	ldr	r4, [r5, #0x14]
+     226: 6362         	str	r2, [r4, #0x34]
+     228: 615f         	str	r7, [r3, #0x14]
+     22a: 6d72         	ldr	r2, [r6, #0x54]
+     22c: 3676         	adds	r6, #0x76
+     22e: 5f6d         	ldrsh	r5, [r5, r5]
+     230: 6f73         	ldr	r3, [r6, #0x74]
+     232: 7466         	strb	r6, [r4, #0x11]
+     234: 6e5f         	ldr	r7, [r3, #0x64]
+     236: 666f         	str	r7, [r5, #0x64]
+     238: 5f70         	ldrsh	r0, [r6, r5]
+     23a: 7865         	ldrb	r5, [r4, #0x1]
+     23c: 5f6e         	ldrsh	r6, [r5, r5]
+     23e: 7472         	strb	r2, [r6, #0x11]
+     240: 6974         	ldr	r4, [r6, #0x14]
+     242: 622d         	str	r5, [r5, #0x20]
+     244: 6975         	ldr	r5, [r6, #0x14]
+     246: 646c         	str	r4, [r5, #0x44]
+     248: 4300         	orrs	r0, r0
+     24a: 5c3a         	ldrb	r2, [r7, r0]
+     24c: 7355         	strb	r5, [r2, #0xd]
+     24e: 7265         	strb	r5, [r4, #0x9]
+     250: 5c73         	ldrb	r3, [r6, r1]
+     252: 696b         	ldr	r3, [r5, #0x14]
+     254: 6172         	str	r2, [r6, #0x14]
+     256: 5c6e         	ldrb	r6, [r5, r1]
+     258: 6f44         	ldr	r4, [r0, #0x74]
+     25a: 7563         	strb	r3, [r4, #0x15]
+     25c: 656d         	str	r5, [r5, #0x54]
+     25e: 746e         	strb	r6, [r5, #0x11]
+     260: 5c73         	ldrb	r3, [r6, r1]
+     262: 6544         	str	r4, [r0, #0x54]
+     264: 5c76         	ldrb	r6, [r6, r1]
+     266: 4341         	muls	r1, r0, r1
+     268: 5c41         	ldrb	r1, [r0, r1]
+     26a: 7270         	strb	r0, [r6, #0x9]
+     26c: 676f         	str	r7, [r5, #0x74]
+     26e: 6172         	str	r2, [r6, #0x14]
+     270: 736d         	strb	r5, [r5, #0xd]
+     272: 4300         	orrs	r0, r0
+     274: 5c3a         	ldrb	r2, [r7, r0]
+     276: 7355         	strb	r5, [r2, #0xd]
+     278: 7265         	strb	r5, [r4, #0x9]
+     27a: 5c73         	ldrb	r3, [r6, r1]
+     27c: 696b         	ldr	r3, [r5, #0x14]
+     27e: 6172         	str	r2, [r6, #0x14]
+     280: 006e         	lsls	r6, r5, #0x1
+     282: 7973         	ldrb	r3, [r6, #0x5]
+     284: 6373         	str	r3, [r6, #0x34]
+     286: 6c61         	ldr	r1, [r4, #0x44]
+     288: 736c         	strb	r4, [r5, #0xd]
+     28a: 682e         	ldr	r6, [r5]
+     28c: 6600         	str	r0, [r0, #0x60]
+     28e: 6269         	str	r1, [r5, #0x24]
+     290: 632e         	str	r6, [r5, #0x30]
+     292: 00           	<unknown>
+
+Disassembly of section .debug_loclists:
+
+00000000 <.debug_loclists>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 0029         	movs	r1, r5
+       2: 0000         	movs	r0, r0
+;     char* prev_heap_ptr = heap_ptr;
+       4: 0005         	movs	r5, r0
+       6: 0004         	movs	r4, r0
+       8: 0002         	movs	r2, r0
+;     if (increment > 0) {
+       a: 0000         	movs	r0, r0
+       c: 0008         	movs	r0, r1
+       e: 0000         	movs	r0, r0
+      10: 0016         	movs	r6, r2
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 0000         	movs	r0, r0
+      14: 0004         	movs	r4, r0
+      16: 010c         	lsls	r4, r1, #0x4
+      18: 0450         	lsls	r0, r2, #0x11
+      1a: 0e0c         	lsrs	r4, r1, #0x18
+      1c: a304         	adr	r3, #16 <.debug_line+0x24>
+      1e: 5001         	str	r1, [r0, r0]
+      20: 009f         	lsls	r7, r3, #0x2
+      22: 0004         	movs	r4, r0
+      24: 0106         	lsls	r6, r0, #0x4
+;             return (void*)-1;  // Return error if the heap is full
+      26: 0451         	lsls	r1, r2, #0x11
+      28: 0c06         	lsrs	r6, r0, #0x10
+;         heap_ptr += increment;
+      2a: 5201         	strh	r1, [r0, r0]
+      2c: 4b00         	ldr	r3, [pc, #0x0]          @ 0x30 <.debug_line+0x30>
+      2e: 0000         	movs	r0, r0
+      30: 0500         	lsls	r0, r0, #0x14
+      32: 0400         	lsls	r0, r0, #0x10
+;     }
+      34: 0200         	lsls	r0, r0, #0x8
+;     return (void*)prev_heap_ptr;
+      36: 0000         	movs	r0, r0
+      38: 0800         	lsrs	r0, r0, #0x20
+      3a: 0000         	movs	r0, r0
+; }
+      3c: 1c00         	adds	r0, r0, #0x0
+      3e: 0000         	movs	r0, r0
+      40: 0400         	lsls	r0, r0, #0x10
+      42: 0200         	lsls	r0, r0, #0x8
+      44: 5201         	strh	r1, [r0, r0]
+      46: 0204         	lsls	r4, r0, #0x8
+      48: 0306         	lsls	r6, r0, #0xc
+      4a: 7f73         	ldrb	r3, [r6, #0x1d]
+; unsigned long long fibonacci(int n) {
+      4c: 049f         	lsls	r7, r3, #0x12
+      4e: 0e0c         	lsrs	r4, r1, #0x18
+;     if (n <= 0) return 0;
+      50: 7303         	strb	r3, [r0, #0xc]
+      52: 9f7f         	ldr	r7, [sp, #0x1fc]
+      54: 0400         	lsls	r0, r0, #0x10
+      56: 0200         	lsls	r0, r0, #0x8
+      58: 5001         	str	r1, [r0, r0]
+;     if (n <= 0) return 0;
+      5a: 0204         	lsls	r4, r0, #0x8
+      5c: 0606         	lsls	r6, r0, #0x18
+      5e: 0073         	lsls	r3, r6, #0x1
+;     if (n == 1) return 1;
+      60: 0070         	lsls	r0, r6, #0x1
+      62: 9f22         	ldr	r7, [sp, #0x88]
+      64: 0604         	lsls	r4, r0, #0x18
+      66: 090a         	lsrs	r2, r1, #0x4
+      68: 0073         	lsls	r3, r6, #0x1
+;     if (n == 1) return 1;
+      6a: 0111         	lsls	r1, r2, #0x4
+      6c: 0070         	lsls	r0, r6, #0x1
+      6e: 2222         	movs	r2, #0x22
+      70: 049f         	lsls	r7, r3, #0x12
+      72: 0e0c         	lsrs	r4, r1, #0x18
+;     unsigned long long a = 0, b = 1, temp;
+      74: 7306         	strb	r6, [r0, #0xc]
+      76: 7000         	strb	r0, [r0]
+      78: 2200         	movs	r2, #0x0
+      7a: 009f         	lsls	r7, r3, #0x2
+
+Disassembly of section .debug_str_offsets:
+
+00000000 <.debug_str_offsets>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 0068         	lsls	r0, r5, #0x1
+       2: 0000         	movs	r0, r0
+;     char* prev_heap_ptr = heap_ptr;
+       4: 0005         	movs	r5, r0
+       6: 0000         	movs	r0, r0
+       8: 0039         	movs	r1, r7
+;     if (increment > 0) {
+       a: 0000         	movs	r0, r0
+       c: 009e         	lsls	r6, r3, #0x2
+       e: 0000         	movs	r0, r0
+      10: 01fe         	lsls	r6, r7, #0x7
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 0000         	movs	r0, r0
+      14: 0067         	lsls	r7, r4, #0x1
+      16: 0000         	movs	r0, r0
+      18: 008e         	lsls	r6, r1, #0x2
+      1a: 0000         	movs	r0, r0
+      1c: 01f9         	lsls	r1, r7, #0x7
+      1e: 0000         	movs	r0, r0
+      20: 0100         	lsls	r0, r0, #0x4
+      22: 0000         	movs	r0, r0
+      24: 0000         	movs	r0, r0
+;             return (void*)-1;  // Return error if the heap is full
+      26: 0000         	movs	r0, r0
+      28: 007b         	lsls	r3, r7, #0x1
+;         heap_ptr += increment;
+      2a: 0000         	movs	r0, r0
+      2c: 0093         	lsls	r3, r2, #0x2
+      2e: 0000         	movs	r0, r0
+      30: 0070         	lsls	r0, r6, #0x1
+      32: 0000         	movs	r0, r0
+;     }
+      34: 0080         	lsls	r0, r0, #0x2
+;     return (void*)prev_heap_ptr;
+      36: 0000         	movs	r0, r0
+      38: 0013         	movs	r3, r2
+      3a: 0000         	movs	r0, r0
+; }
+      3c: 0026         	movs	r6, r4
+      3e: 0000         	movs	r0, r0
+      40: 004e         	lsls	r6, r1, #0x1
+      42: 0000         	movs	r0, r0
+      44: 0030         	movs	r0, r6
+      46: 0000         	movs	r0, r0
+      48: 001f         	movs	r7, r3
+      4a: 0000         	movs	r0, r0
+; unsigned long long fibonacci(int n) {
+      4c: 005c         	lsls	r4, r3, #0x1
+      4e: 0000         	movs	r0, r0
+;     if (n <= 0) return 0;
+      50: 0089         	lsls	r1, r1, #0x2
+      52: 0000         	movs	r0, r0
+      54: 001d         	movs	r5, r3
+      56: 0000         	movs	r0, r0
+      58: 0228         	lsls	r0, r5, #0x8
+;     if (n <= 0) return 0;
+      5a: 0000         	movs	r0, r0
+      5c: 00f3         	lsls	r3, r6, #0x3
+      5e: 0000         	movs	r0, r0
+;     if (n == 1) return 1;
+      60: 010a         	lsls	r2, r1, #0x4
+      62: 0000         	movs	r0, r0
+      64: 0064         	lsls	r4, r4, #0x1
+      66: 0000         	movs	r0, r0
+      68: 0021         	movs	r1, r4
+;     if (n == 1) return 1;
+      6a: 0000         	movs	r0, r0
+      6c: 0024         	movs	r4, r4
+      6e: 0000         	movs	r0, r0
+      70: 0005         	movs	r5, r0
+      72: 0000         	movs	r0, r0
+;     unsigned long long a = 0, b = 1, temp;
+      74: 0039         	movs	r1, r7
+      76: 0000         	movs	r0, r0
+      78: 0124         	lsls	r4, r4, #0x4
+      7a: 0000         	movs	r0, r0
+      7c: 0160         	lsls	r0, r4, #0x5
+      7e: 0000         	movs	r0, r0
+;     for (int i = 2; i <= n; ++i) {
+      80: 011e         	lsls	r6, r3, #0x4
+      82: 0000         	movs	r0, r0
+      84: 005c         	lsls	r4, r3, #0x1
+      86: 0000         	movs	r0, r0
+      88: 00af         	lsls	r7, r5, #0x2
+      8a: 0000         	movs	r0, r0
+      8c: 00f3         	lsls	r3, r6, #0x3
+;         temp = a + b;
+      8e: 0000         	movs	r0, r0
+      90: 0032         	movs	r2, r6
+      92: 0000         	movs	r0, r0
+      94: 0034         	movs	r4, r6
+      96: 0000         	movs	r0, r0
+      98: 0005         	movs	r5, r0
+      9a: 0000         	movs	r0, r0
+      9c: 0039         	movs	r1, r7
+;         a = b;
+      9e: 0000         	movs	r0, r0
+      a0: 00b6         	lsls	r6, r6, #0x2
+      a2: 0000         	movs	r0, r0
+      a4: 0160         	lsls	r0, r4, #0x5
+;         b = temp;
+      a6: 0000         	movs	r0, r0
+      a8: 008e         	lsls	r6, r1, #0x2
+      aa: 0000         	movs	r0, r0
+      ac: 0097         	lsls	r7, r2, #0x2
+;     }
+      ae: 0000         	movs	r0, r0
+;     for (int i = 2; i <= n; ++i) {
+      b0: 005e         	lsls	r6, r3, #0x1
+      b2: 0000         	movs	r0, r0
+      b4: 0060         	lsls	r0, r4, #0x1
+      b6: 0000         	movs	r0, r0
+;     return b;
+      b8: 0093         	lsls	r3, r2, #0x2
+      ba: 0000         	movs	r0, r0
+      bc: 0030         	movs	r0, r6
+      be: 0000         	movs	r0, r0
+      c0: 00f3         	lsls	r3, r6, #0x3
+; }
+      c2: 0000         	movs	r0, r0
+      c4: 0032         	movs	r2, r6
+      c6: 0000         	movs	r0, r0
+      c8: 0062         	lsls	r2, r4, #0x1
+; int main() {
+      ca: 0000         	movs	r0, r0
+
+Disassembly of section .ARM.attributes:
+
+00000000 <.ARM.attributes>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 4041         	eors	r1, r0
+       2: 0000         	movs	r0, r0
+;     char* prev_heap_ptr = heap_ptr;
+       4: 6100         	str	r0, [r0, #0x10]
+       6: 6165         	str	r5, [r4, #0x14]
+       8: 6962         	ldr	r2, [r4, #0x14]
+;     if (increment > 0) {
+       a: 0100         	lsls	r0, r0, #0x4
+       c: 0036         	movs	r6, r6
+       e: 0000         	movs	r0, r0
+      10: 3243         	adds	r2, #0x43
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 302e         	adds	r0, #0x2e
+      14: 0039         	movs	r1, r7
+      16: 6305         	str	r5, [r0, #0x30]
+      18: 726f         	strb	r7, [r5, #0x9]
+      1a: 6574         	str	r4, [r6, #0x54]
+      1c: 2d78         	cmp	r5, #0x78
+      1e: 306d         	adds	r0, #0x6d
+      20: 0600         	lsls	r0, r0, #0x18
+      22: 070c         	lsls	r4, r1, #0x1c
+      24: 084d         	lsrs	r5, r1, #0x1
+;             return (void*)-1;  // Return error if the heap is full
+      26: 0900         	lsrs	r0, r0, #0x4
+      28: 0e01         	lsrs	r1, r0, #0x18
+;         heap_ptr += increment;
+      2a: 1100         	asrs	r0, r0, #0x4
+      2c: 1201         	asrs	r1, r0, #0x8
+      2e: 1404         	asrs	r4, r0, #0x10
+      30: 1501         	asrs	r1, r0, #0x14
+      32: 1700         	asrs	r0, r0, #0x1c
+;     }
+      34: 1803         	adds	r3, r0, r0
+;     return (void*)prev_heap_ptr;
+      36: 1901         	adds	r1, r0, r4
+      38: 1a01         	subs	r1, r0, r0
+      3a: 1e02         	subs	r2, r0, #0x0
+; }
+      3c: 2206         	movs	r2, #0x6
+      3e: 2600         	movs	r6, #0x0
+      40: 01           	<unknown>
+
+Disassembly of section .symtab:
+
+00000000 <.symtab>:
+		...
+;     if (increment > 0) {
+      10: 0001         	movs	r1, r0
+		...
+;         if (heap_ptr + increment > &__heap_end) {
+      1a: 0000         	movs	r0, r0
+      1c: 0004         	movs	r4, r0
+      1e: fff1 0007    	<unknown>
+		...
+;         heap_ptr += increment;
+      2e: 0001         	movs	r1, r0
+      30: 000a         	movs	r2, r1
+      32: 0000         	movs	r0, r0
+;     }
+      34: 0044         	lsls	r4, r0, #0x1
+		...
+; }
+      3e: 0001         	movs	r1, r0
+      40: 000d         	movs	r5, r1
+      42: 0000         	movs	r0, r0
+      44: 0000         	movs	r0, r0
+      46: 2000         	movs	r0, #0x0
+      48: 0004         	movs	r4, r0
+      4a: 0000         	movs	r0, r0
+; unsigned long long fibonacci(int n) {
+      4c: 0001         	movs	r1, r0
+      4e: 0002         	movs	r2, r0
+;     if (n <= 0) return 0;
+      50: 0016         	movs	r6, r2
+      52: 0000         	movs	r0, r0
+      54: 004c         	lsls	r4, r1, #0x1
+		...
+      5e: 0001         	movs	r1, r0
+;     if (n == 1) return 1;
+      60: 0019         	movs	r1, r3
+      62: 0000         	movs	r0, r0
+      64: 011b         	lsls	r3, r3, #0x4
+      66: 0000         	movs	r0, r0
+      68: 0010         	movs	r0, r2
+;     if (n == 1) return 1;
+      6a: 0000         	movs	r0, r0
+      6c: 0002         	movs	r2, r0
+      6e: 0001         	movs	r1, r0
+      70: 0024         	movs	r4, r4
+      72: 0000         	movs	r0, r0
+;     unsigned long long a = 0, b = 1, temp;
+      74: 012b         	lsls	r3, r5, #0x4
+      76: 0000         	movs	r0, r0
+      78: 0010         	movs	r0, r2
+      7a: 0000         	movs	r0, r0
+      7c: 0002         	movs	r2, r0
+      7e: 0001         	movs	r1, r0
+;     for (int i = 2; i <= n; ++i) {
+      80: 002d         	movs	r5, r5
+		...
+      8a: 0000         	movs	r0, r0
+      8c: 0004         	movs	r4, r0
+;         temp = a + b;
+      8e: fff1 0035    	<unknown>
+      92: 0000         	movs	r0, r0
+      94: 013c         	lsls	r4, r7, #0x4
+		...
+;         a = b;
+      9e: 0001         	movs	r1, r0
+      a0: 0038         	movs	r0, r7
+		...
+;         b = temp;
+      aa: 0000         	movs	r0, r0
+      ac: 0004         	movs	r4, r0
+;     }
+      ae: fff1 0041    	<unknown>
+;     for (int i = 2; i <= n; ++i) {
+      b2: 0000         	movs	r0, r0
+      b4: 014c         	lsls	r4, r1, #0x5
+		...
+;     return b;
+      be: 0001         	movs	r1, r0
+      c0: 0080         	lsls	r0, r0, #0x2
+		...
+; int main() {
+      ca: 0000         	movs	r0, r0
+      cc: 0200         	lsls	r0, r0, #0x8
+      ce: 0001         	movs	r1, r0
+      d0: 0044         	lsls	r4, r0, #0x1
+      d2: 0000         	movs	r0, r0
+      d4: 0001         	movs	r1, r0
+      d6: 0000         	movs	r0, r0
+      d8: 004c         	lsls	r4, r1, #0x1
+      da: 0000         	movs	r0, r0
+; 	unsigned arr[N] = {0};
+      dc: 0012         	movs	r2, r2
+      de: 0001         	movs	r1, r0
+      e0: 0049         	lsls	r1, r1, #0x1
+; 	for (unsigned i = 0; i < N; i++) {
+      e2: 0000         	movs	r0, r0
+      e4: 0000         	movs	r0, r0
+      e6: 21f8         	movs	r1, #0xf8
+      e8: 0000         	movs	r0, r0
+      ea: 0000         	movs	r0, r0
+      ec: 0010         	movs	r0, r2
+; 		arr[i] = fibonacci(i + 1);
+      ee: fff1 0054    	<unknown>
+      f2: 0000         	movs	r0, r0
+      f4: 004d         	lsls	r5, r1, #0x1
+      f6: 0000         	movs	r0, r0
+      f8: 007e         	lsls	r6, r7, #0x1
+      fa: 0000         	movs	r0, r0
+      fc: 0012         	movs	r2, r2
+; 	}
+      fe: 0001         	movs	r1, r0
+; 	for (unsigned i = 0; i < N; i++) {
+     100: 005e         	lsls	r6, r3, #0x1
+     102: 0000         	movs	r0, r0
+     104: 00cb         	lsls	r3, r1, #0x3
+     106: 0000         	movs	r0, r0
+;     svc_putint(arr[N - 1]);
+     108: 0050         	lsls	r0, r2, #0x1
+     10a: 0000         	movs	r0, r0
+     10c: 0012         	movs	r2, r2
+     10e: 0001         	movs	r1, r0
+; 	svc_exit(0);
+     110: 0063         	lsls	r3, r4, #0x1
+     112: 0000         	movs	r0, r0
+; }
+     114: 013d         	lsls	r5, r7, #0x4
+     116: 0000         	movs	r0, r0
+     118: 000e         	movs	r6, r1
+; static inline void svc_putint(int n) {
+     11a: 0000         	movs	r0, r0
+     11c: 0022         	movs	r2, r4
+;      register int r0 __asm__("r0") = n;
+     11e: 0001         	movs	r1, r0
+     120: 0073         	lsls	r3, r6, #0x1
+;      __asm volatile ("svc 3" :  : "r"(r0) : "memory");
+     122: 0000         	movs	r0, r0
+     124: 0008         	movs	r0, r1
+; }
+     126: 2000         	movs	r0, #0x0
+     128: 0000         	movs	r0, r0
+; static inline void svc_exit(unsigned code) {
+     12a: 0000         	movs	r0, r0
+     12c: 0010         	movs	r0, r2
+;     register unsigned r0 __asm__("r0") = code;
+     12e: 0005         	movs	r5, r0
+     130: 008d         	lsls	r5, r1, #0x2
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+     132: 0000         	movs	r0, r0
+     134: 013d         	lsls	r5, r7, #0x4
+; };
+     136: 0000         	movs	r0, r0
+     138: 000e         	movs	r6, r1
+     13a: 0000         	movs	r0, r0
+     13c: 0012         	movs	r2, r2
+     13e: 0001         	movs	r1, r0
+     140: 0093         	lsls	r3, r2, #0x2
+     142: 0000         	movs	r0, r0
+     144: 014d         	lsls	r5, r1, #0x5
+     146: 0000         	movs	r0, r0
+     148: 000e         	movs	r6, r1
+     14a: 0000         	movs	r0, r0
+     14c: 0012         	movs	r2, r2
+     14e: 0001         	movs	r1, r0
+     150: 009a         	lsls	r2, r3, #0x2
+     152: 0000         	movs	r0, r0
+     154: 013d         	lsls	r5, r7, #0x4
+     156: 0000         	movs	r0, r0
+     158: 000e         	movs	r6, r1
+     15a: 0000         	movs	r0, r0
+     15c: 0022         	movs	r2, r4
+     15e: 0001         	movs	r1, r0
+     160: 00aa         	lsls	r2, r5, #0x2
+     162: 0000         	movs	r0, r0
+     164: 013d         	lsls	r5, r7, #0x4
+     166: 0000         	movs	r0, r0
+     168: 000e         	movs	r6, r1
+     16a: 0000         	movs	r0, r0
+     16c: 0022         	movs	r2, r4
+     16e: 0001         	movs	r1, r0
+     170: 00b9         	lsls	r1, r7, #0x2
+		...
+     17a: 0000         	movs	r0, r0
+     17c: 0010         	movs	r0, r2
+     17e: fff1 00c1    	<unknown>
+     182: 0000         	movs	r0, r0
+     184: 0000         	movs	r0, r0
+     186: 0010         	movs	r0, r2
+     188: 0000         	movs	r0, r0
+     18a: 0000         	movs	r0, r0
+     18c: 0010         	movs	r0, r2
+     18e: fff1 00ce    	<unknown>
+     192: 0000         	movs	r0, r0
+     194: 0000         	movs	r0, r0
+     196: 2000         	movs	r0, #0x0
+     198: 0000         	movs	r0, r0
+     19a: 0000         	movs	r0, r0
+     19c: 0010         	movs	r0, r2
+     19e: fff1 00d4    	<unknown>
+     1a2: 0000         	movs	r0, r0
+     1a4: 0000         	movs	r0, r0
+     1a6: 0200         	lsls	r0, r0, #0x8
+     1a8: 0000         	movs	r0, r0
+     1aa: 0000         	movs	r0, r0
+     1ac: 0010         	movs	r0, r2
+     1ae: fff1 00df    	<unknown>
+     1b2: 0000         	movs	r0, r0
+     1b4: 0001         	movs	r1, r0
+     1b6: 0000         	movs	r0, r0
+     1b8: 0000         	movs	r0, r0
+     1ba: 0000         	movs	r0, r0
+     1bc: 0010         	movs	r0, r2
+     1be: fff1 00eb    	<unknown>
+     1c2: 0000         	movs	r0, r0
+     1c4: 0008         	movs	r0, r1
+     1c6: 2000         	movs	r0, #0x0
+     1c8: 0000         	movs	r0, r0
+     1ca: 0000         	movs	r0, r0
+     1cc: 0010         	movs	r0, r2
+     1ce: 0005         	movs	r5, r0
+     1d0: 00f5         	lsls	r5, r6, #0x3
+     1d2: 0000         	movs	r0, r0
+     1d4: 0000         	movs	r0, r0
+     1d6: 0008         	movs	r0, r1
+     1d8: 0000         	movs	r0, r0
+     1da: 0000         	movs	r0, r0
+     1dc: 0010         	movs	r0, r2
+     1de: fff1 0105    	<unknown>
+     1e2: 0000         	movs	r0, r0
+     1e4: 0000         	movs	r0, r0
+     1e6: 0008         	movs	r0, r1
+     1e8: 0000         	movs	r0, r0
+     1ea: 0000         	movs	r0, r0
+     1ec: 0010         	movs	r0, r2
+     1ee: fff1 0112    	<unknown>
+     1f2: 0000         	movs	r0, r0
+     1f4: 0008         	movs	r0, r1
+     1f6: 0000         	movs	r0, r0
+     1f8: 0000         	movs	r0, r0
+     1fa: 0000         	movs	r0, r0
+     1fc: 0010         	movs	r0, r2
+     1fe: fff1 011e    	<unknown>
+     202: 0000         	movs	r0, r0
+     204: 0008         	movs	r0, r1
+     206: 0000         	movs	r0, r0
+     208: 0000         	movs	r0, r0
+     20a: 0000         	movs	r0, r0
+     20c: 0010         	movs	r0, r2
+     20e: fff1 0131    	<unknown>
+     212: 0000         	movs	r0, r0
+     214: 0000         	movs	r0, r0
+     216: 2200         	movs	r2, #0x0
+     218: 0000         	movs	r0, r0
+     21a: 0000         	movs	r0, r0
+     21c: 0010         	movs	r0, r2
+     21e: fff1 0139    	<unknown>
+     222: 0000         	movs	r0, r0
+     224: 0008         	movs	r0, r1
+     226: 2000         	movs	r0, #0x0
+     228: 0000         	movs	r0, r0
+     22a: 0000         	movs	r0, r0
+     22c: 0010         	movs	r0, r2
+     22e: 0005         	movs	r5, r0
+     230: 013f         	lsls	r7, r7, #0x4
+     232: 0000         	movs	r0, r0
+     234: 0168         	lsls	r0, r5, #0x5
+     236: 0000         	movs	r0, r0
+     238: 0000         	movs	r0, r0
+     23a: 0000         	movs	r0, r0
+     23c: 0010         	movs	r0, r2
+     23e: fff1 0151    	<unknown>
+     242: 0000         	movs	r0, r0
+     244: 0160         	lsls	r0, r4, #0x5
+     246: 0000         	movs	r0, r0
+     248: 0000         	movs	r0, r0
+     24a: 0000         	movs	r0, r0
+     24c: 0010         	movs	r0, r2
+     24e: fff1 015f    	<unknown>
+     252: 0000         	movs	r0, r0
+     254: 0168         	lsls	r0, r5, #0x5
+     256: 0000         	movs	r0, r0
+     258: 0000         	movs	r0, r0
+     25a: 0000         	movs	r0, r0
+     25c: 0010         	movs	r0, r2
+     25e: fff1 0172    	<unknown>
+     262: 0000         	movs	r0, r0
+     264: 0008         	movs	r0, r1
+     266: 2000         	movs	r0, #0x0
+     268: 0000         	movs	r0, r0
+     26a: 0000         	movs	r0, r0
+     26c: 0010         	movs	r0, r2
+     26e: 0003         	movs	r3, r0
+     270: 017d         	lsls	r5, r7, #0x5
+     272: 0000         	movs	r0, r0
+     274: 0000         	movs	r0, r0
+     276: 2000         	movs	r0, #0x0
+     278: 0000         	movs	r0, r0
+     27a: 0000         	movs	r0, r0
+     27c: 0010         	movs	r0, r2
+     27e: 0002         	movs	r2, r0
+     280: 018a         	lsls	r2, r1, #0x6
+     282: 0000         	movs	r0, r0
+     284: 015a         	lsls	r2, r3, #0x5
+     286: 0000         	movs	r0, r0
+     288: 0000         	movs	r0, r0
+     28a: 0000         	movs	r0, r0
+     28c: 0010         	movs	r0, r2
+     28e: 0001         	movs	r1, r0
+     290: 0195         	lsls	r5, r2, #0x6
+     292: 0000         	movs	r0, r0
+     294: 0008         	movs	r0, r1
+     296: 2000         	movs	r0, #0x0
+     298: 0000         	movs	r0, r0
+     29a: 0000         	movs	r0, r0
+     29c: 0010         	movs	r0, r2
+     29e: 0005         	movs	r5, r0
+
+Disassembly of section .shstrtab:
+
+00000000 <.shstrtab>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 2e00         	cmp	r6, #0x0
+       2: 6574         	str	r4, [r6, #0x54]
+;     char* prev_heap_ptr = heap_ptr;
+       4: 7478         	strb	r0, [r7, #0x11]
+       6: 2e00         	cmp	r6, #0x0
+       8: 6164         	str	r4, [r4, #0x14]
+;     if (increment > 0) {
+       a: 6174         	str	r4, [r6, #0x14]
+       c: 2e00         	cmp	r6, #0x0
+       e: 6474         	str	r4, [r6, #0x44]
+      10: 7461         	strb	r1, [r4, #0x11]
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 0061         	lsls	r1, r4, #0x1
+      14: 742e         	strb	r6, [r5, #0x10]
+      16: 7362         	strb	r2, [r4, #0xd]
+      18: 0073         	lsls	r3, r6, #0x1
+      1a: 622e         	str	r6, [r5, #0x20]
+      1c: 7373         	strb	r3, [r6, #0xd]
+      1e: 2e00         	cmp	r6, #0x0
+      20: 6568         	str	r0, [r5, #0x54]
+      22: 7061         	strb	r1, [r4, #0x1]
+      24: 2e00         	cmp	r6, #0x0
+;             return (void*)-1;  // Return error if the heap is full
+      26: 7473         	strb	r3, [r6, #0x11]
+      28: 6361         	str	r1, [r4, #0x34]
+;         heap_ptr += increment;
+      2a: 006b         	lsls	r3, r5, #0x1
+      2c: 632e         	str	r6, [r5, #0x30]
+      2e: 6d6f         	ldr	r7, [r5, #0x54]
+      30: 656d         	str	r5, [r5, #0x54]
+      32: 746e         	strb	r6, [r5, #0x11]
+;     }
+      34: 2e00         	cmp	r6, #0x0
+;     return (void*)prev_heap_ptr;
+      36: 6564         	str	r4, [r4, #0x54]
+      38: 7562         	strb	r2, [r4, #0x15]
+      3a: 5f67         	ldrsh	r7, [r4, r5]
+; }
+      3c: 6e69         	ldr	r1, [r5, #0x64]
+      3e: 6f66         	ldr	r6, [r4, #0x74]
+      40: 2e00         	cmp	r6, #0x0
+      42: 6564         	str	r4, [r4, #0x54]
+      44: 7562         	strb	r2, [r4, #0x15]
+      46: 5f67         	ldrsh	r7, [r4, r5]
+      48: 6261         	str	r1, [r4, #0x24]
+      4a: 7262         	strb	r2, [r4, #0x9]
+; unsigned long long fibonacci(int n) {
+      4c: 7665         	strb	r5, [r4, #0x19]
+      4e: 2e00         	cmp	r6, #0x0
+;     if (n <= 0) return 0;
+      50: 6564         	str	r4, [r4, #0x54]
+      52: 7562         	strb	r2, [r4, #0x15]
+      54: 5f67         	ldrsh	r7, [r4, r5]
+      56: 696c         	ldr	r4, [r5, #0x14]
+      58: 656e         	str	r6, [r5, #0x54]
+;     if (n <= 0) return 0;
+      5a: 2e00         	cmp	r6, #0x0
+      5c: 6564         	str	r4, [r4, #0x54]
+      5e: 7562         	strb	r2, [r4, #0x15]
+;     if (n == 1) return 1;
+      60: 5f67         	ldrsh	r7, [r4, r5]
+      62: 7266         	strb	r6, [r4, #0x9]
+      64: 6d61         	ldr	r1, [r4, #0x54]
+      66: 0065         	lsls	r5, r4, #0x1
+      68: 642e         	str	r6, [r5, #0x40]
+;     if (n == 1) return 1;
+      6a: 6265         	str	r5, [r4, #0x24]
+      6c: 6775         	str	r5, [r6, #0x74]
+      6e: 735f         	strb	r7, [r3, #0xd]
+      70: 7274         	strb	r4, [r6, #0x9]
+      72: 2e00         	cmp	r6, #0x0
+;     unsigned long long a = 0, b = 1, temp;
+      74: 6564         	str	r4, [r4, #0x54]
+      76: 7562         	strb	r2, [r4, #0x15]
+      78: 5f67         	ldrsh	r7, [r4, r5]
+      7a: 6461         	str	r1, [r4, #0x44]
+      7c: 7264         	strb	r4, [r4, #0x9]
+      7e: 2e00         	cmp	r6, #0x0
+;     for (int i = 2; i <= n; ++i) {
+      80: 6564         	str	r4, [r4, #0x54]
+      82: 7562         	strb	r2, [r4, #0x15]
+      84: 5f67         	ldrsh	r7, [r4, r5]
+      86: 696c         	ldr	r4, [r5, #0x14]
+      88: 656e         	str	r6, [r5, #0x54]
+      8a: 735f         	strb	r7, [r3, #0xd]
+      8c: 7274         	strb	r4, [r6, #0x9]
+;         temp = a + b;
+      8e: 2e00         	cmp	r6, #0x0
+      90: 6564         	str	r4, [r4, #0x54]
+      92: 7562         	strb	r2, [r4, #0x15]
+      94: 5f67         	ldrsh	r7, [r4, r5]
+      96: 6f6c         	ldr	r4, [r5, #0x74]
+      98: 6c63         	ldr	r3, [r4, #0x44]
+      9a: 7369         	strb	r1, [r5, #0xd]
+      9c: 7374         	strb	r4, [r6, #0xd]
+;         a = b;
+      9e: 2e00         	cmp	r6, #0x0
+      a0: 6564         	str	r4, [r4, #0x54]
+      a2: 7562         	strb	r2, [r4, #0x15]
+      a4: 5f67         	ldrsh	r7, [r4, r5]
+;         b = temp;
+      a6: 7473         	strb	r3, [r6, #0x11]
+      a8: 5f72         	ldrsh	r2, [r6, r5]
+      aa: 666f         	str	r7, [r5, #0x64]
+      ac: 7366         	strb	r6, [r4, #0xd]
+;     }
+      ae: 7465         	strb	r5, [r4, #0x11]
+;     for (int i = 2; i <= n; ++i) {
+      b0: 0073         	lsls	r3, r6, #0x1
+      b2: 412e         	asrs	r6, r5
+      b4: 4d52         	ldr	r5, [pc, #0x148]        @ 0x200 <.debug_line+0x200>
+      b6: 612e         	str	r6, [r5, #0x10]
+;     return b;
+      b8: 7474         	strb	r4, [r6, #0x11]
+      ba: 6972         	ldr	r2, [r6, #0x14]
+      bc: 7562         	strb	r2, [r4, #0x15]
+      be: 6574         	str	r4, [r6, #0x54]
+      c0: 0073         	lsls	r3, r6, #0x1
+; }
+      c2: 732e         	strb	r6, [r5, #0xc]
+      c4: 6d79         	ldr	r1, [r7, #0x54]
+      c6: 6174         	str	r4, [r6, #0x14]
+      c8: 0062         	lsls	r2, r4, #0x1
+; int main() {
+      ca: 732e         	strb	r6, [r5, #0xc]
+      cc: 7368         	strb	r0, [r5, #0xd]
+      ce: 7274         	strb	r4, [r6, #0x9]
+      d0: 6174         	str	r4, [r6, #0x14]
+      d2: 0062         	lsls	r2, r4, #0x1
+      d4: 732e         	strb	r6, [r5, #0xc]
+      d6: 7274         	strb	r4, [r6, #0x9]
+      d8: 6174         	str	r4, [r6, #0x14]
+      da: 0062         	lsls	r2, r4, #0x1
+
+Disassembly of section .strtab:
+
+00000000 <.strtab>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 6600         	str	r0, [r0, #0x60]
+       2: 6269         	str	r1, [r5, #0x24]
+;     char* prev_heap_ptr = heap_ptr;
+       4: 632e         	str	r6, [r5, #0x30]
+       6: 2400         	movs	r4, #0x0
+       8: 0074         	lsls	r4, r6, #0x1
+;     if (increment > 0) {
+       a: 6424         	str	r4, [r4, #0x40]
+       c: 6800         	ldr	r0, [r0]
+       e: 6165         	str	r5, [r4, #0x14]
+      10: 5f70         	ldrsh	r0, [r6, r5]
+;         if (heap_ptr + increment > &__heap_end) {
+      12: 7470         	strb	r0, [r6, #0x11]
+      14: 0072         	lsls	r2, r6, #0x1
+      16: 7424         	strb	r4, [r4, #0x10]
+      18: 7300         	strb	r0, [r0, #0xc]
+      1a: 6376         	str	r6, [r6, #0x34]
+      1c: 705f         	strb	r7, [r3, #0x1]
+      1e: 7475         	strb	r5, [r6, #0x11]
+      20: 6e69         	ldr	r1, [r5, #0x64]
+      22: 0074         	lsls	r4, r6, #0x1
+      24: 7673         	strb	r3, [r6, #0x19]
+;             return (void*)-1;  // Return error if the heap is full
+      26: 5f63         	ldrsh	r3, [r4, r5]
+      28: 7865         	ldrb	r5, [r4, #0x1]
+;         heap_ptr += increment;
+      2a: 7469         	strb	r1, [r5, #0x11]
+      2c: 6200         	str	r0, [r0, #0x20]
+      2e: 657a         	str	r2, [r7, #0x54]
+      30: 6f72         	ldr	r2, [r6, #0x74]
+      32: 632e         	str	r6, [r5, #0x30]
+;     }
+      34: 2400         	movs	r4, #0x0
+;     return (void*)prev_heap_ptr;
+      36: 0074         	lsls	r4, r6, #0x1
+      38: 656d         	str	r5, [r5, #0x54]
+      3a: 736d         	strb	r5, [r5, #0xd]
+; }
+      3c: 7465         	strb	r5, [r4, #0x11]
+      3e: 632e         	str	r6, [r5, #0x30]
+      40: 2400         	movs	r4, #0x0
+      42: 0074         	lsls	r4, r6, #0x1
+      44: 6273         	str	r3, [r6, #0x24]
+      46: 6b72         	ldr	r2, [r6, #0x34]
+      48: 5f00         	ldrsh	r0, [r0, r4]
+      4a: 685f         	ldr	r7, [r3, #0x4]
+; unsigned long long fibonacci(int n) {
+      4c: 6165         	str	r5, [r4, #0x14]
+      4e: 5f70         	ldrsh	r0, [r6, r5]
+;     if (n <= 0) return 0;
+      50: 6e65         	ldr	r5, [r4, #0x64]
+      52: 0064         	lsls	r4, r4, #0x1
+      54: 6966         	ldr	r6, [r4, #0x14]
+      56: 6f62         	ldr	r2, [r4, #0x74]
+      58: 616e         	str	r6, [r5, #0x14]
+;     if (n <= 0) return 0;
+      5a: 6363         	str	r3, [r4, #0x34]
+      5c: 0069         	lsls	r1, r5, #0x1
+      5e: 616d         	str	r5, [r5, #0x14]
+;     if (n == 1) return 1;
+      60: 6e69         	ldr	r1, [r5, #0x64]
+      62: 5f00         	ldrsh	r0, [r0, r4]
+      64: 615f         	str	r7, [r3, #0x14]
+      66: 6165         	str	r5, [r4, #0x14]
+      68: 6962         	ldr	r2, [r4, #0x14]
+;     if (n == 1) return 1;
+      6a: 6d5f         	ldr	r7, [r3, #0x54]
+      6c: 6d65         	ldr	r5, [r4, #0x54]
+      6e: 6c63         	ldr	r3, [r4, #0x44]
+      70: 3472         	adds	r4, #0x72
+      72: 5f00         	ldrsh	r0, [r0, r4]
+;     unsigned long long a = 0, b = 1, temp;
+      74: 685f         	ldr	r7, [r3, #0x4]
+      76: 6165         	str	r5, [r4, #0x14]
+      78: 5f70         	ldrsh	r0, [r6, r5]
+      7a: 7473         	strb	r3, [r6, #0x11]
+      7c: 7261         	strb	r1, [r4, #0x9]
+      7e: 0074         	lsls	r4, r6, #0x1
+;     for (int i = 2; i <= n; ++i) {
+      80: 5f5f         	ldrsh	r7, [r3, r5]
+      82: 7364         	strb	r4, [r4, #0xd]
+      84: 5f6f         	ldrsh	r7, [r5, r5]
+      86: 6168         	str	r0, [r5, #0x14]
+      88: 646e         	str	r6, [r5, #0x44]
+      8a: 656c         	str	r4, [r5, #0x54]
+      8c: 6200         	str	r0, [r0, #0x20]
+;         temp = a + b;
+      8e: 657a         	str	r2, [r7, #0x54]
+      90: 6f72         	ldr	r2, [r6, #0x74]
+      92: 6d00         	ldr	r0, [r0, #0x50]
+      94: 6d65         	ldr	r5, [r4, #0x54]
+      96: 6573         	str	r3, [r6, #0x54]
+      98: 0074         	lsls	r4, r6, #0x1
+      9a: 5f5f         	ldrsh	r7, [r3, r5]
+      9c: 6561         	str	r1, [r4, #0x54]
+;         a = b;
+      9e: 6261         	str	r1, [r4, #0x24]
+      a0: 5f69         	ldrsh	r1, [r5, r5]
+      a2: 656d         	str	r5, [r5, #0x54]
+      a4: 636d         	str	r5, [r5, #0x34]
+;         b = temp;
+      a6: 726c         	strb	r4, [r5, #0x9]
+      a8: 0038         	movs	r0, r7
+      aa: 5f5f         	ldrsh	r7, [r3, r5]
+      ac: 6561         	str	r1, [r4, #0x54]
+;     }
+      ae: 6261         	str	r1, [r4, #0x24]
+;     for (int i = 2; i <= n; ++i) {
+      b0: 5f69         	ldrsh	r1, [r5, r5]
+      b2: 656d         	str	r5, [r5, #0x54]
+      b4: 636d         	str	r5, [r5, #0x34]
+      b6: 726c         	strb	r4, [r5, #0x9]
+;     return b;
+      b8: 5f00         	ldrsh	r0, [r0, r4]
+      ba: 665f         	str	r7, [r3, #0x64]
+      bc: 616c         	str	r4, [r5, #0x14]
+      be: 6873         	ldr	r3, [r6, #0x4]
+      c0: 5f00         	ldrsh	r0, [r0, r4]
+; }
+      c2: 665f         	str	r7, [r3, #0x64]
+      c4: 616c         	str	r4, [r5, #0x14]
+      c6: 6873         	ldr	r3, [r6, #0x4]
+      c8: 735f         	strb	r7, [r3, #0xd]
+; int main() {
+      ca: 7a69         	ldrb	r1, [r5, #0x9]
+      cc: 0065         	lsls	r5, r4, #0x1
+      ce: 5f5f         	ldrsh	r7, [r3, r5]
+      d0: 6172         	str	r2, [r6, #0x14]
+      d2: 006d         	lsls	r5, r5, #0x1
+      d4: 5f5f         	ldrsh	r7, [r3, r5]
+      d6: 6172         	str	r2, [r6, #0x14]
+      d8: 5f6d         	ldrsh	r5, [r5, r5]
+      da: 6973         	ldr	r3, [r6, #0x14]
+; 	unsigned arr[N] = {0};
+      dc: 657a         	str	r2, [r7, #0x54]
+      de: 5f00         	ldrsh	r0, [r0, r4]
+      e0: 745f         	strb	r7, [r3, #0x11]
+; 	for (unsigned i = 0; i < N; i++) {
+      e2: 736c         	strb	r4, [r5, #0xd]
+      e4: 615f         	str	r7, [r3, #0x14]
+      e6: 696c         	ldr	r4, [r5, #0x14]
+      e8: 6e67         	ldr	r7, [r4, #0x64]
+      ea: 5f00         	ldrsh	r0, [r0, r4]
+      ec: 625f         	str	r7, [r3, #0x24]
+; 		arr[i] = fibonacci(i + 1);
+      ee: 7373         	strb	r3, [r6, #0xd]
+      f0: 655f         	str	r7, [r3, #0x54]
+      f2: 646e         	str	r6, [r5, #0x44]
+      f4: 5f00         	ldrsh	r0, [r0, r4]
+      f6: 685f         	ldr	r7, [r3, #0x4]
+      f8: 6165         	str	r5, [r4, #0x14]
+      fa: 5f70         	ldrsh	r0, [r6, r5]
+      fc: 6973         	ldr	r3, [r6, #0x14]
+; 	}
+      fe: 657a         	str	r2, [r7, #0x54]
+; 	for (unsigned i = 0; i < N; i++) {
+     100: 6d5f         	ldr	r7, [r3, #0x54]
+     102: 6e69         	ldr	r1, [r5, #0x64]
+     104: 5f00         	ldrsh	r0, [r0, r4]
+     106: 735f         	strb	r7, [r3, #0xd]
+;     svc_putint(arr[N - 1]);
+     108: 6174         	str	r4, [r6, #0x14]
+     10a: 6b63         	ldr	r3, [r4, #0x34]
+     10c: 735f         	strb	r7, [r3, #0xd]
+     10e: 7a69         	ldrb	r1, [r5, #0x9]
+; 	svc_exit(0);
+     110: 0065         	lsls	r5, r4, #0x1
+     112: 5f5f         	ldrsh	r7, [r3, r5]
+; }
+     114: 6164         	str	r4, [r4, #0x14]
+     116: 6174         	str	r4, [r6, #0x14]
+     118: 735f         	strb	r7, [r3, #0xd]
+; static inline void svc_putint(int n) {
+     11a: 7a69         	ldrb	r1, [r5, #0x9]
+     11c: 0065         	lsls	r5, r4, #0x1
+;      register int r0 __asm__("r0") = n;
+     11e: 5f5f         	ldrsh	r7, [r3, r5]
+     120: 6164         	str	r4, [r4, #0x14]
+;      __asm volatile ("svc 3" :  : "r"(r0) : "memory");
+     122: 6174         	str	r4, [r6, #0x14]
+     124: 735f         	strb	r7, [r3, #0xd]
+; }
+     126: 756f         	strb	r7, [r5, #0x15]
+     128: 6372         	str	r2, [r6, #0x34]
+; static inline void svc_exit(unsigned code) {
+     12a: 5f65         	ldrsh	r5, [r4, r5]
+     12c: 6973         	ldr	r3, [r6, #0x14]
+;     register unsigned r0 __asm__("r0") = code;
+     12e: 657a         	str	r2, [r7, #0x54]
+     130: 5f00         	ldrsh	r0, [r0, r4]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+     132: 735f         	strb	r7, [r3, #0xd]
+     134: 6174         	str	r4, [r6, #0x14]
+; };
+     136: 6b63         	ldr	r3, [r4, #0x34]
+     138: 5f00         	ldrsh	r0, [r0, r4]
+     13a: 655f         	str	r7, [r3, #0x54]
+     13c: 646e         	str	r6, [r5, #0x44]
+     13e: 5f00         	ldrsh	r0, [r0, r4]
+     140: 645f         	str	r7, [r3, #0x44]
+     142: 7461         	strb	r1, [r4, #0x11]
+     144: 5f61         	ldrsh	r1, [r4, r5]
+     146: 6f73         	ldr	r3, [r6, #0x74]
+     148: 7275         	strb	r5, [r6, #0x9]
+     14a: 6563         	str	r3, [r4, #0x54]
+     14c: 655f         	str	r7, [r3, #0x54]
+     14e: 646e         	str	r6, [r5, #0x44]
+     150: 5f00         	ldrsh	r0, [r0, r4]
+     152: 645f         	str	r7, [r3, #0x44]
+     154: 7461         	strb	r1, [r4, #0x11]
+     156: 5f61         	ldrsh	r1, [r4, r5]
+     158: 6f73         	ldr	r3, [r6, #0x74]
+     15a: 7275         	strb	r5, [r6, #0x9]
+     15c: 6563         	str	r3, [r4, #0x54]
+     15e: 5f00         	ldrsh	r0, [r0, r4]
+     160: 745f         	strb	r7, [r3, #0x11]
+     162: 6164         	str	r4, [r4, #0x14]
+     164: 6174         	str	r4, [r6, #0x14]
+     166: 735f         	strb	r7, [r3, #0xd]
+     168: 756f         	strb	r7, [r5, #0x15]
+     16a: 6372         	str	r2, [r6, #0x34]
+     16c: 5f65         	ldrsh	r5, [r4, r5]
+     16e: 6e65         	ldr	r5, [r4, #0x64]
+     170: 0064         	lsls	r4, r4, #0x1
+     172: 5f5f         	ldrsh	r7, [r3, r5]
+     174: 6164         	str	r4, [r4, #0x14]
+     176: 6174         	str	r4, [r6, #0x14]
+     178: 655f         	str	r7, [r3, #0x54]
+     17a: 646e         	str	r6, [r5, #0x44]
+     17c: 5f00         	ldrsh	r0, [r0, r4]
+     17e: 645f         	str	r7, [r3, #0x44]
+     180: 7461         	strb	r1, [r4, #0x11]
+     182: 5f61         	ldrsh	r1, [r4, r5]
+     184: 7473         	strb	r3, [r6, #0x11]
+     186: 7261         	strb	r1, [r4, #0x9]
+     188: 0074         	lsls	r4, r6, #0x1
+     18a: 5f5f         	ldrsh	r7, [r3, r5]
+     18c: 6574         	str	r4, [r6, #0x54]
+     18e: 7478         	strb	r0, [r7, #0x11]
+     190: 655f         	str	r7, [r3, #0x54]
+     192: 646e         	str	r6, [r5, #0x44]
+     194: 5f00         	ldrsh	r0, [r0, r4]
+     196: 6e65         	ldr	r5, [r4, #0x64]
+     198: 0064         	lsls	r4, r4, #0x1

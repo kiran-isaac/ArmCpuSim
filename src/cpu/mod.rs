@@ -132,10 +132,10 @@ impl<'a> OoOSpeculative<'a> {
             fb: [None; N_ISSUE],
             iq: VecDeque::new(),
 
-            rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 12),
-            rs_mul: RSSet::new(IssueType::MUL, 8),
-            rs_control: RSSet::new(IssueType::Control, 8),
-            rs_ls: RSSet::new(IssueType::LoadStore, 12),
+            rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, N_ALUSHIFT_RS),
+            rs_mul: RSSet::new(IssueType::MUL, N_MUL_RS),
+            rs_control: RSSet::new(IssueType::Control, N_CNTRL_RS),
+            rs_ls: RSSet::new(IssueType::LoadStore, N_LS_RS),
 
             rob,
             flush_delay: 0,

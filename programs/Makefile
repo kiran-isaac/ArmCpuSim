@@ -1,5 +1,4 @@
-C_FILES := $(wildcard ./*.c)
-ARMET := ~/LLVM-ET-Arm-19.1.5-Linux-x86_64
+ARMET := $(USERPROFILE)/LLVM-ET-Arm-19.1.5
 CLANG_TARGET_OPTIONS := --target=armv6m-none-eabi -mfloat-abi=soft -mthumb
 LINKER_SCRIPT := script.ld
 
@@ -8,7 +7,7 @@ LINKER_SCRIPT := script.ld
 
 %.out: %.c
 	$(ARMET)/bin/clang -O2 -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
-	
+
 %.out: %.s
 	$(ARMET)/bin/clang -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
 
@@ -29,11 +28,15 @@ facbench:
 	$(ARMET)/bin/clang -O0 -g $(CLANG_TARGET_OPTIONS) benchmarks/fac.c -o benchmarks/fac.out -T $(LINKER_SCRIPT)
 	$(ARMET)/bin/llvm-objdump -D -S  benchmarks/fac.out > benchmarks/fac.dis
 
+fibbench:
+	$(ARMET)/bin/clang -O0 -g $(CLANG_TARGET_OPTIONS) benchmarks/fib.c -o benchmarks/fib.out -T $(LINKER_SCRIPT)
+	$(ARMET)/bin/llvm-objdump -D -S  benchmarks/fib.out > benchmarks/fib.dis
+
 makelistbench:
 	$(ARMET)/bin/clang -O3 -g $(CLANG_TARGET_OPTIONS) benchmarks/makelist.c -o benchmarks/makelist.out -T $(LINKER_SCRIPT)
 	$(ARMET)/bin/llvm-objdump -D -S  benchmarks/makelist.out > benchmarks/makelist.dis
 
-bench: bubblebench matmulbench facbench makelistbench
+bench: bubblebench matmulbench facbench makelistbench fibbench
 
 .PHONY: clean
 clean:

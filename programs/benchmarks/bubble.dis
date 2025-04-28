@@ -353,31 +353,31 @@ Disassembly of section .debug_info:
       62: 0000         	movs	r0, r0
       64: 5701         	ldrsb	r1, [r0, r4]
 ;   arr[j] = temp;
-      66: 0006         	movs	r6, r0
+      66: 0206         	lsls	r6, r0, #0x8
       68: 0703         	lsls	r3, r0, #0x1c
       6a: 7d02         	ldrb	r2, [r0, #0x14]
       6c: 0f0c         	lsrs	r4, r1, #0x1c
 ; }
-      6e: 0300         	lsls	r0, r0, #0xc
+      6e: 0302         	lsls	r2, r0, #0xc
       70: 002e         	movs	r6, r5
 ; void bubble_sort(char arr[], int n) {
       72: 0000         	movs	r0, r0
       74: 0207         	lsls	r7, r0, #0x8
       76: 087d         	lsrs	r5, r7, #0x1
-      78: 0010         	movs	r0, r2
+      78: 0210         	lsls	r0, r2, #0x8
       7a: 5803         	ldr	r3, [r0, r0]
       7c: 0001         	movs	r1, r0
 ;   for (int i = 0; i < n; i++) {
       7e: 0700         	lsls	r0, r0, #0x1c
       80: 7d02         	ldrb	r2, [r0, #0x14]
       82: 1104         	asrs	r4, r0, #0x4
-      84: 0300         	lsls	r0, r0, #0xc
+      84: 0302         	lsls	r2, r0, #0xc
       86: 0158         	lsls	r0, r3, #0x5
       88: 0000         	movs	r0, r0
       8a: 0208         	lsls	r0, r1, #0x8
       8c: 007d         	lsls	r5, r7, #0x1
 ;     for (int j = 0; j < n - i - 1; j++) {
-      8e: 0012         	movs	r2, r2
+      8e: 0212         	lsls	r2, r2, #0x8
       90: 5804         	ldr	r4, [r0, r0]
       92: 0001         	movs	r1, r0
       94: 0000         	movs	r0, r0
@@ -385,17 +385,17 @@ Disassembly of section .debug_info:
       98: 0064         	lsls	r4, r4, #0x1
       9a: 0000         	movs	r0, r0
       9c: 5701         	ldrsb	r1, [r0, r4]
-      9e: 0007         	movs	r7, r0
+      9e: 0207         	lsls	r7, r0, #0x8
       a0: 0709         	lsls	r1, r1, #0x1c
 ;       if (arr[j] > arr[j + 1])
       a2: 7d02         	ldrb	r2, [r0, #0x14]
       a4: 0f0c         	lsrs	r4, r1, #0x1c
-      a6: 0900         	lsrs	r0, r0, #0x4
+      a6: 0902         	lsrs	r2, r0, #0x4
       a8: 002e         	movs	r6, r5
       aa: 0000         	movs	r0, r0
       ac: 0207         	lsls	r7, r0, #0x8
       ae: 087d         	lsrs	r5, r7, #0x1
-      b0: 0013         	movs	r3, r2
+      b0: 0213         	lsls	r3, r2, #0x8
 ;         swap(arr, j, j + 1);
       b2: 5809         	ldr	r1, [r1, r0]
       b4: 0001         	movs	r1, r0
@@ -407,7 +407,7 @@ Disassembly of section .debug_info:
       be: 7d02         	ldrb	r2, [r0, #0x14]
 ;     for (int j = 0; j < n - i - 1; j++) {
       c0: 1004         	asrs	r4, r0, #0x20
-      c2: 0a00         	lsrs	r0, r0, #0x8
+      c2: 0a02         	lsrs	r2, r0, #0x8
       c4: 0158         	lsls	r0, r3, #0x5
       c6: 0000         	movs	r0, r0
 ;   }
@@ -418,7 +418,7 @@ Disassembly of section .debug_info:
       ce: 0208         	lsls	r0, r1, #0x8
       d0: 007d         	lsls	r5, r7, #0x1
 ; }
-      d2: 0011         	movs	r1, r2
+      d2: 0211         	lsls	r1, r2, #0x8
       d4: 580b         	ldr	r3, [r1, r0]
 ; void assert_is_sorted(char *arr, unsigned n) {
       d6: 0001         	movs	r1, r0
@@ -429,17 +429,17 @@ Disassembly of section .debug_info:
       e0: 0000         	movs	r0, r0
 ;   for (int i = 0; i < n - 1; i++) {
       e2: 5701         	ldrsb	r1, [r0, r4]
-      e4: 0008         	movs	r0, r1
+      e4: 0208         	lsls	r0, r1, #0x8
       e6: 0712         	lsls	r2, r2, #0x1c
       e8: 7d02         	ldrb	r2, [r0, #0x14]
       ea: 0f0c         	lsrs	r4, r1, #0x1c
-      ec: 1200         	asrs	r0, r0, #0x8
+      ec: 1202         	asrs	r2, r0, #0x8
       ee: 002e         	movs	r6, r5
       f0: 0000         	movs	r0, r0
 ;     if (arr[i] > arr[i + 1]) {
       f2: 0207         	lsls	r7, r0, #0x8
       f4: 087d         	lsrs	r5, r7, #0x1
-      f6: 0013         	movs	r3, r2
+      f6: 0213         	lsls	r3, r2, #0x8
       f8: 6412         	str	r2, [r2, #0x40]
       fa: 0001         	movs	r1, r0
       fc: 0a00         	lsrs	r0, r0, #0x8
@@ -450,7 +450,7 @@ Disassembly of section .debug_info:
      104: 7d02         	ldrb	r2, [r0, #0x14]
      106: 1004         	asrs	r4, r0, #0x20
 ;     }
-     108: 1300         	asrs	r0, r0, #0xc
+     108: 1302         	asrs	r2, r0, #0xc
 ;   }
      10a: 0158         	lsls	r0, r3, #0x5
 ;   for (int i = 0; i < n - 1; i++) {
@@ -484,7 +484,7 @@ Disassembly of section .debug_info:
      134: 0040         	lsls	r0, r0, #0x1
      136: 0000         	movs	r0, r0
      138: 5701         	ldrsb	r1, [r0, r4]
-     13a: 000a         	movs	r2, r1
+     13a: 020a         	lsls	r2, r1, #0x8
      13c: 581c         	ldr	r4, [r3, r0]
      13e: 0001         	movs	r1, r0
      140: 0800         	lsrs	r0, r0, #0x20
@@ -492,13 +492,13 @@ Disassembly of section .debug_info:
      142: 7d02         	ldrb	r2, [r0, #0x14]
 ;   bubble_sort(arr, len);
      144: 0f0c         	lsrs	r4, r1, #0x1c
-     146: 1d00         	adds	r0, r0, #0x4
+     146: 1d02         	adds	r2, r0, #0x4
      148: 0168         	lsls	r0, r5, #0x5
      14a: 0000         	movs	r0, r0
 ;   assert_is_sorted(arr, len);
      14c: 0208         	lsls	r0, r1, #0x8
      14e: 087d         	lsrs	r5, r7, #0x1
-     150: 0018         	movs	r0, r3
+     150: 0218         	lsls	r0, r3, #0x8
      152: 6420         	str	r0, [r4, #0x40]
 ;   svc_exit(arr[0]);
      154: 0001         	movs	r1, r0
@@ -509,7 +509,7 @@ Disassembly of section .debug_info:
      15c: 580d         	ldr	r5, [r1, r0]
      15e: 0001         	movs	r1, r0
      160: 0d00         	lsrs	r0, r0, #0x14
-     162: 1202         	asrs	r2, r0, #0x8
+     162: 1203         	asrs	r3, r0, #0x8
      164: 1404         	asrs	r4, r0, #0x10
      166: 0407         	lsls	r7, r0, #0x10
      168: 330e         	adds	r3, #0xe
@@ -668,12 +668,12 @@ Disassembly of section .debug_line:
 
 00000000 <.debug_line>:
 ; extern void* sbrk(ptrdiff_t increment) {
-       0: 01f1         	lsls	r1, r6, #0x7
+       0: 020a         	lsls	r2, r1, #0x8
        2: 0000         	movs	r0, r0
 ;     char* prev_heap_ptr = heap_ptr;
        4: 0005         	movs	r5, r0
        6: 0004         	movs	r4, r0
-       8: 0069         	lsls	r1, r5, #0x1
+       8: 0082         	lsls	r2, r0, #0x2
 ;     if (increment > 0) {
        a: 0000         	movs	r0, r0
        c: 0101         	lsls	r1, r0, #0x4
@@ -686,279 +686,292 @@ Disassembly of section .debug_line:
       1a: 0001         	movs	r1, r0
       1c: 0100         	lsls	r0, r0, #0x4
       1e: 0101         	lsls	r1, r0, #0x4
-      20: 031f         	lsls	r7, r3, #0xc
-      22: 000c         	movs	r4, r1
+      20: 041f         	lsls	r7, r3, #0x10
+      22: 0068         	lsls	r0, r5, #0x1
       24: 0000         	movs	r0, r0
 ;             return (void*)-1;  // Return error if the heap is full
-      26: 0025         	movs	r5, r4
+      26: 0000         	movs	r0, r0
       28: 0000         	movs	r0, r0
 ;         heap_ptr += increment;
-      2a: 0000         	movs	r0, r0
+      2a: 0054         	lsls	r4, r2, #0x1
       2c: 0000         	movs	r0, r0
-      2e: 0103         	lsls	r3, r0, #0x4
-      30: 021f         	lsls	r7, r3, #0x8
-      32: 050f         	lsls	r7, r1, #0x14
+      2e: 0092         	lsls	r2, r2, #0x2
+      30: 0000         	movs	r0, r0
+      32: 0103         	lsls	r3, r0, #0x4
 ;     }
-      34: 031e         	lsls	r6, r3, #0xc
+      34: 021f         	lsls	r7, r3, #0x8
 ;     return (void*)prev_heap_ptr;
-      36: 0086         	lsls	r6, r0, #0x2
-      38: 0000         	movs	r0, r0
-      3a: 0600         	lsls	r0, r0, #0x18
+      36: 050f         	lsls	r7, r1, #0x14
+      38: 041e         	lsls	r6, r3, #0x10
+      3a: 00a1         	lsls	r1, r4, #0x2
 ; }
-      3c: 7e50         	ldrb	r0, [r2, #0x19]
-      3e: db9d         	blt	0xffffff7c <.stack+0xffffffffdff7ff74> @ imm = #-0xc6
-      40: c289         	stm	r2!, {r0, r3, r7}
-      42: f841 e3b1    	<unknown>
-      46: 588a         	ldr	r2, [r1, r2]
-      48: 1853         	adds	r3, r2, r1
-      4a: 9a2e         	ldr	r2, [sp, #0xb8]
+      3c: 0000         	movs	r0, r0
+      3e: 7600         	strb	r0, [r0, #0x18]
+      40: 7616         	strb	r6, [r2, #0x18]
+      42: 0447         	lsls	r7, r0, #0x11
+      44: e27c         	b	0x540 <.rodata+0x3d8>   @ imm = #0x4f8
+      46: b7e0         	<unknown>
+      48: 35d3         	adds	r5, #0xd3
+      4a: e7e3         	b	0x14 <.debug_line+0x14> @ imm = #-0x3a
 ; void swap(char *arr, int i, int j) {
-      4c: 0000         	movs	r0, r0
-      4e: 0100         	lsls	r0, r0, #0x4
-      50: 9c5b         	ldr	r4, [sp, #0x16c]
-      52: 2155         	movs	r1, #0x55
+      4c: 1b56         	subs	r6, r2, r5
+      4e: b5be         	push	{r1, r2, r3, r4, r5, r7, lr}
+      50: 0000         	movs	r0, r0
+      52: 0100         	lsls	r0, r0, #0x4
 ;   int temp = arr[i];
-      54: e3d5         	b	0x802 <.rodata+0x69a>   @ imm = #0x7aa
-      56: a127         	adr	r1, #156 <.debug_line+0x81>
-      58: a52a         	adr	r5, #168 <.debug_line+0x86>
-      5a: 8fab         	ldrh	r3, [r5, #0x3c]
+      54: b4f9         	push	{r0, r3, r4, r5, r6, r7}
+      56: 5110         	str	r0, [r2, r4]
+      58: 81db         	strh	r3, [r3, #0xe]
+      5a: 6976         	ldr	r6, [r6, #0x14]
 ;   arr[i] = arr[j];
-      5c: b551         	push	{r0, r4, r6, lr}
-      5e: 7e63         	ldrb	r3, [r4, #0x19]
-      60: 003c         	movs	r4, r7
-      62: 0000         	movs	r0, r0
-      64: 2102         	movs	r1, #0x2
+      5c: a991         	add	r1, sp, #0x244
+      5e: 3f64         	subs	r7, #0x64
+      60: d53e         	bpl	0xe0 <.debug_line+0xe0> @ imm = #0x7c
+      62: 01a9         	lsls	r1, r5, #0x6
+      64: 005f         	lsls	r7, r3, #0x1
 ;   arr[j] = temp;
-      66: c4e0         	stm	r4!, {r5, r6, r7}
-      68: 330f         	adds	r3, #0xf
-      6a: 7915         	ldrb	r5, [r2, #0x4]
-      6c: 917d         	str	r1, [sp, #0x1f4]
+      66: 0000         	movs	r0, r0
+      68: 7602         	strb	r2, [r0, #0x18]
+      6a: 7616         	strb	r6, [r2, #0x18]
+      6c: 0447         	lsls	r7, r0, #0x11
 ; }
-      6e: c75c         	stm	r7!, {r2, r3, r4, r6}
-      70: 60ea         	str	r2, [r5, #0xc]
+      6e: e27c         	b	0x56a <.rodata+0x402>   @ imm = #0x4f8
+      70: b7e0         	<unknown>
 ; void bubble_sort(char arr[], int n) {
-      72: 0a04         	lsrs	r4, r0, #0x8
-      74: 0098         	lsls	r0, r3, #0x2
-      76: 0205         	lsls	r5, r0, #0x8
-      78: 0000         	movs	r0, r0
+      72: 35d3         	adds	r5, #0xd3
+      74: e7e3         	b	0x3e <.debug_line+0x3e> @ imm = #-0x3a
+      76: 1b56         	subs	r6, r2, r5
+      78: 17be         	asrs	r6, r7, #0x1e
       7a: 0000         	movs	r0, r0
-      7c: 1903         	adds	r3, r0, r4
+      7c: 0300         	lsls	r0, r0, #0xc
 ;   for (int i = 0; i < n; i++) {
-      7e: 0501         	lsls	r1, r0, #0x14
-      80: 0a1b         	lsrs	r3, r3, #0x8
-      82: 054b         	lsls	r3, r1, #0x15
-      84: 060b         	lsls	r3, r1, #0x18
-      86: 054a         	lsls	r2, r1, #0x15
-      88: 0609         	lsls	r1, r1, #0x18
-      8a: 0631         	lsls	r1, r6, #0x18
-      8c: 052e         	lsls	r6, r5, #0x14
+      7e: d32e         	blo	0xde <.debug_line+0xde> @ imm = #0x5c
+      80: 8947         	ldrh	r7, [r0, #0xa]
+      82: 3e38         	subs	r6, #0x38
+      84: e3a7         	b	0x7d6 <.rodata+0x66e>   @ imm = #0x74e
+      86: d5a1         	bpl	0xffffffcc <.stack+0xffffffffdff7ffc4> @ imm = #-0xbe
+      88: 0f88         	lsrs	r0, r1, #0x1e
+      8a: c60f         	stm	r6!, {r0, r1, r2, r3}
+      8c: 7197         	strb	r7, [r2, #0x6]
 ;     for (int j = 0; j < n - i - 1; j++) {
-      8e: 060d         	lsls	r5, r1, #0x18
-      90: 0568         	lsls	r0, r5, #0x15
-      92: 0618         	lsls	r0, r3, #0x18
-      94: 054a         	lsls	r2, r1, #0x15
-      96: 2e16         	cmp	r6, #0x16
-      98: 2205         	movs	r2, #0x5
-      9a: 052e         	lsls	r6, r5, #0x14
-      9c: 2e0d         	cmp	r6, #0xd
-      9e: 6003         	str	r3, [r0]
-      a0: 0666         	lsls	r6, r4, #0x19
+      8e: 0500         	lsls	r0, r0, #0x14
+      90: 0002         	movs	r2, r0
+      92: 0000         	movs	r0, r0
+      94: 0300         	lsls	r0, r0, #0xc
+      96: 0119         	lsls	r1, r3, #0x4
+      98: 1b05         	subs	r5, r0, r4
+      9a: 4b0a         	ldr	r3, [pc, #0x28]         @ 0xc4 <.debug_line+0xc4>
+      9c: 0b05         	lsrs	r5, r0, #0xc
+      9e: 4a06         	ldr	r2, [pc, #0x18]         @ 0xb8 <.debug_line+0xb8>
+      a0: 0905         	lsrs	r5, r0, #0x4
 ;       if (arr[j] > arr[j + 1])
-      a2: 2103         	movs	r1, #0x3
-      a4: 054a         	lsls	r2, r1, #0x15
-      a6: 4e15         	ldr	r6, [pc, #0x54]         @ 0xfc <.debug_line+0xfc>
-      a8: 1205         	asrs	r5, r0, #0x8
-      aa: 2e06         	cmp	r6, #0x6
-      ac: 0505         	lsls	r5, r0, #0x14
-      ae: 8306         	strh	r6, [r0, #0x18]
-      b0: 1305         	asrs	r5, r0, #0xc
+      a2: 3106         	adds	r1, #0x6
+      a4: 2e06         	cmp	r6, #0x6
+      a6: 0d05         	lsrs	r5, r0, #0x14
+      a8: 6806         	ldr	r6, [r0]
+      aa: 1805         	adds	r5, r0, r0
+      ac: 4a06         	ldr	r2, [pc, #0x18]         @ 0xc8 <.debug_line+0xc8>
+      ae: 1605         	asrs	r5, r0, #0x18
+      b0: 052e         	lsls	r6, r5, #0x14
 ;         swap(arr, j, j + 1);
-      b2: 0531         	lsls	r1, r6, #0x14
-      b4: 0605         	lsls	r5, r0, #0x18
-      b6: 052e         	lsls	r6, r5, #0x14
-      b8: 0601         	lsls	r1, r0, #0x18
-      ba: 064b         	lsls	r3, r1, #0x19
-      bc: 2e0b         	cmp	r6, #0xb
+      b2: 2e22         	cmp	r6, #0x22
+      b4: 0d05         	lsrs	r5, r0, #0x14
+      b6: 032e         	lsls	r6, r5, #0xc
+      b8: 6660         	str	r0, [r4, #0x64]
+      ba: 0306         	lsls	r6, r0, #0xc
+      bc: 4a21         	ldr	r2, [pc, #0x84]         @ 0x144 <.debug_line+0x144>
 ;     }
-      be: 5603         	ldrsb	r3, [r0, r0]
+      be: 1505         	asrs	r5, r0, #0x14
 ;     for (int j = 0; j < n - i - 1; j++) {
-      c0: 0466         	lsls	r6, r4, #0x11
-      c2: 0500         	lsls	r0, r0, #0x14
-      c4: 0600         	lsls	r0, r0, #0x18
-      c6: 0585         	lsls	r5, r0, #0x16
+      c0: 054e         	lsls	r6, r1, #0x15
+      c2: 0612         	lsls	r2, r2, #0x18
+      c4: 052e         	lsls	r6, r5, #0x14
+      c6: 0605         	lsls	r5, r0, #0x18
 ;   }
-      c8: 0a0e         	lsrs	r6, r1, #0x8
+      c8: 0583         	lsls	r3, r0, #0x16
 ;   for (int i = 0; i < n; i++) {
-      ca: 0583         	lsls	r3, r0, #0x16
-      cc: 0612         	lsls	r2, r2, #0x18
-      ce: 052e         	lsls	r6, r5, #0x14
-      d0: 2e0e         	cmp	r6, #0xe
+      ca: 3113         	adds	r1, #0x13
+      cc: 0505         	lsls	r5, r0, #0x14
+      ce: 2e06         	cmp	r6, #0x6
+      d0: 0105         	lsls	r5, r0, #0x4
 ; }
-      d2: 0705         	lsls	r5, r0, #0x1c
-      d4: 052e         	lsls	r6, r5, #0x14
+      d2: 4b06         	ldr	r3, [pc, #0x18]         @ 0xec <.debug_line+0xec>
+      d4: 0b06         	lsrs	r6, r0, #0xc
 ; void assert_is_sorted(char *arr, unsigned n) {
-      d6: 060c         	lsls	r4, r1, #0x18
-      d8: 052f         	lsls	r7, r5, #0x14
-      da: 0610         	lsls	r0, r2, #0x18
-      dc: 052e         	lsls	r6, r5, #0x14
-      de: 2e0c         	cmp	r6, #0xc
-      e0: 0705         	lsls	r5, r0, #0x1c
+      d6: 032e         	lsls	r6, r5, #0xc
+      d8: 6656         	str	r6, [r2, #0x64]
+      da: 0204         	lsls	r4, r0, #0x8
+      dc: 0005         	movs	r5, r0
+      de: 8506         	strh	r6, [r0, #0x28]
+      e0: 0e05         	lsrs	r5, r0, #0x18
 ;   for (int i = 0; i < n - 1; i++) {
-      e2: 052e         	lsls	r6, r5, #0x14
-      e4: 2e0a         	cmp	r6, #0xa
-      e6: 0c05         	lsrs	r5, r0, #0x10
-      e8: 2f06         	cmp	r7, #0x6
-      ea: 0305         	lsls	r5, r0, #0xc
-      ec: 2e06         	cmp	r6, #0x6
-      ee: 0705         	lsls	r5, r0, #0x1c
-      f0: 052e         	lsls	r6, r5, #0x14
+      e2: 830a         	strh	r2, [r1, #0x18]
+      e4: 1205         	asrs	r5, r0, #0x8
+      e6: 2e06         	cmp	r6, #0x6
+      e8: 0e05         	lsrs	r5, r0, #0x18
+      ea: 052e         	lsls	r6, r5, #0x14
+      ec: 2e07         	cmp	r6, #0x7
+      ee: 0c05         	lsrs	r5, r0, #0x10
+      f0: 2f06         	cmp	r7, #0x6
 ;     if (arr[i] > arr[i + 1]) {
-      f2: 2e0a         	cmp	r6, #0xa
-      f4: 0105         	lsls	r5, r0, #0x4
-      f6: 0b06         	lsrs	r6, r0, #0xc
-      f8: 052f         	lsls	r7, r5, #0x14
-      fa: 4c00         	ldr	r4, [pc, #0x0]          @ 0xfc <.debug_line+0xfc>
-      fc: 0c05         	lsrs	r5, r0, #0x10
-      fe: bb0a         	<unknown>
-     100: 0805         	lsrs	r5, r0, #0x20
-     102: 2e06         	cmp	r6, #0x6
+      f2: 1005         	asrs	r5, r0, #0x20
+      f4: 2e06         	cmp	r6, #0x6
+      f6: 0c05         	lsrs	r5, r0, #0x10
+      f8: 052e         	lsls	r6, r5, #0x14
+      fa: 2e07         	cmp	r6, #0x7
+      fc: 0a05         	lsrs	r5, r0, #0x8
+      fe: 052e         	lsls	r6, r5, #0x14
+     100: 060c         	lsls	r4, r1, #0x18
+     102: 052f         	lsls	r7, r5, #0x14
 ;       svc_exit(1);
-     104: 1305         	asrs	r5, r0, #0xc
+     104: 0603         	lsls	r3, r0, #0x18
      106: 052e         	lsls	r6, r5, #0x14
 ;     }
-     108: 2e17         	cmp	r6, #0x17
+     108: 2e07         	cmp	r6, #0x7
 ;   }
-     10a: 0305         	lsls	r5, r0, #0xc
+     10a: 0a05         	lsrs	r5, r0, #0x8
 ;   for (int i = 0; i < n - 1; i++) {
-     10c: 032e         	lsls	r6, r5, #0xc
-     10e: 6676         	str	r6, [r6, #0x64]
-     110: 0e05         	lsrs	r5, r0, #0x18
-     112: 0306         	lsls	r6, r0, #0xc
+     10c: 052e         	lsls	r6, r5, #0x14
+     10e: 0601         	lsls	r1, r0, #0x18
+     110: 2f0b         	cmp	r7, #0xb
+     112: 0005         	movs	r5, r0
 ; }
-     114: 2e0b         	cmp	r6, #0xb
-     116: 0a05         	lsrs	r5, r0, #0x8
+     114: 054c         	lsls	r4, r1, #0x15
+     116: 0a0c         	lsrs	r4, r1, #0x8
 ; static inline void svc_exit(unsigned code) {
-     118: 2e06         	cmp	r6, #0x6
-     11a: 1505         	asrs	r5, r0, #0x14
+     118: 05bb         	lsls	r3, r7, #0x16
+     11a: 0608         	lsls	r0, r1, #0x18
 ;     register unsigned r0 __asm__("r0") = code;
      11c: 052e         	lsls	r6, r5, #0x14
-     11e: 2e19         	cmp	r6, #0x19
+     11e: 2e13         	cmp	r6, #0x13
 ;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
-     120: 1d05         	adds	r5, r0, #0x4
+     120: 1705         	asrs	r5, r0, #0x1c
      122: 052e         	lsls	r6, r5, #0x14
 ; };
-     124: 2e1f         	cmp	r6, #0x1f
-     126: 0505         	lsls	r5, r0, #0x14
+     124: 2e03         	cmp	r6, #0x3
+     126: 7603         	strb	r3, [r0, #0x18]
 ; int main() {
-     128: 054a         	lsls	r2, r1, #0x15
-     12a: 060b         	lsls	r3, r1, #0x18
-     12c: 0567         	lsls	r7, r4, #0x15
-     12e: 060f         	lsls	r7, r1, #0x18
-     130: 052e         	lsls	r6, r5, #0x14
-     132: 2e0b         	cmp	r6, #0xb
+     128: 0566         	lsls	r6, r4, #0x15
+     12a: 060e         	lsls	r6, r1, #0x18
+     12c: 0b03         	lsrs	r3, r0, #0xc
+     12e: 052e         	lsls	r6, r5, #0x14
+     130: 060a         	lsls	r2, r1, #0x18
+     132: 052e         	lsls	r6, r5, #0x14
 ;   char arr[] = {
-     134: 1405         	asrs	r5, r0, #0x10
-     136: 054a         	lsls	r2, r1, #0x15
-     138: 2e0b         	cmp	r6, #0xb
-     13a: 0e05         	lsrs	r5, r0, #0x18
-     13c: 6706         	str	r6, [r0, #0x70]
-     13e: 1305         	asrs	r5, r0, #0xc
-     140: 2e06         	cmp	r6, #0x6
+     134: 2e15         	cmp	r6, #0x15
+     136: 1905         	adds	r5, r0, r4
+     138: 052e         	lsls	r6, r5, #0x14
+     13a: 2e1d         	cmp	r6, #0x1d
+     13c: 1f05         	subs	r5, r0, #0x4
+     13e: 052e         	lsls	r6, r5, #0x14
+     140: 4a05         	ldr	r2, [pc, #0x14]         @ 0x158 <.debug_line+0x158>
 ;   unsigned len = sizeof(arr) / sizeof(char);
-     142: 1805         	adds	r5, r0, r0
+     142: 0b05         	lsrs	r5, r0, #0xc
 ;   bubble_sort(arr, len);
-     144: 052e         	lsls	r6, r5, #0x14
-     146: 2e09         	cmp	r6, #0x9
-     148: 0505         	lsls	r5, r0, #0x14
-     14a: 6706         	str	r6, [r0, #0x70]
+     144: 6706         	str	r6, [r0, #0x70]
+     146: 0f05         	lsrs	r5, r0, #0x1c
+     148: 2e06         	cmp	r6, #0x6
+     14a: 0b05         	lsrs	r5, r0, #0xc
 ;   assert_is_sorted(arr, len);
-     14c: 2505         	movs	r5, #0x5
-     14e: 052b         	lsls	r3, r5, #0x14
-     150: 0605         	lsls	r5, r0, #0x18
-     152: 0566         	lsls	r6, r4, #0x15
+     14c: 052e         	lsls	r6, r5, #0x14
+     14e: 4a14         	ldr	r2, [pc, #0x50]         @ 0x1a0 <.rodata+0x38>
+     150: 0b05         	lsrs	r5, r0, #0xc
+     152: 052e         	lsls	r6, r5, #0x14
 ;   svc_exit(arr[0]);
-     154: 0603         	lsls	r3, r0, #0x18
-     156: 0532         	lsls	r2, r6, #0x14
-     158: 291b         	cmp	r1, #0x1b
-     15a: 0305         	lsls	r5, r0, #0xc
+     154: 060e         	lsls	r6, r1, #0x18
+     156: 0567         	lsls	r7, r4, #0x15
+     158: 0613         	lsls	r3, r2, #0x18
+     15a: 052e         	lsls	r6, r5, #0x14
 ; }
-     15c: 6606         	str	r6, [r0, #0x60]
-     15e: 0105         	lsls	r5, r0, #0x4
-     160: 0b06         	lsrs	r6, r0, #0xc
-     162: 0534         	lsls	r4, r6, #0x14
-     164: 4c00         	ldr	r4, [pc, #0x0]          @ 0x168 <.rodata>
-     166: 0c05         	lsrs	r5, r0, #0x10
-     168: bb0a         	<unknown>
-     16a: 0805         	lsrs	r5, r0, #0x20
-     16c: 2e06         	cmp	r6, #0x6
-     16e: 1305         	asrs	r5, r0, #0xc
-     170: 052e         	lsls	r6, r5, #0x14
-     172: 2e17         	cmp	r6, #0x17
-     174: 1905         	adds	r5, r0, r4
-     176: 052e         	lsls	r6, r5, #0x14
-     178: 2e03         	cmp	r6, #0x3
-     17a: 0905         	lsrs	r5, r0, #0x4
-     17c: 6706         	str	r6, [r0, #0x70]
-     17e: 0d05         	lsrs	r5, r0, #0x14
-     180: 2e06         	cmp	r6, #0x6
-     182: 0905         	lsrs	r5, r0, #0x4
-     184: 052e         	lsls	r6, r5, #0x14
-     186: 4a12         	ldr	r2, [pc, #0x48]         @ 0x1d0 <.rodata+0x68>
-     188: 0905         	lsrs	r5, r0, #0x4
-     18a: 032e         	lsls	r6, r5, #0xc
-     18c: 666c         	str	r4, [r5, #0x64]
-     18e: 0705         	lsls	r5, r0, #0x1c
-     190: 0306         	lsls	r6, r0, #0xc
-     192: 2e16         	cmp	r6, #0x16
-     194: 0505         	lsls	r5, r0, #0x14
-     196: 054b         	lsls	r3, r1, #0x15
-     198: 2f03         	cmp	r7, #0x3
-     19a: 1f05         	subs	r5, r0, #0x4
-     19c: 0529         	lsls	r1, r5, #0x14
-     19e: 0603         	lsls	r3, r0, #0x18
-     1a0: 0566         	lsls	r6, r4, #0x15
-     1a2: 0601         	lsls	r1, r0, #0x18
-     1a4: 350b         	adds	r5, #0xb
-     1a6: 0104         	lsls	r4, r0, #0x4
-     1a8: 0005         	movs	r5, r0
-     1aa: 7103         	strb	r3, [r0, #0x4]
-     1ac: 054a         	lsls	r2, r1, #0x15
-     1ae: 0a2a         	lsrs	r2, r5, #0x8
-     1b0: 054b         	lsls	r3, r1, #0x15
-     1b2: 0617         	lsls	r7, r2, #0x18
-     1b4: 052e         	lsls	r6, r5, #0x14
-     1b6: 0626         	lsls	r6, r4, #0x18
-     1b8: 052f         	lsls	r7, r5, #0x14
-     1ba: 0605         	lsls	r5, r0, #0x18
-     1bc: 052e         	lsls	r6, r5, #0x14
-     1be: 0601         	lsls	r1, r0, #0x18
-     1c0: 2f0b         	cmp	r7, #0xb
-     1c2: 0004         	movs	r4, r0
-     1c4: 0005         	movs	r5, r0
-     1c6: 0e03         	lsrs	r3, r0, #0x18
-     1c8: 054a         	lsls	r2, r1, #0x15
-     1ca: 0a08         	lsrs	r0, r1, #0x8
-     1cc: 05bb         	lsls	r3, r7, #0x16
-     1ce: d90c         	bls	0x1ea <.rodata+0x82>    @ imm = #0x18
-     1d0: 1405         	asrs	r5, r0, #0x10
-     1d2: 052f         	lsls	r7, r5, #0x14
-     1d4: 0603         	lsls	r3, r0, #0x18
-     1d6: 052e         	lsls	r6, r5, #0x14
-     1d8: 0619         	lsls	r1, r3, #0x18
-     1da: 0567         	lsls	r7, r4, #0x15
-     1dc: 0603         	lsls	r3, r0, #0x18
-     1de: 052e         	lsls	r6, r5, #0x14
-     1e0: 060c         	lsls	r4, r1, #0x18
-     1e2: 0568         	lsls	r0, r5, #0x15
-     1e4: 0603         	lsls	r3, r0, #0x18
-     1e6: 052e         	lsls	r6, r5, #0x14
-     1e8: 0601         	lsls	r1, r0, #0x18
-     1ea: 670b         	str	r3, [r1, #0x70]
-     1ec: 0306         	lsls	r6, r0, #0xc
-     1ee: 4a5b         	ldr	r2, [pc, #0x16c]        @ 0x35c <.rodata+0x1f4>
-     1f0: 0802         	lsrs	r2, r0, #0x20
-     1f2: 0100         	lsls	r0, r0, #0x4
-     1f4: 01           	<unknown>
+     15c: 2e18         	cmp	r6, #0x18
+     15e: 0905         	lsrs	r5, r0, #0x4
+     160: 052e         	lsls	r6, r5, #0x14
+     162: 0605         	lsls	r5, r0, #0x18
+     164: 0567         	lsls	r7, r4, #0x15
+     166: 2b25         	cmp	r3, #0x25
+     168: 0505         	lsls	r5, r0, #0x14
+     16a: 6606         	str	r6, [r0, #0x60]
+     16c: 0305         	lsls	r5, r0, #0xc
+     16e: 3206         	adds	r2, #0x6
+     170: 1b05         	subs	r5, r0, r4
+     172: 0529         	lsls	r1, r5, #0x14
+     174: 0603         	lsls	r3, r0, #0x18
+     176: 0566         	lsls	r6, r4, #0x15
+     178: 0601         	lsls	r1, r0, #0x18
+     17a: 340b         	adds	r4, #0xb
+     17c: 0005         	movs	r5, r0
+     17e: 054c         	lsls	r4, r1, #0x15
+     180: 0a0c         	lsrs	r4, r1, #0x8
+     182: 05bb         	lsls	r3, r7, #0x16
+     184: 0608         	lsls	r0, r1, #0x18
+     186: 052e         	lsls	r6, r5, #0x14
+     188: 2e13         	cmp	r6, #0x13
+     18a: 1705         	asrs	r5, r0, #0x1c
+     18c: 052e         	lsls	r6, r5, #0x14
+     18e: 2e19         	cmp	r6, #0x19
+     190: 0305         	lsls	r5, r0, #0xc
+     192: 052e         	lsls	r6, r5, #0x14
+     194: 0609         	lsls	r1, r1, #0x18
+     196: 0567         	lsls	r7, r4, #0x15
+     198: 060d         	lsls	r5, r1, #0x18
+     19a: 052e         	lsls	r6, r5, #0x14
+     19c: 2e09         	cmp	r6, #0x9
+     19e: 1205         	asrs	r5, r0, #0x8
+     1a0: 054a         	lsls	r2, r1, #0x15
+     1a2: 2e09         	cmp	r6, #0x9
+     1a4: 6c03         	ldr	r3, [r0, #0x40]
+     1a6: 0566         	lsls	r6, r4, #0x15
+     1a8: 0607         	lsls	r7, r0, #0x18
+     1aa: 1603         	asrs	r3, r0, #0x18
+     1ac: 052e         	lsls	r6, r5, #0x14
+     1ae: 4b05         	ldr	r3, [pc, #0x14]         @ 0x1c4 <.rodata+0x5c>
+     1b0: 0305         	lsls	r5, r0, #0xc
+     1b2: 052f         	lsls	r7, r5, #0x14
+     1b4: 291f         	cmp	r1, #0x1f
+     1b6: 0305         	lsls	r5, r0, #0xc
+     1b8: 6606         	str	r6, [r0, #0x60]
+     1ba: 0105         	lsls	r5, r0, #0x4
+     1bc: 0b06         	lsrs	r6, r0, #0xc
+     1be: 0435         	lsls	r5, r6, #0x10
+     1c0: 0501         	lsls	r1, r0, #0x14
+     1c2: 0300         	lsls	r0, r0, #0xc
+     1c4: 4a71         	ldr	r2, [pc, #0x1c4]        @ 0x38c <.rodata+0x224>
+     1c6: 2a05         	cmp	r2, #0x5
+     1c8: 4b0a         	ldr	r3, [pc, #0x28]         @ 0x1f4 <.rodata+0x8c>
+     1ca: 1705         	asrs	r5, r0, #0x1c
+     1cc: 2e06         	cmp	r6, #0x6
+     1ce: 2605         	movs	r6, #0x5
+     1d0: 2f06         	cmp	r7, #0x6
+     1d2: 0505         	lsls	r5, r0, #0x14
+     1d4: 2e06         	cmp	r6, #0x6
+     1d6: 0105         	lsls	r5, r0, #0x4
+     1d8: 0b06         	lsrs	r6, r0, #0xc
+     1da: 042f         	lsls	r7, r5, #0x10
+     1dc: 0502         	lsls	r2, r0, #0x14
+     1de: 0300         	lsls	r0, r0, #0xc
+     1e0: 4a0e         	ldr	r2, [pc, #0x38]         @ 0x21c <.rodata+0xb4>
+     1e2: 0805         	lsrs	r5, r0, #0x20
+     1e4: bb0a         	<unknown>
+     1e6: 0c05         	lsrs	r5, r0, #0x10
+     1e8: 05d9         	lsls	r1, r3, #0x17
+     1ea: 2f14         	cmp	r7, #0x14
+     1ec: 0305         	lsls	r5, r0, #0xc
+     1ee: 2e06         	cmp	r6, #0x6
+     1f0: 1905         	adds	r5, r0, r4
+     1f2: 6706         	str	r6, [r0, #0x70]
+     1f4: 0305         	lsls	r5, r0, #0xc
+     1f6: 2e06         	cmp	r6, #0x6
+     1f8: 0c05         	lsrs	r5, r0, #0x10
+     1fa: 6806         	ldr	r6, [r0]
+     1fc: 0305         	lsls	r5, r0, #0xc
+     1fe: 2e06         	cmp	r6, #0x6
+     200: 0105         	lsls	r5, r0, #0x4
+     202: 0b06         	lsrs	r6, r0, #0xc
+     204: 0667         	lsls	r7, r4, #0x19
+     206: 5b03         	ldrh	r3, [r0, r4]
+     208: 024a         	lsls	r2, r1, #0x9
+     20a: 0008         	movs	r0, r1
+     20c: 0101         	lsls	r1, r0, #0x4
 
 Disassembly of section .debug_frame:
 
@@ -1119,92 +1132,101 @@ Disassembly of section .debug_str:
       54: 5f70         	ldrsh	r0, [r6, r5]
       56: 7470         	strb	r0, [r6, #0x11]
       58: 0072         	lsls	r2, r6, #0x1
-      5a: 682f         	ldr	r7, [r5]
+      5a: 3072         	adds	r0, #0x72
 ;   arr[i] = arr[j];
-      5c: 6d6f         	ldr	r7, [r5, #0x54]
-      5e: 2f65         	cmp	r7, #0x65
-      60: 696b         	ldr	r3, [r5, #0x14]
-      62: 6172         	str	r2, [r6, #0x14]
-      64: 2f6e         	cmp	r7, #0x6e
+      5c: 6800         	ldr	r0, [r0]
+      5e: 6165         	str	r5, [r4, #0x14]
+      60: 5f70         	ldrsh	r0, [r6, r5]
+      62: 7470         	strb	r0, [r6, #0x11]
+      64: 0072         	lsls	r2, r6, #0x1
 ;   arr[j] = temp;
-      66: 4341         	muls	r1, r0, r1
-      68: 2f41         	cmp	r7, #0x41
-      6a: 7270         	strb	r0, [r6, #0x9]
-      6c: 676f         	str	r7, [r5, #0x74]
+      66: 7673         	strb	r3, [r6, #0x19]
+      68: 5f63         	ldrsh	r3, [r4, r5]
+      6a: 7865         	ldrb	r5, [r4, #0x1]
+      6c: 7469         	strb	r1, [r5, #0x11]
 ; }
-      6e: 6172         	str	r2, [r6, #0x14]
-      70: 736d         	strb	r5, [r5, #0xd]
+      6e: 6d00         	ldr	r0, [r0, #0x50]
+      70: 6961         	ldr	r1, [r4, #0x14]
 ; void bubble_sort(char arr[], int n) {
-      72: 7200         	strb	r0, [r0, #0x8]
-      74: 0030         	movs	r0, r6
-      76: 6568         	str	r0, [r5, #0x54]
-      78: 7061         	strb	r1, [r4, #0x1]
-      7a: 705f         	strb	r7, [r3, #0x1]
-      7c: 7274         	strb	r4, [r6, #0x9]
+      72: 006e         	lsls	r6, r5, #0x1
+      74: 6574         	str	r4, [r6, #0x54]
+      76: 706d         	strb	r5, [r5, #0x1]
+      78: 6300         	str	r0, [r0, #0x30]
+      7a: 6168         	str	r0, [r5, #0x14]
+      7c: 0072         	lsls	r2, r6, #0x1
 ;   for (int i = 0; i < n; i++) {
-      7e: 7300         	strb	r0, [r0, #0xc]
-      80: 6376         	str	r6, [r6, #0x34]
-      82: 655f         	str	r7, [r3, #0x54]
-      84: 6978         	ldr	r0, [r7, #0x14]
-      86: 0074         	lsls	r4, r6, #0x1
-      88: 616d         	str	r5, [r5, #0x14]
-      8a: 6e69         	ldr	r1, [r5, #0x64]
-      8c: 7400         	strb	r0, [r0, #0x10]
+      7e: 6e69         	ldr	r1, [r5, #0x64]
+      80: 0074         	lsls	r4, r6, #0x1
+      82: 6e75         	ldr	r5, [r6, #0x64]
+      84: 6973         	ldr	r3, [r6, #0x14]
+      86: 6e67         	ldr	r7, [r4, #0x64]
+      88: 6465         	str	r5, [r4, #0x44]
+      8a: 6920         	ldr	r0, [r4, #0x10]
+      8c: 746e         	strb	r6, [r5, #0x11]
 ;     for (int j = 0; j < n - i - 1; j++) {
-      8e: 6d65         	ldr	r5, [r4, #0x54]
-      90: 0070         	lsls	r0, r6, #0x1
-      92: 6863         	ldr	r3, [r4, #0x4]
-      94: 7261         	strb	r1, [r4, #0x9]
-      96: 6900         	ldr	r0, [r0, #0x10]
-      98: 746e         	strb	r6, [r5, #0x11]
-      9a: 7500         	strb	r0, [r0, #0x14]
-      9c: 736e         	strb	r6, [r5, #0xd]
-      9e: 6769         	str	r1, [r5, #0x74]
-      a0: 656e         	str	r6, [r5, #0x54]
+      8e: 6200         	str	r0, [r0, #0x20]
+      90: 6275         	str	r5, [r6, #0x24]
+      92: 6c62         	ldr	r2, [r4, #0x44]
+      94: 5f65         	ldrsh	r5, [r4, r5]
+      96: 6f73         	ldr	r3, [r6, #0x74]
+      98: 7472         	strb	r2, [r6, #0x11]
+      9a: 5f00         	ldrsh	r0, [r0, r4]
+      9c: 415f         	adcs	r7, r3
+      9e: 5252         	strh	r2, [r2, r1]
+      a0: 5941         	ldr	r1, [r0, r5]
 ;       if (arr[j] > arr[j + 1])
-      a2: 2064         	movs	r0, #0x64
-      a4: 6e69         	ldr	r1, [r5, #0x64]
-      a6: 0074         	lsls	r4, r6, #0x1
-      a8: 6562         	str	r2, [r4, #0x54]
-      aa: 636e         	str	r6, [r5, #0x34]
-      ac: 6d68         	ldr	r0, [r5, #0x54]
-      ae: 7261         	strb	r1, [r4, #0x9]
-      b0: 736b         	strb	r3, [r5, #0xd]
+      a2: 535f         	strh	r7, [r3, r5]
+      a4: 5a49         	ldrh	r1, [r1, r1]
+      a6: 5f45         	ldrsh	r5, [r0, r5]
+      a8: 5954         	ldr	r4, [r2, r5]
+      aa: 4550         	cmp	r0, r10
+      ac: 5f5f         	ldrsh	r7, [r3, r5]
+      ae: 7300         	strb	r0, [r0, #0xc]
+      b0: 7262         	strb	r2, [r4, #0x9]
 ;         swap(arr, j, j + 1);
-      b2: 622f         	str	r7, [r5, #0x20]
-      b4: 6275         	str	r5, [r6, #0x24]
-      b6: 6c62         	ldr	r2, [r4, #0x44]
-      b8: 2e65         	cmp	r6, #0x65
-      ba: 0063         	lsls	r3, r4, #0x1
-      bc: 7562         	strb	r2, [r4, #0x15]
+      b2: 006b         	lsls	r3, r5, #0x1
+      b4: 3a43         	subs	r2, #0x43
+      b6: 555c         	strb	r4, [r3, r5]
+      b8: 6573         	str	r3, [r6, #0x54]
+      ba: 7372         	strb	r2, [r6, #0xd]
+      bc: 6b5c         	ldr	r4, [r3, #0x34]
 ;     }
-      be: 6262         	str	r2, [r4, #0x24]
+      be: 7269         	strb	r1, [r5, #0x9]
 ;     for (int j = 0; j < n - i - 1; j++) {
-      c0: 656c         	str	r4, [r5, #0x54]
-      c2: 735f         	strb	r7, [r3, #0xd]
-      c4: 726f         	strb	r7, [r5, #0x9]
-      c6: 0074         	lsls	r4, r6, #0x1
+      c0: 6e61         	ldr	r1, [r4, #0x64]
+      c2: 445c         	add	r4, r11
+      c4: 636f         	str	r7, [r5, #0x34]
+      c6: 6d75         	ldr	r5, [r6, #0x54]
 ;   }
-      c8: 5f5f         	ldrsh	r7, [r3, r5]
+      c8: 6e65         	ldr	r5, [r4, #0x64]
 ;   for (int i = 0; i < n; i++) {
-      ca: 5241         	strh	r1, [r0, r1]
-      cc: 4152         	adcs	r2, r2
-      ce: 5f59         	ldrsh	r1, [r3, r5]
-      d0: 4953         	ldr	r1, [pc, #0x14c]        @ 0x220 <.rodata+0xb8>
+      ca: 7374         	strb	r4, [r6, #0xd]
+      cc: 445c         	add	r4, r11
+      ce: 7665         	strb	r5, [r4, #0x19]
+      d0: 415c         	adcs	r4, r3
 ; }
-      d2: 455a         	cmp	r2, r11
-      d4: 545f         	strb	r7, [r3, r1]
+      d2: 4143         	adcs	r3, r0
+      d4: 705c         	strb	r4, [r3, #0x1]
 ; void assert_is_sorted(char *arr, unsigned n) {
-      d6: 5059         	str	r1, [r3, r1]
-      d8: 5f45         	ldrsh	r5, [r0, r5]
-      da: 005f         	lsls	r7, r3, #0x1
-      dc: 6273         	str	r3, [r6, #0x24]
-      de: 6b72         	ldr	r2, [r6, #0x34]
-      e0: 6a00         	ldr	r0, [r0, #0x20]
+      d6: 6f72         	ldr	r2, [r6, #0x74]
+      d8: 7267         	strb	r7, [r4, #0x9]
+      da: 6d61         	ldr	r1, [r4, #0x54]
+      dc: 0073         	lsls	r3, r6, #0x1
+      de: 6562         	str	r2, [r4, #0x54]
+      e0: 636e         	str	r6, [r5, #0x34]
 ;   for (int i = 0; i < n - 1; i++) {
-      e2: 6100         	str	r0, [r0, #0x10]
-      e4: 7272         	strb	r2, [r6, #0x9]
-      e6: 00           	<unknown>
+      e2: 6d68         	ldr	r0, [r5, #0x54]
+      e4: 7261         	strb	r1, [r4, #0x9]
+      e6: 736b         	strb	r3, [r5, #0xd]
+      e8: 625c         	str	r4, [r3, #0x24]
+      ea: 6275         	str	r5, [r6, #0x24]
+      ec: 6c62         	ldr	r2, [r4, #0x44]
+      ee: 2e65         	cmp	r6, #0x65
+      f0: 0063         	lsls	r3, r4, #0x1
+;     if (arr[i] > arr[i + 1]) {
+      f2: 006a         	lsls	r2, r5, #0x1
+      f4: 7261         	strb	r1, [r4, #0x9]
+      f6: 0072         	lsls	r2, r6, #0x1
 
 Disassembly of section .debug_addr:
 
@@ -1244,106 +1266,121 @@ Disassembly of section .debug_line_str:
 
 00000000 <.debug_line_str>:
 ; extern void* sbrk(ptrdiff_t increment) {
-       0: 682f         	ldr	r7, [r5]
-       2: 6d6f         	ldr	r7, [r5, #0x54]
+       0: 6562         	str	r2, [r4, #0x54]
+       2: 636e         	str	r6, [r5, #0x34]
 ;     char* prev_heap_ptr = heap_ptr;
-       4: 2f65         	cmp	r7, #0x65
-       6: 696b         	ldr	r3, [r5, #0x14]
-       8: 6172         	str	r2, [r6, #0x14]
+       4: 6d68         	ldr	r0, [r5, #0x54]
+       6: 7261         	strb	r1, [r4, #0x9]
+       8: 736b         	strb	r3, [r5, #0xd]
 ;     if (increment > 0) {
-       a: 006e         	lsls	r6, r5, #0x1
-       c: 682f         	ldr	r7, [r5]
-       e: 6d6f         	ldr	r7, [r5, #0x54]
-      10: 2f65         	cmp	r7, #0x65
+       a: 2e5c         	cmp	r6, #0x5c
+       c: 2f2e         	cmp	r7, #0x2e
+       e: 7973         	ldrb	r3, [r6, #0x5]
+      10: 6373         	str	r3, [r6, #0x34]
 ;         if (heap_ptr + increment > &__heap_end) {
-      12: 696b         	ldr	r3, [r5, #0x14]
-      14: 6172         	str	r2, [r6, #0x14]
-      16: 2f6e         	cmp	r7, #0x6e
-      18: 4341         	muls	r1, r0, r1
-      1a: 2f41         	cmp	r7, #0x41
-      1c: 7270         	strb	r0, [r6, #0x9]
-      1e: 676f         	str	r7, [r5, #0x74]
-      20: 6172         	str	r2, [r6, #0x14]
-      22: 736d         	strb	r5, [r5, #0xd]
-      24: 6200         	str	r0, [r0, #0x20]
+      12: 6c61         	ldr	r1, [r4, #0x44]
+      14: 736c         	strb	r4, [r5, #0xd]
+      16: 4c00         	ldr	r4, [pc, #0x0]          @ 0x18 <.debug_line+0x18>
+      18: 564c         	ldrsb	r4, [r1, r1]
+      1a: 2d4d         	cmp	r5, #0x4d
+      1c: 5445         	strb	r5, [r0, r1]
+      1e: 412d         	asrs	r5, r5
+      20: 6d72         	ldr	r2, [r6, #0x54]
+      22: 312d         	adds	r1, #0x2d
+      24: 2e39         	cmp	r6, #0x39
 ;             return (void*)-1;  // Return error if the heap is full
-      26: 6e65         	ldr	r5, [r4, #0x64]
-      28: 6863         	ldr	r3, [r4, #0x4]
+      26: 2e31         	cmp	r6, #0x31
+      28: 5c35         	ldrb	r5, [r6, r0]
 ;         heap_ptr += increment;
-      2a: 616d         	str	r5, [r5, #0x14]
-      2c: 6b72         	ldr	r2, [r6, #0x34]
-      2e: 2f73         	cmp	r7, #0x73
-      30: 2e2e         	cmp	r6, #0x2e
-      32: 732f         	strb	r7, [r5, #0xc]
+      2a: 696c         	ldr	r4, [r5, #0x14]
+      2c: 5c62         	ldrb	r2, [r4, r1]
+      2e: 6c63         	ldr	r3, [r4, #0x44]
+      30: 6e61         	ldr	r1, [r4, #0x64]
+      32: 5c67         	ldrb	r7, [r4, r1]
 ;     }
-      34: 7379         	strb	r1, [r7, #0xd]
+      34: 3931         	subs	r1, #0x31
 ;     return (void*)prev_heap_ptr;
-      36: 6163         	str	r3, [r4, #0x14]
-      38: 6c6c         	ldr	r4, [r5, #0x44]
-      3a: 0073         	lsls	r3, r6, #0x1
+      36: 695c         	ldr	r4, [r3, #0x14]
+      38: 636e         	str	r6, [r5, #0x34]
+      3a: 756c         	strb	r4, [r5, #0x15]
 ; }
-      3c: 4c4c         	ldr	r4, [pc, #0x130]        @ 0x170 <.rodata+0x8>
-      3e: 4d56         	ldr	r5, [pc, #0x158]        @ 0x198 <.rodata+0x30>
-      40: 452d         	cmp	r5, r5
-      42: 2d54         	cmp	r5, #0x54
-      44: 7241         	strb	r1, [r0, #0x9]
-      46: 2d6d         	cmp	r5, #0x6d
-      48: 3931         	subs	r1, #0x31
-      4a: 312e         	adds	r1, #0x2e
+      3c: 6564         	str	r4, [r4, #0x54]
+      3e: 5f5c         	ldrsh	r4, [r3, r5]
+      40: 735f         	strb	r7, [r3, #0xd]
+      42: 6474         	str	r4, [r6, #0x44]
+      44: 6564         	str	r4, [r4, #0x54]
+      46: 5f66         	ldrsh	r6, [r4, r5]
+      48: 7470         	strb	r0, [r6, #0x11]
+      4a: 6472         	str	r2, [r6, #0x44]
 ; void swap(char *arr, int i, int j) {
-      4c: 352e         	adds	r5, #0x2e
-      4e: 4c2d         	ldr	r4, [pc, #0xb4]         @ 0x104 <.debug_line+0x104>
-      50: 6e69         	ldr	r1, [r5, #0x64]
-      52: 7875         	ldrb	r5, [r6, #0x1]
+      4c: 6669         	str	r1, [r5, #0x64]
+      4e: 5f66         	ldrsh	r6, [r4, r5]
+      50: 2e74         	cmp	r6, #0x74
+      52: 0068         	lsls	r0, r5, #0x1
 ;   int temp = arr[i];
-      54: 782d         	ldrb	r5, [r5]
-      56: 3638         	adds	r6, #0x38
-      58: 365f         	adds	r6, #0x5f
-      5a: 2f34         	cmp	r7, #0x34
+      54: 6562         	str	r2, [r4, #0x54]
+      56: 636e         	str	r6, [r5, #0x34]
+      58: 6d68         	ldr	r0, [r5, #0x54]
+      5a: 7261         	strb	r1, [r4, #0x9]
 ;   arr[i] = arr[j];
-      5c: 696c         	ldr	r4, [r5, #0x14]
-      5e: 2f62         	cmp	r7, #0x62
-      60: 6c63         	ldr	r3, [r4, #0x44]
-      62: 6e61         	ldr	r1, [r4, #0x64]
-      64: 2f67         	cmp	r7, #0x67
+      5c: 736b         	strb	r3, [r5, #0xd]
+      5e: 6200         	str	r0, [r0, #0x20]
+      60: 6275         	str	r5, [r6, #0x24]
+      62: 6c62         	ldr	r2, [r4, #0x44]
+      64: 2e65         	cmp	r6, #0x65
 ;   arr[j] = temp;
-      66: 3931         	subs	r1, #0x31
-      68: 692f         	ldr	r7, [r5, #0x10]
-      6a: 636e         	str	r6, [r5, #0x34]
-      6c: 756c         	strb	r4, [r5, #0x15]
+      66: 0063         	lsls	r3, r4, #0x1
+      68: 3a43         	subs	r2, #0x43
+      6a: 555c         	strb	r4, [r3, r5]
+      6c: 6573         	str	r3, [r6, #0x54]
 ; }
-      6e: 6564         	str	r4, [r4, #0x54]
-      70: 5f2f         	ldrsh	r7, [r5, r4]
+      6e: 7372         	strb	r2, [r6, #0xd]
+      70: 6b5c         	ldr	r4, [r3, #0x34]
 ; void bubble_sort(char arr[], int n) {
-      72: 735f         	strb	r7, [r3, #0xd]
-      74: 6474         	str	r4, [r6, #0x44]
-      76: 6564         	str	r4, [r4, #0x54]
-      78: 5f66         	ldrsh	r6, [r4, r5]
-      7a: 7470         	strb	r0, [r6, #0x11]
-      7c: 6472         	str	r2, [r6, #0x44]
+      72: 7269         	strb	r1, [r5, #0x9]
+      74: 6e61         	ldr	r1, [r4, #0x64]
+      76: 445c         	add	r4, r11
+      78: 636f         	str	r7, [r5, #0x34]
+      7a: 6d75         	ldr	r5, [r6, #0x54]
+      7c: 6e65         	ldr	r5, [r4, #0x64]
 ;   for (int i = 0; i < n; i++) {
-      7e: 6669         	str	r1, [r5, #0x64]
-      80: 5f66         	ldrsh	r6, [r4, r5]
-      82: 2e74         	cmp	r6, #0x74
-      84: 0068         	lsls	r0, r5, #0x1
-      86: 6562         	str	r2, [r4, #0x54]
-      88: 636e         	str	r6, [r5, #0x34]
-      8a: 6d68         	ldr	r0, [r5, #0x54]
-      8c: 7261         	strb	r1, [r4, #0x9]
+      7e: 7374         	strb	r4, [r6, #0xd]
+      80: 445c         	add	r4, r11
+      82: 7665         	strb	r5, [r4, #0x19]
+      84: 415c         	adcs	r4, r3
+      86: 4143         	adcs	r3, r0
+      88: 705c         	strb	r4, [r3, #0x1]
+      8a: 6f72         	ldr	r2, [r6, #0x74]
+      8c: 7267         	strb	r7, [r4, #0x9]
 ;     for (int j = 0; j < n - i - 1; j++) {
-      8e: 736b         	strb	r3, [r5, #0xd]
-      90: 622f         	str	r7, [r5, #0x20]
-      92: 6275         	str	r5, [r6, #0x24]
-      94: 6c62         	ldr	r2, [r4, #0x44]
-      96: 2e65         	cmp	r6, #0x65
-      98: 0063         	lsls	r3, r4, #0x1
-      9a: 7973         	ldrb	r3, [r6, #0x5]
-      9c: 6373         	str	r3, [r6, #0x34]
-      9e: 6c61         	ldr	r1, [r4, #0x44]
-      a0: 736c         	strb	r4, [r5, #0xd]
+      8e: 6d61         	ldr	r1, [r4, #0x54]
+      90: 0073         	lsls	r3, r6, #0x1
+      92: 3a43         	subs	r2, #0x43
+      94: 555c         	strb	r4, [r3, r5]
+      96: 6573         	str	r3, [r6, #0x54]
+      98: 7372         	strb	r2, [r6, #0xd]
+      9a: 6b5c         	ldr	r4, [r3, #0x34]
+      9c: 7269         	strb	r1, [r5, #0x9]
+      9e: 6e61         	ldr	r1, [r4, #0x64]
+      a0: 6200         	str	r0, [r0, #0x20]
 ;       if (arr[j] > arr[j + 1])
-      a2: 682e         	ldr	r6, [r5]
-      a4: 00           	<unknown>
+      a2: 6e65         	ldr	r5, [r4, #0x64]
+      a4: 6863         	ldr	r3, [r4, #0x4]
+      a6: 616d         	str	r5, [r5, #0x14]
+      a8: 6b72         	ldr	r2, [r6, #0x34]
+      aa: 5c73         	ldrb	r3, [r6, r1]
+      ac: 7562         	strb	r2, [r4, #0x15]
+      ae: 6262         	str	r2, [r4, #0x24]
+      b0: 656c         	str	r4, [r5, #0x54]
+;         swap(arr, j, j + 1);
+      b2: 632e         	str	r6, [r5, #0x30]
+      b4: 7300         	strb	r0, [r0, #0xc]
+      b6: 7379         	strb	r1, [r7, #0xd]
+      b8: 6163         	str	r3, [r4, #0x14]
+      ba: 6c6c         	ldr	r4, [r5, #0x44]
+      bc: 2e73         	cmp	r6, #0x73
+;     }
+      be: 0068         	lsls	r0, r5, #0x1
 
 Disassembly of section .debug_str_offsets:
 
@@ -1357,31 +1394,31 @@ Disassembly of section .debug_str_offsets:
        8: 0037         	movs	r7, r6
 ;     if (increment > 0) {
        a: 0000         	movs	r0, r0
-       c: 00a8         	lsls	r0, r5, #0x2
+       c: 00de         	lsls	r6, r3, #0x3
        e: 0000         	movs	r0, r0
-      10: 005a         	lsls	r2, r3, #0x1
+      10: 00b4         	lsls	r4, r6, #0x2
 ;         if (heap_ptr + increment > &__heap_end) {
       12: 0000         	movs	r0, r0
-      14: 0076         	lsls	r6, r6, #0x1
+      14: 005d         	lsls	r5, r3, #0x1
       16: 0000         	movs	r0, r0
-      18: 0092         	lsls	r2, r2, #0x2
+      18: 0079         	lsls	r1, r7, #0x1
       1a: 0000         	movs	r0, r0
-      1c: 00dc         	lsls	r4, r3, #0x3
+      1c: 00af         	lsls	r7, r5, #0x2
       1e: 0000         	movs	r0, r0
       20: 0032         	movs	r2, r6
       22: 0000         	movs	r0, r0
-      24: 00bc         	lsls	r4, r7, #0x2
+      24: 008f         	lsls	r7, r1, #0x2
 ;             return (void*)-1;  // Return error if the heap is full
       26: 0000         	movs	r0, r0
       28: 0000         	movs	r0, r0
 ;         heap_ptr += increment;
       2a: 0000         	movs	r0, r0
-      2c: 007f         	lsls	r7, r7, #0x1
+      2c: 0066         	lsls	r6, r4, #0x1
       2e: 0000         	movs	r0, r0
-      30: 0088         	lsls	r0, r1, #0x2
+      30: 006f         	lsls	r7, r5, #0x1
       32: 0000         	movs	r0, r0
 ;     }
-      34: 0097         	lsls	r7, r2, #0x2
+      34: 007e         	lsls	r6, r7, #0x1
 ;     return (void*)prev_heap_ptr;
       36: 0000         	movs	r0, r0
       38: 0011         	movs	r1, r2
@@ -1391,26 +1428,26 @@ Disassembly of section .debug_str_offsets:
       3e: 0000         	movs	r0, r0
       40: 004c         	lsls	r4, r1, #0x1
       42: 0000         	movs	r0, r0
-      44: 00e3         	lsls	r3, r4, #0x3
+      44: 00f4         	lsls	r4, r6, #0x3
       46: 0000         	movs	r0, r0
       48: 001b         	movs	r3, r3
       4a: 0000         	movs	r0, r0
 ; void swap(char *arr, int i, int j) {
-      4c: 00e1         	lsls	r1, r4, #0x3
+      4c: 00f2         	lsls	r2, r6, #0x3
       4e: 0000         	movs	r0, r0
-      50: 008d         	lsls	r5, r1, #0x2
+      50: 0074         	lsls	r4, r6, #0x1
       52: 0000         	movs	r0, r0
 ;   int temp = arr[i];
       54: 0030         	movs	r0, r6
       56: 0000         	movs	r0, r0
-      58: 009b         	lsls	r3, r3, #0x2
+      58: 0082         	lsls	r2, r0, #0x2
       5a: 0000         	movs	r0, r0
 ;   arr[i] = arr[j];
       5c: 0021         	movs	r1, r4
       5e: 0000         	movs	r0, r0
-      60: 0073         	lsls	r3, r6, #0x1
+      60: 005a         	lsls	r2, r3, #0x1
       62: 0000         	movs	r0, r0
-      64: 00c8         	lsls	r0, r1, #0x3
+      64: 009b         	lsls	r3, r3, #0x2
 ;   arr[j] = temp;
       66: 0000         	movs	r0, r0
       68: 001d         	movs	r5, r3
