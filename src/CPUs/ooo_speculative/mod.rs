@@ -5,7 +5,9 @@ mod execute;
 mod fetch;
 mod issue;
 mod wb;
+mod parameters;
 
+pub use parameters::*;
 use super::*;
 use crate::components::ROB::{ROBEntryDest, ROBStatus};
 use crate::decode::IT;
@@ -27,17 +29,7 @@ pub enum PredictionAlgorithms {
     AlwaysUntaken,
 }
 
-pub const N_ISSUE: usize = 4;
-const CDB_WIDTH: usize = 10;
-const LQ_SIZE: usize = 8;
-pub const N_LS_EXECS: usize = 2;
-pub const N_ALUSHIFTERS: usize = 2;
-pub const N_MULS: usize = 1;
-pub const N_CONTROL: usize = 1;
-pub const STALL_ON_BRANCH: bool = false;
-pub const PREDICT: PredictionAlgorithms = PredictionAlgorithms::AlwaysTaken;
-pub const ROB_ENTRIES: usize = 64;
-pub const FLUSH_DELAY: u32 = 2;
+
 
 #[derive(Clone, Copy)]
 struct CDBRecord {

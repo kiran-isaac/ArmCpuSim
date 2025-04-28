@@ -7,7 +7,7 @@ LINKER_SCRIPT := script.ld
 	$(ARMET)/bin/llvm-objdump -D -S  $< > $@
 
 %.out: %.c
-	$(ARMET)/bin/clang -O1 -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
+	$(ARMET)/bin/clang -O0 -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
 	
 %.out: %.s
 	$(ARMET)/bin/clang -g $(CLANG_TARGET_OPTIONS) $< -o $@ -T $(LINKER_SCRIPT)
@@ -16,6 +16,20 @@ LINKER_SCRIPT := script.ld
 	$(ARMET)/bin/clang -O0 -S $(CLANG_TARGET_OPTIONS) $< -o $@
 
 all: $(C_FILES:.c=.dis) $(C_FILES:.c=.s) $(C_FILES:.c=.out)
+
+bubblebench:
+	$(ARMET)/bin/clang -O0 -g $(CLANG_TARGET_OPTIONS) benchmarks/bubble.c -o benchmarks/bubble.out -T $(LINKER_SCRIPT)
+	$(ARMET)/bin/llvm-objdump -D -S  benchmarks/bubble.out > benchmarks/bubble.dis
+
+matmulbench:
+	$(ARMET)/bin/clang -O1 -g $(CLANG_TARGET_OPTIONS) benchmarks/matmul.c -o benchmarks/matmul.out -T $(LINKER_SCRIPT)
+	$(ARMET)/bin/llvm-objdump -D -S  benchmarks/matmul.out > benchmarks/matmul.dis
+
+facbench: 
+	$(ARMET)/bin/clang -O0 -g $(CLANG_TARGET_OPTIONS) benchmarks/fac.c -o benchmarks/fac.out -T $(LINKER_SCRIPT)
+	$(ARMET)/bin/llvm-objdump -D -S  benchmarks/fac.out > benchmarks/fac.dis
+
+bench: bubblebench matmulbench facbench
 
 .PHONY: clean
 clean:

@@ -28,7 +28,7 @@ void assert_is_sorted(char *arr, unsigned n) {
 
 int main() {
   char arr[] = {
-     5, 4, 3, 2, 1, 0
+     10, 9, 8, 7, 6, 5, 4, 3, 2, 1
   };
   unsigned len = sizeof(arr) / sizeof(char);
   bubble_sort(arr, len);
