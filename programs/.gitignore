@@ -6,4 +6,4 @@
 *.out
 !decode_test.s
 !os/*
-!benchmarks/*/*
+!benchmarks/*

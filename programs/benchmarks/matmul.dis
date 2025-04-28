@@ -1,0 +1,4260 @@
+
+benchmarks/matmul.out:	file format elf32-littlearm
+
+Disassembly of section .text:
+
+00000000 <sbrk>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 4601         	mov	r1, r0
+;     char* prev_heap_ptr = heap_ptr;
+       2: 4a06         	ldr	r2, [pc, #0x18]         @ 0x1c <sbrk+0x1c>
+       4: 6810         	ldr	r0, [r2]
+;     if (increment > 0) {
+       6: 2901         	cmp	r1, #0x1
+       8: db07         	blt	0x1a <sbrk+0x1a>        @ imm = #0xe
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 1841         	adds	r1, r0, r1
+       c: 4b04         	ldr	r3, [pc, #0x10]         @ 0x20 <sbrk+0x20>
+       e: 4299         	cmp	r1, r3
+      10: d902         	bls	0x18 <sbrk+0x18>        @ imm = #0x4
+      12: 2000         	movs	r0, #0x0
+      14: 43c0         	mvns	r0, r0
+; }
+      16: 4770         	bx	lr
+;         heap_ptr += increment;
+      18: 6011         	str	r1, [r2]
+; }
+      1a: 4770         	bx	lr
+      1c: 00 00 00 20  	.word	0x20000000
+      20: 00 00 f8 21  	.word	0x21f80000
+
+00000024 <main>:
+; int main() {
+      24: b5f0         	push	{r4, r5, r6, r7, lr}
+      26: af03         	add	r7, sp, #0xc
+      28: 4e1a         	ldr	r6, [pc, #0x68]         @ 0x94 <main+0x70>
+      2a: 44b5         	add	sp, r6
+      2c: 2019         	movs	r0, #0x19
+      2e: 0181         	lsls	r1, r0, #0x6
+      30: a805         	add	r0, sp, #0x14
+;     volatile int result[SIZE][SIZE] = {0};
+      32: f000 f831    	bl	0x98 <bzero>            @ imm = #0x62
+      36: 2000         	movs	r0, #0x0
+      38: 4914         	ldr	r1, [pc, #0x50]         @ 0x8c <main+0x68>
+      3a: 9002         	str	r0, [sp, #0x8]
+      3c: 9003         	str	r0, [sp, #0xc]
+      3e: 4b14         	ldr	r3, [pc, #0x50]         @ 0x90 <main+0x6c>
+      40: 9d02         	ldr	r5, [sp, #0x8]
+      42: 2050         	movs	r0, #0x50
+      44: 9a03         	ldr	r2, [sp, #0xc]
+      46: 4350         	muls	r0, r2, r0
+      48: ac05         	add	r4, sp, #0x14
+      4a: 1820         	adds	r0, r4, r0
+      4c: 00ac         	lsls	r4, r5, #0x2
+      4e: 1906         	adds	r6, r0, r4
+      50: 9304         	str	r3, [sp, #0x10]
+      52: 461c         	mov	r4, r3
+      54: 9802         	ldr	r0, [sp, #0x8]
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: 580b         	ldr	r3, [r1, r0]
+      58: 6822         	ldr	r2, [r4]
+      5a: 435a         	muls	r2, r3, r2
+      5c: 6833         	ldr	r3, [r6]
+      5e: 189a         	adds	r2, r3, r2
+      60: 6032         	str	r2, [r6]
+;             for (int k = 0; k < SIZE; k++) {
+      62: 3450         	adds	r4, #0x50
+      64: 1d00         	adds	r0, r0, #0x4
+      66: 2850         	cmp	r0, #0x50
+      68: d1f5         	bne	0x56 <main+0x32>        @ imm = #-0x16
+      6a: 9b04         	ldr	r3, [sp, #0x10]
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 1d1b         	adds	r3, r3, #0x4
+      6e: 1c6d         	adds	r5, r5, #0x1
+      70: 2d14         	cmp	r5, #0x14
+      72: d1e6         	bne	0x42 <main+0x1e>        @ imm = #-0x34
+;     for (int i = 0; i < SIZE; i++) {
+      74: 3150         	adds	r1, #0x50
+      76: 9803         	ldr	r0, [sp, #0xc]
+      78: 1c40         	adds	r0, r0, #0x1
+      7a: 9003         	str	r0, [sp, #0xc]
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 2814         	cmp	r0, #0x14
+      7e: d1de         	bne	0x3e <main+0x1a>        @ imm = #-0x44
+      80: 2000         	movs	r0, #0x0
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: df00         	svc	#0x0
+; }
+      84: 1ffe         	subs	r6, r7, #0x7
+      86: 3e05         	subs	r6, #0x5
+      88: 46b5         	mov	sp, r6
+      8a: bdf0         	pop	{r4, r5, r6, r7, pc}
+      8c: b8 00 00 00  	.word	0x000000b8
+      90: f8 06 00 00  	.word	0x000006f8
+      94: ac f9 ff ff  	.word	0xfffff9ac
+
+00000098 <bzero>:
+      98: b580         	push	{r7, lr}
+      9a: af00         	add	r7, sp, #0x0
+      9c: 460a         	mov	r2, r1
+      9e: 2100         	movs	r1, #0x0
+      a0: f000 f802    	bl	0xa8 <memset>           @ imm = #0x4
+      a4: bd80         	pop	{r7, pc}
+      a6: d4d4         	bmi	0x52 <main+0x2e>        @ imm = #-0x58
+
+000000a8 <memset>:
+      a8: 2300         	movs	r3, #0x0
+      aa: 429a         	cmp	r2, r3
+      ac: d002         	beq	0xb4 <memset+0xc>       @ imm = #0x4
+      ae: 54c1         	strb	r1, [r0, r3]
+      b0: 1c5b         	adds	r3, r3, #0x1
+      b2: e7fa         	b	0xaa <memset+0x2>       @ imm = #-0xc
+      b4: 4770         	bx	lr
+
+000000b6 <__text_end>:
+      b6: d4d4         	bmi	0x62 <main+0x3e>        @ imm = #-0x58
+
+Disassembly of section .rodata:
+
+000000b8 <.rodata>:
+      b8: 000c         	movs	r4, r1
+      ba: 0000         	movs	r0, r0
+      bc: 0005         	movs	r5, r0
+      be: 0000         	movs	r0, r0
+      c0: 0007         	movs	r7, r0
+      c2: 0000         	movs	r0, r0
+      c4: 0013         	movs	r3, r2
+      c6: 0000         	movs	r0, r0
+      c8: 0002         	movs	r2, r0
+      ca: 0000         	movs	r0, r0
+      cc: 0008         	movs	r0, r1
+      ce: 0000         	movs	r0, r0
+      d0: 0003         	movs	r3, r0
+      d2: 0000         	movs	r0, r0
+      d4: 000b         	movs	r3, r1
+      d6: 0000         	movs	r0, r0
+      d8: 0006         	movs	r6, r0
+      da: 0000         	movs	r0, r0
+      dc: 0004         	movs	r4, r0
+      de: 0000         	movs	r0, r0
+      e0: 000d         	movs	r5, r1
+      e2: 0000         	movs	r0, r0
+      e4: 0011         	movs	r1, r2
+      e6: 0000         	movs	r0, r0
+      e8: 0009         	movs	r1, r1
+      ea: 0000         	movs	r0, r0
+      ec: 0005         	movs	r5, r0
+      ee: 0000         	movs	r0, r0
+      f0: 0002         	movs	r2, r0
+      f2: 0000         	movs	r0, r0
+      f4: 0008         	movs	r0, r1
+      f6: 0000         	movs	r0, r0
+      f8: 000f         	movs	r7, r1
+      fa: 0000         	movs	r0, r0
+      fc: 000a         	movs	r2, r1
+      fe: 0000         	movs	r0, r0
+     100: 0007         	movs	r7, r0
+     102: 0000         	movs	r0, r0
+     104: 0003         	movs	r3, r0
+     106: 0000         	movs	r0, r0
+     108: 0009         	movs	r1, r1
+     10a: 0000         	movs	r0, r0
+     10c: 000e         	movs	r6, r1
+     10e: 0000         	movs	r0, r0
+     110: 0001         	movs	r1, r0
+     112: 0000         	movs	r0, r0
+     114: 000d         	movs	r5, r1
+     116: 0000         	movs	r0, r0
+     118: 0005         	movs	r5, r0
+     11a: 0000         	movs	r0, r0
+     11c: 0007         	movs	r7, r0
+     11e: 0000         	movs	r0, r0
+     120: 0008         	movs	r0, r1
+     122: 0000         	movs	r0, r0
+     124: 000a         	movs	r2, r1
+     126: 0000         	movs	r0, r0
+     128: 000c         	movs	r4, r1
+     12a: 0000         	movs	r0, r0
+     12c: 0002         	movs	r2, r0
+     12e: 0000         	movs	r0, r0
+     130: 0006         	movs	r6, r0
+     132: 0000         	movs	r0, r0
+     134: 000b         	movs	r3, r1
+     136: 0000         	movs	r0, r0
+     138: 000f         	movs	r7, r1
+     13a: 0000         	movs	r0, r0
+     13c: 0004         	movs	r4, r0
+     13e: 0000         	movs	r0, r0
+     140: 0007         	movs	r7, r0
+     142: 0000         	movs	r0, r0
+     144: 0001         	movs	r1, r0
+     146: 0000         	movs	r0, r0
+     148: 000d         	movs	r5, r1
+     14a: 0000         	movs	r0, r0
+     14c: 0010         	movs	r0, r2
+     14e: 0000         	movs	r0, r0
+     150: 0002         	movs	r2, r0
+     152: 0000         	movs	r0, r0
+     154: 0005         	movs	r5, r0
+     156: 0000         	movs	r0, r0
+     158: 0006         	movs	r6, r0
+     15a: 0000         	movs	r0, r0
+     15c: 0003         	movs	r3, r0
+     15e: 0000         	movs	r0, r0
+     160: 0011         	movs	r1, r2
+     162: 0000         	movs	r0, r0
+     164: 0004         	movs	r4, r0
+     166: 0000         	movs	r0, r0
+     168: 0009         	movs	r1, r1
+     16a: 0000         	movs	r0, r0
+     16c: 0001         	movs	r1, r0
+     16e: 0000         	movs	r0, r0
+     170: 0005         	movs	r5, r0
+     172: 0000         	movs	r0, r0
+     174: 000e         	movs	r6, r1
+     176: 0000         	movs	r0, r0
+     178: 000b         	movs	r3, r1
+     17a: 0000         	movs	r0, r0
+     17c: 0007         	movs	r7, r0
+     17e: 0000         	movs	r0, r0
+     180: 0002         	movs	r2, r0
+     182: 0000         	movs	r0, r0
+     184: 0008         	movs	r0, r1
+     186: 0000         	movs	r0, r0
+     188: 000d         	movs	r5, r1
+     18a: 0000         	movs	r0, r0
+     18c: 0006         	movs	r6, r0
+     18e: 0000         	movs	r0, r0
+     190: 0003         	movs	r3, r0
+     192: 0000         	movs	r0, r0
+     194: 000c         	movs	r4, r1
+     196: 0000         	movs	r0, r0
+     198: 0009         	movs	r1, r1
+     19a: 0000         	movs	r0, r0
+     19c: 0005         	movs	r5, r0
+     19e: 0000         	movs	r0, r0
+     1a0: 000e         	movs	r6, r1
+     1a2: 0000         	movs	r0, r0
+     1a4: 0008         	movs	r0, r1
+     1a6: 0000         	movs	r0, r0
+     1a8: 0008         	movs	r0, r1
+     1aa: 0000         	movs	r0, r0
+     1ac: 0002         	movs	r2, r0
+     1ae: 0000         	movs	r0, r0
+     1b0: 000d         	movs	r5, r1
+     1b2: 0000         	movs	r0, r0
+     1b4: 0006         	movs	r6, r0
+     1b6: 0000         	movs	r0, r0
+     1b8: 000a         	movs	r2, r1
+     1ba: 0000         	movs	r0, r0
+     1bc: 0003         	movs	r3, r0
+     1be: 0000         	movs	r0, r0
+     1c0: 0007         	movs	r7, r0
+     1c2: 0000         	movs	r0, r0
+     1c4: 000c         	movs	r4, r1
+     1c6: 0000         	movs	r0, r0
+     1c8: 0001         	movs	r1, r0
+     1ca: 0000         	movs	r0, r0
+     1cc: 0009         	movs	r1, r1
+     1ce: 0000         	movs	r0, r0
+     1d0: 000e         	movs	r6, r1
+     1d2: 0000         	movs	r0, r0
+     1d4: 000b         	movs	r3, r1
+     1d6: 0000         	movs	r0, r0
+     1d8: 0002         	movs	r2, r0
+     1da: 0000         	movs	r0, r0
+     1dc: 0007         	movs	r7, r0
+     1de: 0000         	movs	r0, r0
+     1e0: 0005         	movs	r5, r0
+     1e2: 0000         	movs	r0, r0
+     1e4: 0004         	movs	r4, r0
+     1e6: 0000         	movs	r0, r0
+     1e8: 0006         	movs	r6, r0
+     1ea: 0000         	movs	r0, r0
+     1ec: 0008         	movs	r0, r1
+     1ee: 0000         	movs	r0, r0
+     1f0: 0009         	movs	r1, r1
+     1f2: 0000         	movs	r0, r0
+     1f4: 0005         	movs	r5, r0
+     1f6: 0000         	movs	r0, r0
+     1f8: 000b         	movs	r3, r1
+     1fa: 0000         	movs	r0, r0
+     1fc: 0007         	movs	r7, r0
+     1fe: 0000         	movs	r0, r0
+     200: 0005         	movs	r5, r0
+     202: 0000         	movs	r0, r0
+     204: 0002         	movs	r2, r0
+     206: 0000         	movs	r0, r0
+     208: 000e         	movs	r6, r1
+     20a: 0000         	movs	r0, r0
+     20c: 0009         	movs	r1, r1
+     20e: 0000         	movs	r0, r0
+     210: 0006         	movs	r6, r0
+     212: 0000         	movs	r0, r0
+     214: 0004         	movs	r4, r0
+     216: 0000         	movs	r0, r0
+     218: 0003         	movs	r3, r0
+     21a: 0000         	movs	r0, r0
+     21c: 0008         	movs	r0, r1
+     21e: 0000         	movs	r0, r0
+     220: 000d         	movs	r5, r1
+     222: 0000         	movs	r0, r0
+     224: 000c         	movs	r4, r1
+     226: 0000         	movs	r0, r0
+     228: 0005         	movs	r5, r0
+     22a: 0000         	movs	r0, r0
+     22c: 000a         	movs	r2, r1
+     22e: 0000         	movs	r0, r0
+     230: 0007         	movs	r7, r0
+     232: 0000         	movs	r0, r0
+     234: 0009         	movs	r1, r1
+     236: 0000         	movs	r0, r0
+     238: 000b         	movs	r3, r1
+     23a: 0000         	movs	r0, r0
+     23c: 0006         	movs	r6, r0
+     23e: 0000         	movs	r0, r0
+     240: 0003         	movs	r3, r0
+     242: 0000         	movs	r0, r0
+     244: 0002         	movs	r2, r0
+     246: 0000         	movs	r0, r0
+     248: 0004         	movs	r4, r0
+     24a: 0000         	movs	r0, r0
+     24c: 000a         	movs	r2, r1
+     24e: 0000         	movs	r0, r0
+     250: 0002         	movs	r2, r0
+     252: 0000         	movs	r0, r0
+     254: 0007         	movs	r7, r0
+     256: 0000         	movs	r0, r0
+     258: 000c         	movs	r4, r1
+     25a: 0000         	movs	r0, r0
+     25c: 0005         	movs	r5, r0
+     25e: 0000         	movs	r0, r0
+     260: 0009         	movs	r1, r1
+     262: 0000         	movs	r0, r0
+     264: 0001         	movs	r1, r0
+     266: 0000         	movs	r0, r0
+     268: 0008         	movs	r0, r1
+     26a: 0000         	movs	r0, r0
+     26c: 000b         	movs	r3, r1
+     26e: 0000         	movs	r0, r0
+     270: 0006         	movs	r6, r0
+     272: 0000         	movs	r0, r0
+     274: 0007         	movs	r7, r0
+     276: 0000         	movs	r0, r0
+     278: 000e         	movs	r6, r1
+     27a: 0000         	movs	r0, r0
+     27c: 0002         	movs	r2, r0
+     27e: 0000         	movs	r0, r0
+     280: 0005         	movs	r5, r0
+     282: 0000         	movs	r0, r0
+     284: 0003         	movs	r3, r0
+     286: 0000         	movs	r0, r0
+     288: 0008         	movs	r0, r1
+     28a: 0000         	movs	r0, r0
+     28c: 000c         	movs	r4, r1
+     28e: 0000         	movs	r0, r0
+     290: 0004         	movs	r4, r0
+     292: 0000         	movs	r0, r0
+     294: 0009         	movs	r1, r1
+     296: 0000         	movs	r0, r0
+     298: 0007         	movs	r7, r0
+     29a: 0000         	movs	r0, r0
+     29c: 0008         	movs	r0, r1
+     29e: 0000         	movs	r0, r0
+     2a0: 0006         	movs	r6, r0
+     2a2: 0000         	movs	r0, r0
+     2a4: 0005         	movs	r5, r0
+     2a6: 0000         	movs	r0, r0
+     2a8: 0003         	movs	r3, r0
+     2aa: 0000         	movs	r0, r0
+     2ac: 000b         	movs	r3, r1
+     2ae: 0000         	movs	r0, r0
+     2b0: 0002         	movs	r2, r0
+     2b2: 0000         	movs	r0, r0
+     2b4: 0009         	movs	r1, r1
+     2b6: 0000         	movs	r0, r0
+     2b8: 000a         	movs	r2, r1
+     2ba: 0000         	movs	r0, r0
+     2bc: 0001         	movs	r1, r0
+     2be: 0000         	movs	r0, r0
+     2c0: 000d         	movs	r5, r1
+     2c2: 0000         	movs	r0, r0
+     2c4: 0004         	movs	r4, r0
+     2c6: 0000         	movs	r0, r0
+     2c8: 0008         	movs	r0, r1
+     2ca: 0000         	movs	r0, r0
+     2cc: 0007         	movs	r7, r0
+     2ce: 0000         	movs	r0, r0
+     2d0: 000c         	movs	r4, r1
+     2d2: 0000         	movs	r0, r0
+     2d4: 0005         	movs	r5, r0
+     2d6: 0000         	movs	r0, r0
+     2d8: 0006         	movs	r6, r0
+     2da: 0000         	movs	r0, r0
+     2dc: 000b         	movs	r3, r1
+     2de: 0000         	movs	r0, r0
+     2e0: 0002         	movs	r2, r0
+     2e2: 0000         	movs	r0, r0
+     2e4: 000a         	movs	r2, r1
+     2e6: 0000         	movs	r0, r0
+     2e8: 0005         	movs	r5, r0
+     2ea: 0000         	movs	r0, r0
+     2ec: 0001         	movs	r1, r0
+     2ee: 0000         	movs	r0, r0
+     2f0: 0009         	movs	r1, r1
+     2f2: 0000         	movs	r0, r0
+     2f4: 0008         	movs	r0, r1
+     2f6: 0000         	movs	r0, r0
+     2f8: 0007         	movs	r7, r0
+     2fa: 0000         	movs	r0, r0
+     2fc: 0002         	movs	r2, r0
+     2fe: 0000         	movs	r0, r0
+     300: 0004         	movs	r4, r0
+     302: 0000         	movs	r0, r0
+     304: 0006         	movs	r6, r0
+     306: 0000         	movs	r0, r0
+     308: 000b         	movs	r3, r1
+     30a: 0000         	movs	r0, r0
+     30c: 0003         	movs	r3, r0
+     30e: 0000         	movs	r0, r0
+     310: 0005         	movs	r5, r0
+     312: 0000         	movs	r0, r0
+     314: 000a         	movs	r2, r1
+     316: 0000         	movs	r0, r0
+     318: 0009         	movs	r1, r1
+     31a: 0000         	movs	r0, r0
+     31c: 0008         	movs	r0, r1
+     31e: 0000         	movs	r0, r0
+     320: 0006         	movs	r6, r0
+     322: 0000         	movs	r0, r0
+     324: 0002         	movs	r2, r0
+     326: 0000         	movs	r0, r0
+     328: 0001         	movs	r1, r0
+     32a: 0000         	movs	r0, r0
+     32c: 0007         	movs	r7, r0
+     32e: 0000         	movs	r0, r0
+     330: 000c         	movs	r4, r1
+     332: 0000         	movs	r0, r0
+     334: 0005         	movs	r5, r0
+     336: 0000         	movs	r0, r0
+     338: 0003         	movs	r3, r0
+     33a: 0000         	movs	r0, r0
+     33c: 000b         	movs	r3, r1
+     33e: 0000         	movs	r0, r0
+     340: 0004         	movs	r4, r0
+     342: 0000         	movs	r0, r0
+     344: 000a         	movs	r2, r1
+     346: 0000         	movs	r0, r0
+     348: 0001         	movs	r1, r0
+     34a: 0000         	movs	r0, r0
+     34c: 0006         	movs	r6, r0
+     34e: 0000         	movs	r0, r0
+     350: 0008         	movs	r0, r1
+     352: 0000         	movs	r0, r0
+     354: 0005         	movs	r5, r0
+     356: 0000         	movs	r0, r0
+     358: 0002         	movs	r2, r0
+     35a: 0000         	movs	r0, r0
+     35c: 0007         	movs	r7, r0
+     35e: 0000         	movs	r0, r0
+     360: 0009         	movs	r1, r1
+     362: 0000         	movs	r0, r0
+     364: 000d         	movs	r5, r1
+     366: 0000         	movs	r0, r0
+     368: 0004         	movs	r4, r0
+     36a: 0000         	movs	r0, r0
+     36c: 0006         	movs	r6, r0
+     36e: 0000         	movs	r0, r0
+     370: 000b         	movs	r3, r1
+     372: 0000         	movs	r0, r0
+     374: 0008         	movs	r0, r1
+     376: 0000         	movs	r0, r0
+     378: 000a         	movs	r2, r1
+     37a: 0000         	movs	r0, r0
+     37c: 0003         	movs	r3, r0
+     37e: 0000         	movs	r0, r0
+     380: 0005         	movs	r5, r0
+     382: 0000         	movs	r0, r0
+     384: 0007         	movs	r7, r0
+     386: 0000         	movs	r0, r0
+     388: 0002         	movs	r2, r0
+     38a: 0000         	movs	r0, r0
+     38c: 0006         	movs	r6, r0
+     38e: 0000         	movs	r0, r0
+     390: 0008         	movs	r0, r1
+     392: 0000         	movs	r0, r0
+     394: 0001         	movs	r1, r0
+     396: 0000         	movs	r0, r0
+     398: 0005         	movs	r5, r0
+     39a: 0000         	movs	r0, r0
+     39c: 000a         	movs	r2, r1
+     39e: 0000         	movs	r0, r0
+     3a0: 000b         	movs	r3, r1
+     3a2: 0000         	movs	r0, r0
+     3a4: 0003         	movs	r3, r0
+     3a6: 0000         	movs	r0, r0
+     3a8: 0009         	movs	r1, r1
+     3aa: 0000         	movs	r0, r0
+     3ac: 0004         	movs	r4, r0
+     3ae: 0000         	movs	r0, r0
+     3b0: 0007         	movs	r7, r0
+     3b2: 0000         	movs	r0, r0
+     3b4: 000c         	movs	r4, r1
+     3b6: 0000         	movs	r0, r0
+     3b8: 0006         	movs	r6, r0
+     3ba: 0000         	movs	r0, r0
+     3bc: 0005         	movs	r5, r0
+     3be: 0000         	movs	r0, r0
+     3c0: 0003         	movs	r3, r0
+     3c2: 0000         	movs	r0, r0
+     3c4: 0009         	movs	r1, r1
+     3c6: 0000         	movs	r0, r0
+     3c8: 000b         	movs	r3, r1
+     3ca: 0000         	movs	r0, r0
+     3cc: 0008         	movs	r0, r1
+     3ce: 0000         	movs	r0, r0
+     3d0: 0002         	movs	r2, r0
+     3d2: 0000         	movs	r0, r0
+     3d4: 0006         	movs	r6, r0
+     3d6: 0000         	movs	r0, r0
+     3d8: 000d         	movs	r5, r1
+     3da: 0000         	movs	r0, r0
+     3dc: 0004         	movs	r4, r0
+     3de: 0000         	movs	r0, r0
+     3e0: 0005         	movs	r5, r0
+     3e2: 0000         	movs	r0, r0
+     3e4: 0009         	movs	r1, r1
+     3e6: 0000         	movs	r0, r0
+     3e8: 0007         	movs	r7, r0
+     3ea: 0000         	movs	r0, r0
+     3ec: 000c         	movs	r4, r1
+     3ee: 0000         	movs	r0, r0
+     3f0: 0003         	movs	r3, r0
+     3f2: 0000         	movs	r0, r0
+     3f4: 0008         	movs	r0, r1
+     3f6: 0000         	movs	r0, r0
+     3f8: 000a         	movs	r2, r1
+     3fa: 0000         	movs	r0, r0
+     3fc: 0001         	movs	r1, r0
+     3fe: 0000         	movs	r0, r0
+     400: 0005         	movs	r5, r0
+     402: 0000         	movs	r0, r0
+     404: 0006         	movs	r6, r0
+     406: 0000         	movs	r0, r0
+     408: 000b         	movs	r3, r1
+     40a: 0000         	movs	r0, r0
+     40c: 0002         	movs	r2, r0
+     40e: 0000         	movs	r0, r0
+     410: 0009         	movs	r1, r1
+     412: 0000         	movs	r0, r0
+     414: 0007         	movs	r7, r0
+     416: 0000         	movs	r0, r0
+     418: 0004         	movs	r4, r0
+     41a: 0000         	movs	r0, r0
+     41c: 000d         	movs	r5, r1
+     41e: 0000         	movs	r0, r0
+     420: 0008         	movs	r0, r1
+     422: 0000         	movs	r0, r0
+     424: 0005         	movs	r5, r0
+     426: 0000         	movs	r0, r0
+     428: 0007         	movs	r7, r0
+     42a: 0000         	movs	r0, r0
+     42c: 0009         	movs	r1, r1
+     42e: 0000         	movs	r0, r0
+     430: 0002         	movs	r2, r0
+     432: 0000         	movs	r0, r0
+     434: 000b         	movs	r3, r1
+     436: 0000         	movs	r0, r0
+     438: 0008         	movs	r0, r1
+     43a: 0000         	movs	r0, r0
+     43c: 0005         	movs	r5, r0
+     43e: 0000         	movs	r0, r0
+     440: 0006         	movs	r6, r0
+     442: 0000         	movs	r0, r0
+     444: 000d         	movs	r5, r1
+     446: 0000         	movs	r0, r0
+     448: 0001         	movs	r1, r0
+     44a: 0000         	movs	r0, r0
+     44c: 000a         	movs	r2, r1
+     44e: 0000         	movs	r0, r0
+     450: 0003         	movs	r3, r0
+     452: 0000         	movs	r0, r0
+     454: 0007         	movs	r7, r0
+     456: 0000         	movs	r0, r0
+     458: 0005         	movs	r5, r0
+     45a: 0000         	movs	r0, r0
+     45c: 0009         	movs	r1, r1
+     45e: 0000         	movs	r0, r0
+     460: 0008         	movs	r0, r1
+     462: 0000         	movs	r0, r0
+     464: 0004         	movs	r4, r0
+     466: 0000         	movs	r0, r0
+     468: 0006         	movs	r6, r0
+     46a: 0000         	movs	r0, r0
+     46c: 000c         	movs	r4, r1
+     46e: 0000         	movs	r0, r0
+     470: 000b         	movs	r3, r1
+     472: 0000         	movs	r0, r0
+     474: 0003         	movs	r3, r0
+     476: 0000         	movs	r0, r0
+     478: 000a         	movs	r2, r1
+     47a: 0000         	movs	r0, r0
+     47c: 0001         	movs	r1, r0
+     47e: 0000         	movs	r0, r0
+     480: 0006         	movs	r6, r0
+     482: 0000         	movs	r0, r0
+     484: 0007         	movs	r7, r0
+     486: 0000         	movs	r0, r0
+     488: 0003         	movs	r3, r0
+     48a: 0000         	movs	r0, r0
+     48c: 000b         	movs	r3, r1
+     48e: 0000         	movs	r0, r0
+     490: 0005         	movs	r5, r0
+     492: 0000         	movs	r0, r0
+     494: 0009         	movs	r1, r1
+     496: 0000         	movs	r0, r0
+     498: 0002         	movs	r2, r0
+     49a: 0000         	movs	r0, r0
+     49c: 0008         	movs	r0, r1
+     49e: 0000         	movs	r0, r0
+     4a0: 0004         	movs	r4, r0
+     4a2: 0000         	movs	r0, r0
+     4a4: 0005         	movs	r5, r0
+     4a6: 0000         	movs	r0, r0
+     4a8: 000c         	movs	r4, r1
+     4aa: 0000         	movs	r0, r0
+     4ac: 0006         	movs	r6, r0
+     4ae: 0000         	movs	r0, r0
+     4b0: 0007         	movs	r7, r0
+     4b2: 0000         	movs	r0, r0
+     4b4: 0002         	movs	r2, r0
+     4b6: 0000         	movs	r0, r0
+     4b8: 000a         	movs	r2, r1
+     4ba: 0000         	movs	r0, r0
+     4bc: 0005         	movs	r5, r0
+     4be: 0000         	movs	r0, r0
+     4c0: 0009         	movs	r1, r1
+     4c2: 0000         	movs	r0, r0
+     4c4: 0004         	movs	r4, r0
+     4c6: 0000         	movs	r0, r0
+     4c8: 0009         	movs	r1, r1
+     4ca: 0000         	movs	r0, r0
+     4cc: 0008         	movs	r0, r1
+     4ce: 0000         	movs	r0, r0
+     4d0: 0003         	movs	r3, r0
+     4d2: 0000         	movs	r0, r0
+     4d4: 000c         	movs	r4, r1
+     4d6: 0000         	movs	r0, r0
+     4d8: 0004         	movs	r4, r0
+     4da: 0000         	movs	r0, r0
+     4dc: 0007         	movs	r7, r0
+     4de: 0000         	movs	r0, r0
+     4e0: 000a         	movs	r2, r1
+     4e2: 0000         	movs	r0, r0
+     4e4: 0002         	movs	r2, r0
+     4e6: 0000         	movs	r0, r0
+     4e8: 0005         	movs	r5, r0
+     4ea: 0000         	movs	r0, r0
+     4ec: 0006         	movs	r6, r0
+     4ee: 0000         	movs	r0, r0
+     4f0: 000b         	movs	r3, r1
+     4f2: 0000         	movs	r0, r0
+     4f4: 0001         	movs	r1, r0
+     4f6: 0000         	movs	r0, r0
+     4f8: 0008         	movs	r0, r1
+     4fa: 0000         	movs	r0, r0
+     4fc: 0003         	movs	r3, r0
+     4fe: 0000         	movs	r0, r0
+     500: 0009         	movs	r1, r1
+     502: 0000         	movs	r0, r0
+     504: 0005         	movs	r5, r0
+     506: 0000         	movs	r0, r0
+     508: 0007         	movs	r7, r0
+     50a: 0000         	movs	r0, r0
+     50c: 000a         	movs	r2, r1
+     50e: 0000         	movs	r0, r0
+     510: 0006         	movs	r6, r0
+     512: 0000         	movs	r0, r0
+     514: 0002         	movs	r2, r0
+     516: 0000         	movs	r0, r0
+     518: 0006         	movs	r6, r0
+     51a: 0000         	movs	r0, r0
+     51c: 0002         	movs	r2, r0
+     51e: 0000         	movs	r0, r0
+     520: 000a         	movs	r2, r1
+     522: 0000         	movs	r0, r0
+     524: 0005         	movs	r5, r0
+     526: 0000         	movs	r0, r0
+     528: 0009         	movs	r1, r1
+     52a: 0000         	movs	r0, r0
+     52c: 0004         	movs	r4, r0
+     52e: 0000         	movs	r0, r0
+     530: 000b         	movs	r3, r1
+     532: 0000         	movs	r0, r0
+     534: 0007         	movs	r7, r0
+     536: 0000         	movs	r0, r0
+     538: 0003         	movs	r3, r0
+     53a: 0000         	movs	r0, r0
+     53c: 0008         	movs	r0, r1
+     53e: 0000         	movs	r0, r0
+     540: 0001         	movs	r1, r0
+     542: 0000         	movs	r0, r0
+     544: 0009         	movs	r1, r1
+     546: 0000         	movs	r0, r0
+     548: 0006         	movs	r6, r0
+     54a: 0000         	movs	r0, r0
+     54c: 0007         	movs	r7, r0
+     54e: 0000         	movs	r0, r0
+     550: 0005         	movs	r5, r0
+     552: 0000         	movs	r0, r0
+     554: 0003         	movs	r3, r0
+     556: 0000         	movs	r0, r0
+     558: 0002         	movs	r2, r0
+     55a: 0000         	movs	r0, r0
+     55c: 000b         	movs	r3, r1
+     55e: 0000         	movs	r0, r0
+     560: 0004         	movs	r4, r0
+     562: 0000         	movs	r0, r0
+     564: 000a         	movs	r2, r1
+     566: 0000         	movs	r0, r0
+     568: 0004         	movs	r4, r0
+     56a: 0000         	movs	r0, r0
+     56c: 0005         	movs	r5, r0
+     56e: 0000         	movs	r0, r0
+     570: 000c         	movs	r4, r1
+     572: 0000         	movs	r0, r0
+     574: 0008         	movs	r0, r1
+     576: 0000         	movs	r0, r0
+     578: 0002         	movs	r2, r0
+     57a: 0000         	movs	r0, r0
+     57c: 0006         	movs	r6, r0
+     57e: 0000         	movs	r0, r0
+     580: 0007         	movs	r7, r0
+     582: 0000         	movs	r0, r0
+     584: 0001         	movs	r1, r0
+     586: 0000         	movs	r0, r0
+     588: 000a         	movs	r2, r1
+     58a: 0000         	movs	r0, r0
+     58c: 0003         	movs	r3, r0
+     58e: 0000         	movs	r0, r0
+     590: 0009         	movs	r1, r1
+     592: 0000         	movs	r0, r0
+     594: 0005         	movs	r5, r0
+     596: 0000         	movs	r0, r0
+     598: 0004         	movs	r4, r0
+     59a: 0000         	movs	r0, r0
+     59c: 0008         	movs	r0, r1
+     59e: 0000         	movs	r0, r0
+     5a0: 000b         	movs	r3, r1
+     5a2: 0000         	movs	r0, r0
+     5a4: 0007         	movs	r7, r0
+     5a6: 0000         	movs	r0, r0
+     5a8: 0006         	movs	r6, r0
+     5aa: 0000         	movs	r0, r0
+     5ac: 0002         	movs	r2, r0
+     5ae: 0000         	movs	r0, r0
+     5b0: 0009         	movs	r1, r1
+     5b2: 0000         	movs	r0, r0
+     5b4: 0001         	movs	r1, r0
+     5b6: 0000         	movs	r0, r0
+     5b8: 000b         	movs	r3, r1
+     5ba: 0000         	movs	r0, r0
+     5bc: 0003         	movs	r3, r0
+     5be: 0000         	movs	r0, r0
+     5c0: 0007         	movs	r7, r0
+     5c2: 0000         	movs	r0, r0
+     5c4: 0006         	movs	r6, r0
+     5c6: 0000         	movs	r0, r0
+     5c8: 0001         	movs	r1, r0
+     5ca: 0000         	movs	r0, r0
+     5cc: 0009         	movs	r1, r1
+     5ce: 0000         	movs	r0, r0
+     5d0: 0005         	movs	r5, r0
+     5d2: 0000         	movs	r0, r0
+     5d4: 0008         	movs	r0, r1
+     5d6: 0000         	movs	r0, r0
+     5d8: 0004         	movs	r4, r0
+     5da: 0000         	movs	r0, r0
+     5dc: 0002         	movs	r2, r0
+     5de: 0000         	movs	r0, r0
+     5e0: 000a         	movs	r2, r1
+     5e2: 0000         	movs	r0, r0
+     5e4: 0007         	movs	r7, r0
+     5e6: 0000         	movs	r0, r0
+     5e8: 000b         	movs	r3, r1
+     5ea: 0000         	movs	r0, r0
+     5ec: 0005         	movs	r5, r0
+     5ee: 0000         	movs	r0, r0
+     5f0: 0006         	movs	r6, r0
+     5f2: 0000         	movs	r0, r0
+     5f4: 0009         	movs	r1, r1
+     5f6: 0000         	movs	r0, r0
+     5f8: 0003         	movs	r3, r0
+     5fa: 0000         	movs	r0, r0
+     5fc: 0004         	movs	r4, r0
+     5fe: 0000         	movs	r0, r0
+     600: 0007         	movs	r7, r0
+     602: 0000         	movs	r0, r0
+     604: 0008         	movs	r0, r1
+     606: 0000         	movs	r0, r0
+     608: 0008         	movs	r0, r1
+     60a: 0000         	movs	r0, r0
+     60c: 0007         	movs	r7, r0
+     60e: 0000         	movs	r0, r0
+     610: 0005         	movs	r5, r0
+     612: 0000         	movs	r0, r0
+     614: 0002         	movs	r2, r0
+     616: 0000         	movs	r0, r0
+     618: 000b         	movs	r3, r1
+     61a: 0000         	movs	r0, r0
+     61c: 0003         	movs	r3, r0
+     61e: 0000         	movs	r0, r0
+     620: 0006         	movs	r6, r0
+     622: 0000         	movs	r0, r0
+     624: 0009         	movs	r1, r1
+     626: 0000         	movs	r0, r0
+     628: 0007         	movs	r7, r0
+     62a: 0000         	movs	r0, r0
+     62c: 0001         	movs	r1, r0
+     62e: 0000         	movs	r0, r0
+     630: 0004         	movs	r4, r0
+     632: 0000         	movs	r0, r0
+     634: 0002         	movs	r2, r0
+     636: 0000         	movs	r0, r0
+     638: 0008         	movs	r0, r1
+     63a: 0000         	movs	r0, r0
+     63c: 000a         	movs	r2, r1
+     63e: 0000         	movs	r0, r0
+     640: 0005         	movs	r5, r0
+     642: 0000         	movs	r0, r0
+     644: 0007         	movs	r7, r0
+     646: 0000         	movs	r0, r0
+     648: 000c         	movs	r4, r1
+     64a: 0000         	movs	r0, r0
+     64c: 0003         	movs	r3, r0
+     64e: 0000         	movs	r0, r0
+     650: 0006         	movs	r6, r0
+     652: 0000         	movs	r0, r0
+     654: 000b         	movs	r3, r1
+     656: 0000         	movs	r0, r0
+     658: 0005         	movs	r5, r0
+     65a: 0000         	movs	r0, r0
+     65c: 0006         	movs	r6, r0
+     65e: 0000         	movs	r0, r0
+     660: 000b         	movs	r3, r1
+     662: 0000         	movs	r0, r0
+     664: 0003         	movs	r3, r0
+     666: 0000         	movs	r0, r0
+     668: 0007         	movs	r7, r0
+     66a: 0000         	movs	r0, r0
+     66c: 0008         	movs	r0, r1
+     66e: 0000         	movs	r0, r0
+     670: 000a         	movs	r2, r1
+     672: 0000         	movs	r0, r0
+     674: 0004         	movs	r4, r0
+     676: 0000         	movs	r0, r0
+     678: 0001         	movs	r1, r0
+     67a: 0000         	movs	r0, r0
+     67c: 0009         	movs	r1, r1
+     67e: 0000         	movs	r0, r0
+     680: 0002         	movs	r2, r0
+     682: 0000         	movs	r0, r0
+     684: 0006         	movs	r6, r0
+     686: 0000         	movs	r0, r0
+     688: 0005         	movs	r5, r0
+     68a: 0000         	movs	r0, r0
+     68c: 0003         	movs	r3, r0
+     68e: 0000         	movs	r0, r0
+     690: 0008         	movs	r0, r1
+     692: 0000         	movs	r0, r0
+     694: 000b         	movs	r3, r1
+     696: 0000         	movs	r0, r0
+     698: 0009         	movs	r1, r1
+     69a: 0000         	movs	r0, r0
+     69c: 0007         	movs	r7, r0
+     69e: 0000         	movs	r0, r0
+     6a0: 000a         	movs	r2, r1
+     6a2: 0000         	movs	r0, r0
+     6a4: 0002         	movs	r2, r0
+     6a6: 0000         	movs	r0, r0
+     6a8: 0002         	movs	r2, r0
+     6aa: 0000         	movs	r0, r0
+     6ac: 0009         	movs	r1, r1
+     6ae: 0000         	movs	r0, r0
+     6b0: 0008         	movs	r0, r1
+     6b2: 0000         	movs	r0, r0
+     6b4: 0007         	movs	r7, r0
+     6b6: 0000         	movs	r0, r0
+     6b8: 0004         	movs	r4, r0
+     6ba: 0000         	movs	r0, r0
+     6bc: 000a         	movs	r2, r1
+     6be: 0000         	movs	r0, r0
+     6c0: 0001         	movs	r1, r0
+     6c2: 0000         	movs	r0, r0
+     6c4: 0005         	movs	r5, r0
+     6c6: 0000         	movs	r0, r0
+     6c8: 0006         	movs	r6, r0
+     6ca: 0000         	movs	r0, r0
+     6cc: 0003         	movs	r3, r0
+     6ce: 0000         	movs	r0, r0
+     6d0: 000b         	movs	r3, r1
+     6d2: 0000         	movs	r0, r0
+     6d4: 0009         	movs	r1, r1
+     6d6: 0000         	movs	r0, r0
+     6d8: 0007         	movs	r7, r0
+     6da: 0000         	movs	r0, r0
+     6dc: 0004         	movs	r4, r0
+     6de: 0000         	movs	r0, r0
+     6e0: 0002         	movs	r2, r0
+     6e2: 0000         	movs	r0, r0
+     6e4: 000a         	movs	r2, r1
+     6e6: 0000         	movs	r0, r0
+     6e8: 0005         	movs	r5, r0
+     6ea: 0000         	movs	r0, r0
+     6ec: 0008         	movs	r0, r1
+     6ee: 0000         	movs	r0, r0
+     6f0: 0003         	movs	r3, r0
+     6f2: 0000         	movs	r0, r0
+     6f4: 0006         	movs	r6, r0
+     6f6: 0000         	movs	r0, r0
+     6f8: 0004         	movs	r4, r0
+     6fa: 0000         	movs	r0, r0
+     6fc: 0007         	movs	r7, r0
+     6fe: 0000         	movs	r0, r0
+     700: 000d         	movs	r5, r1
+     702: 0000         	movs	r0, r0
+     704: 0006         	movs	r6, r0
+     706: 0000         	movs	r0, r0
+     708: 000b         	movs	r3, r1
+     70a: 0000         	movs	r0, r0
+     70c: 0002         	movs	r2, r0
+     70e: 0000         	movs	r0, r0
+     710: 0009         	movs	r1, r1
+     712: 0000         	movs	r0, r0
+     714: 0001         	movs	r1, r0
+     716: 0000         	movs	r0, r0
+     718: 0005         	movs	r5, r0
+     71a: 0000         	movs	r0, r0
+     71c: 000c         	movs	r4, r1
+     71e: 0000         	movs	r0, r0
+     720: 0008         	movs	r0, r1
+     722: 0000         	movs	r0, r0
+     724: 000a         	movs	r2, r1
+     726: 0000         	movs	r0, r0
+     728: 0003         	movs	r3, r0
+     72a: 0000         	movs	r0, r0
+     72c: 0007         	movs	r7, r0
+     72e: 0000         	movs	r0, r0
+     730: 0006         	movs	r6, r0
+     732: 0000         	movs	r0, r0
+     734: 0009         	movs	r1, r1
+     736: 0000         	movs	r0, r0
+     738: 0005         	movs	r5, r0
+     73a: 0000         	movs	r0, r0
+     73c: 0008         	movs	r0, r1
+     73e: 0000         	movs	r0, r0
+     740: 000b         	movs	r3, r1
+     742: 0000         	movs	r0, r0
+     744: 0002         	movs	r2, r0
+     746: 0000         	movs	r0, r0
+     748: 0006         	movs	r6, r0
+     74a: 0000         	movs	r0, r0
+     74c: 000c         	movs	r4, r1
+     74e: 0000         	movs	r0, r0
+     750: 0003         	movs	r3, r0
+     752: 0000         	movs	r0, r0
+     754: 0008         	movs	r0, r1
+     756: 0000         	movs	r0, r0
+     758: 0002         	movs	r2, r0
+     75a: 0000         	movs	r0, r0
+     75c: 000a         	movs	r2, r1
+     75e: 0000         	movs	r0, r0
+     760: 0005         	movs	r5, r0
+     762: 0000         	movs	r0, r0
+     764: 0007         	movs	r7, r0
+     766: 0000         	movs	r0, r0
+     768: 0009         	movs	r1, r1
+     76a: 0000         	movs	r0, r0
+     76c: 0004         	movs	r4, r0
+     76e: 0000         	movs	r0, r0
+     770: 000b         	movs	r3, r1
+     772: 0000         	movs	r0, r0
+     774: 0006         	movs	r6, r0
+     776: 0000         	movs	r0, r0
+     778: 0001         	movs	r1, r0
+     77a: 0000         	movs	r0, r0
+     77c: 0008         	movs	r0, r1
+     77e: 0000         	movs	r0, r0
+     780: 0007         	movs	r7, r0
+     782: 0000         	movs	r0, r0
+     784: 0003         	movs	r3, r0
+     786: 0000         	movs	r0, r0
+     788: 000a         	movs	r2, r1
+     78a: 0000         	movs	r0, r0
+     78c: 0009         	movs	r1, r1
+     78e: 0000         	movs	r0, r0
+     790: 0005         	movs	r5, r0
+     792: 0000         	movs	r0, r0
+     794: 000c         	movs	r4, r1
+     796: 0000         	movs	r0, r0
+     798: 0008         	movs	r0, r1
+     79a: 0000         	movs	r0, r0
+     79c: 0005         	movs	r5, r0
+     79e: 0000         	movs	r0, r0
+     7a0: 0007         	movs	r7, r0
+     7a2: 0000         	movs	r0, r0
+     7a4: 000a         	movs	r2, r1
+     7a6: 0000         	movs	r0, r0
+     7a8: 0006         	movs	r6, r0
+     7aa: 0000         	movs	r0, r0
+     7ac: 0004         	movs	r4, r0
+     7ae: 0000         	movs	r0, r0
+     7b0: 0002         	movs	r2, r0
+     7b2: 0000         	movs	r0, r0
+     7b4: 000b         	movs	r3, r1
+     7b6: 0000         	movs	r0, r0
+     7b8: 0003         	movs	r3, r0
+     7ba: 0000         	movs	r0, r0
+     7bc: 0009         	movs	r1, r1
+     7be: 0000         	movs	r0, r0
+     7c0: 000c         	movs	r4, r1
+     7c2: 0000         	movs	r0, r0
+     7c4: 0001         	movs	r1, r0
+     7c6: 0000         	movs	r0, r0
+     7c8: 0005         	movs	r5, r0
+     7ca: 0000         	movs	r0, r0
+     7cc: 0007         	movs	r7, r0
+     7ce: 0000         	movs	r0, r0
+     7d0: 0006         	movs	r6, r0
+     7d2: 0000         	movs	r0, r0
+     7d4: 0004         	movs	r4, r0
+     7d6: 0000         	movs	r0, r0
+     7d8: 0008         	movs	r0, r1
+     7da: 0000         	movs	r0, r0
+     7dc: 0002         	movs	r2, r0
+     7de: 0000         	movs	r0, r0
+     7e0: 0009         	movs	r1, r1
+     7e2: 0000         	movs	r0, r0
+     7e4: 0003         	movs	r3, r0
+     7e6: 0000         	movs	r0, r0
+     7e8: 000b         	movs	r3, r1
+     7ea: 0000         	movs	r0, r0
+     7ec: 0009         	movs	r1, r1
+     7ee: 0000         	movs	r0, r0
+     7f0: 0002         	movs	r2, r0
+     7f2: 0000         	movs	r0, r0
+     7f4: 0007         	movs	r7, r0
+     7f6: 0000         	movs	r0, r0
+     7f8: 0005         	movs	r5, r0
+     7fa: 0000         	movs	r0, r0
+     7fc: 0008         	movs	r0, r1
+     7fe: 0000         	movs	r0, r0
+     800: 000a         	movs	r2, r1
+     802: 0000         	movs	r0, r0
+     804: 0003         	movs	r3, r0
+     806: 0000         	movs	r0, r0
+     808: 0006         	movs	r6, r0
+     80a: 0000         	movs	r0, r0
+     80c: 0001         	movs	r1, r0
+     80e: 0000         	movs	r0, r0
+     810: 0007         	movs	r7, r0
+     812: 0000         	movs	r0, r0
+     814: 0005         	movs	r5, r0
+     816: 0000         	movs	r0, r0
+     818: 000c         	movs	r4, r1
+     81a: 0000         	movs	r0, r0
+     81c: 0004         	movs	r4, r0
+     81e: 0000         	movs	r0, r0
+     820: 000b         	movs	r3, r1
+     822: 0000         	movs	r0, r0
+     824: 0008         	movs	r0, r1
+     826: 0000         	movs	r0, r0
+     828: 0009         	movs	r1, r1
+     82a: 0000         	movs	r0, r0
+     82c: 0006         	movs	r6, r0
+     82e: 0000         	movs	r0, r0
+     830: 0002         	movs	r2, r0
+     832: 0000         	movs	r0, r0
+     834: 000a         	movs	r2, r1
+     836: 0000         	movs	r0, r0
+     838: 0009         	movs	r1, r1
+     83a: 0000         	movs	r0, r0
+     83c: 0003         	movs	r3, r0
+     83e: 0000         	movs	r0, r0
+     840: 0006         	movs	r6, r0
+     842: 0000         	movs	r0, r0
+     844: 0001         	movs	r1, r0
+     846: 0000         	movs	r0, r0
+     848: 0007         	movs	r7, r0
+     84a: 0000         	movs	r0, r0
+     84c: 000b         	movs	r3, r1
+     84e: 0000         	movs	r0, r0
+     850: 0008         	movs	r0, r1
+     852: 0000         	movs	r0, r0
+     854: 0004         	movs	r4, r0
+     856: 0000         	movs	r0, r0
+     858: 0002         	movs	r2, r0
+     85a: 0000         	movs	r0, r0
+     85c: 000a         	movs	r2, r1
+     85e: 0000         	movs	r0, r0
+     860: 0005         	movs	r5, r0
+     862: 0000         	movs	r0, r0
+     864: 0009         	movs	r1, r1
+     866: 0000         	movs	r0, r0
+     868: 0006         	movs	r6, r0
+     86a: 0000         	movs	r0, r0
+     86c: 000c         	movs	r4, r1
+     86e: 0000         	movs	r0, r0
+     870: 0003         	movs	r3, r0
+     872: 0000         	movs	r0, r0
+     874: 0005         	movs	r5, r0
+     876: 0000         	movs	r0, r0
+     878: 0007         	movs	r7, r0
+     87a: 0000         	movs	r0, r0
+     87c: 0008         	movs	r0, r1
+     87e: 0000         	movs	r0, r0
+     880: 0004         	movs	r4, r0
+     882: 0000         	movs	r0, r0
+     884: 000b         	movs	r3, r1
+     886: 0000         	movs	r0, r0
+     888: 0007         	movs	r7, r0
+     88a: 0000         	movs	r0, r0
+     88c: 0001         	movs	r1, r0
+     88e: 0000         	movs	r0, r0
+     890: 000b         	movs	r3, r1
+     892: 0000         	movs	r0, r0
+     894: 0005         	movs	r5, r0
+     896: 0000         	movs	r0, r0
+     898: 0004         	movs	r4, r0
+     89a: 0000         	movs	r0, r0
+     89c: 0006         	movs	r6, r0
+     89e: 0000         	movs	r0, r0
+     8a0: 0003         	movs	r3, r0
+     8a2: 0000         	movs	r0, r0
+     8a4: 000c         	movs	r4, r1
+     8a6: 0000         	movs	r0, r0
+     8a8: 0008         	movs	r0, r1
+     8aa: 0000         	movs	r0, r0
+     8ac: 0002         	movs	r2, r0
+     8ae: 0000         	movs	r0, r0
+     8b0: 0009         	movs	r1, r1
+     8b2: 0000         	movs	r0, r0
+     8b4: 0007         	movs	r7, r0
+     8b6: 0000         	movs	r0, r0
+     8b8: 000a         	movs	r2, r1
+     8ba: 0000         	movs	r0, r0
+     8bc: 0005         	movs	r5, r0
+     8be: 0000         	movs	r0, r0
+     8c0: 0002         	movs	r2, r0
+     8c2: 0000         	movs	r0, r0
+     8c4: 000b         	movs	r3, r1
+     8c6: 0000         	movs	r0, r0
+     8c8: 0006         	movs	r6, r0
+     8ca: 0000         	movs	r0, r0
+     8cc: 0004         	movs	r4, r0
+     8ce: 0000         	movs	r0, r0
+     8d0: 0007         	movs	r7, r0
+     8d2: 0000         	movs	r0, r0
+     8d4: 0009         	movs	r1, r1
+     8d6: 0000         	movs	r0, r0
+     8d8: 0005         	movs	r5, r0
+     8da: 0000         	movs	r0, r0
+     8dc: 0008         	movs	r0, r1
+     8de: 0000         	movs	r0, r0
+     8e0: 0004         	movs	r4, r0
+     8e2: 0000         	movs	r0, r0
+     8e4: 000c         	movs	r4, r1
+     8e6: 0000         	movs	r0, r0
+     8e8: 0009         	movs	r1, r1
+     8ea: 0000         	movs	r0, r0
+     8ec: 0007         	movs	r7, r0
+     8ee: 0000         	movs	r0, r0
+     8f0: 0006         	movs	r6, r0
+     8f2: 0000         	movs	r0, r0
+     8f4: 0002         	movs	r2, r0
+     8f6: 0000         	movs	r0, r0
+     8f8: 000b         	movs	r3, r1
+     8fa: 0000         	movs	r0, r0
+     8fc: 0003         	movs	r3, r0
+     8fe: 0000         	movs	r0, r0
+     900: 0001         	movs	r1, r0
+     902: 0000         	movs	r0, r0
+     904: 0005         	movs	r5, r0
+     906: 0000         	movs	r0, r0
+     908: 0008         	movs	r0, r1
+     90a: 0000         	movs	r0, r0
+     90c: 0006         	movs	r6, r0
+     90e: 0000         	movs	r0, r0
+     910: 0009         	movs	r1, r1
+     912: 0000         	movs	r0, r0
+     914: 0002         	movs	r2, r0
+     916: 0000         	movs	r0, r0
+     918: 0003         	movs	r3, r0
+     91a: 0000         	movs	r0, r0
+     91c: 000a         	movs	r2, r1
+     91e: 0000         	movs	r0, r0
+     920: 0005         	movs	r5, r0
+     922: 0000         	movs	r0, r0
+     924: 0007         	movs	r7, r0
+     926: 0000         	movs	r0, r0
+     928: 0002         	movs	r2, r0
+     92a: 0000         	movs	r0, r0
+     92c: 000b         	movs	r3, r1
+     92e: 0000         	movs	r0, r0
+     930: 0005         	movs	r5, r0
+     932: 0000         	movs	r0, r0
+     934: 0009         	movs	r1, r1
+     936: 0000         	movs	r0, r0
+     938: 0008         	movs	r0, r1
+     93a: 0000         	movs	r0, r0
+     93c: 0001         	movs	r1, r0
+     93e: 0000         	movs	r0, r0
+     940: 0007         	movs	r7, r0
+     942: 0000         	movs	r0, r0
+     944: 000a         	movs	r2, r1
+     946: 0000         	movs	r0, r0
+     948: 0004         	movs	r4, r0
+     94a: 0000         	movs	r0, r0
+     94c: 0006         	movs	r6, r0
+     94e: 0000         	movs	r0, r0
+     950: 0003         	movs	r3, r0
+     952: 0000         	movs	r0, r0
+     954: 0008         	movs	r0, r1
+     956: 0000         	movs	r0, r0
+     958: 0009         	movs	r1, r1
+     95a: 0000         	movs	r0, r0
+     95c: 0002         	movs	r2, r0
+     95e: 0000         	movs	r0, r0
+     960: 000c         	movs	r4, r1
+     962: 0000         	movs	r0, r0
+     964: 0007         	movs	r7, r0
+     966: 0000         	movs	r0, r0
+     968: 0005         	movs	r5, r0
+     96a: 0000         	movs	r0, r0
+     96c: 000b         	movs	r3, r1
+     96e: 0000         	movs	r0, r0
+     970: 0001         	movs	r1, r0
+     972: 0000         	movs	r0, r0
+     974: 0006         	movs	r6, r0
+     976: 0000         	movs	r0, r0
+     978: 0003         	movs	r3, r0
+     97a: 0000         	movs	r0, r0
+     97c: 000a         	movs	r2, r1
+     97e: 0000         	movs	r0, r0
+     980: 0009         	movs	r1, r1
+     982: 0000         	movs	r0, r0
+     984: 0002         	movs	r2, r0
+     986: 0000         	movs	r0, r0
+     988: 000c         	movs	r4, r1
+     98a: 0000         	movs	r0, r0
+     98c: 0005         	movs	r5, r0
+     98e: 0000         	movs	r0, r0
+     990: 000b         	movs	r3, r1
+     992: 0000         	movs	r0, r0
+     994: 0006         	movs	r6, r0
+     996: 0000         	movs	r0, r0
+     998: 0007         	movs	r7, r0
+     99a: 0000         	movs	r0, r0
+     99c: 0008         	movs	r0, r1
+     99e: 0000         	movs	r0, r0
+     9a0: 0004         	movs	r4, r0
+     9a2: 0000         	movs	r0, r0
+     9a4: 0001         	movs	r1, r0
+     9a6: 0000         	movs	r0, r0
+     9a8: 0006         	movs	r6, r0
+     9aa: 0000         	movs	r0, r0
+     9ac: 0003         	movs	r3, r0
+     9ae: 0000         	movs	r0, r0
+     9b0: 0005         	movs	r5, r0
+     9b2: 0000         	movs	r0, r0
+     9b4: 000c         	movs	r4, r1
+     9b6: 0000         	movs	r0, r0
+     9b8: 0008         	movs	r0, r1
+     9ba: 0000         	movs	r0, r0
+     9bc: 0009         	movs	r1, r1
+     9be: 0000         	movs	r0, r0
+     9c0: 0007         	movs	r7, r0
+     9c2: 0000         	movs	r0, r0
+     9c4: 0002         	movs	r2, r0
+     9c6: 0000         	movs	r0, r0
+     9c8: 000a         	movs	r2, r1
+     9ca: 0000         	movs	r0, r0
+     9cc: 0002         	movs	r2, r0
+     9ce: 0000         	movs	r0, r0
+     9d0: 0008         	movs	r0, r1
+     9d2: 0000         	movs	r0, r0
+     9d4: 000b         	movs	r3, r1
+     9d6: 0000         	movs	r0, r0
+     9d8: 0001         	movs	r1, r0
+     9da: 0000         	movs	r0, r0
+     9dc: 0009         	movs	r1, r1
+     9de: 0000         	movs	r0, r0
+     9e0: 000c         	movs	r4, r1
+     9e2: 0000         	movs	r0, r0
+     9e4: 0005         	movs	r5, r0
+     9e6: 0000         	movs	r0, r0
+     9e8: 0003         	movs	r3, r0
+     9ea: 0000         	movs	r0, r0
+     9ec: 0007         	movs	r7, r0
+     9ee: 0000         	movs	r0, r0
+     9f0: 0006         	movs	r6, r0
+     9f2: 0000         	movs	r0, r0
+     9f4: 0002         	movs	r2, r0
+     9f6: 0000         	movs	r0, r0
+     9f8: 000b         	movs	r3, r1
+     9fa: 0000         	movs	r0, r0
+     9fc: 0008         	movs	r0, r1
+     9fe: 0000         	movs	r0, r0
+     a00: 0004         	movs	r4, r0
+     a02: 0000         	movs	r0, r0
+     a04: 0006         	movs	r6, r0
+     a06: 0000         	movs	r0, r0
+     a08: 0009         	movs	r1, r1
+     a0a: 0000         	movs	r0, r0
+     a0c: 0005         	movs	r5, r0
+     a0e: 0000         	movs	r0, r0
+     a10: 0003         	movs	r3, r0
+     a12: 0000         	movs	r0, r0
+     a14: 000a         	movs	r2, r1
+     a16: 0000         	movs	r0, r0
+     a18: 000c         	movs	r4, r1
+     a1a: 0000         	movs	r0, r0
+     a1c: 0006         	movs	r6, r0
+     a1e: 0000         	movs	r0, r0
+     a20: 0001         	movs	r1, r0
+     a22: 0000         	movs	r0, r0
+     a24: 0004         	movs	r4, r0
+     a26: 0000         	movs	r0, r0
+     a28: 000a         	movs	r2, r1
+     a2a: 0000         	movs	r0, r0
+     a2c: 0003         	movs	r3, r0
+     a2e: 0000         	movs	r0, r0
+     a30: 0005         	movs	r5, r0
+     a32: 0000         	movs	r0, r0
+     a34: 0007         	movs	r7, r0
+     a36: 0000         	movs	r0, r0
+     a38: 0009         	movs	r1, r1
+     a3a: 0000         	movs	r0, r0
+     a3c: 000b         	movs	r3, r1
+     a3e: 0000         	movs	r0, r0
+     a40: 0002         	movs	r2, r0
+     a42: 0000         	movs	r0, r0
+     a44: 000c         	movs	r4, r1
+     a46: 0000         	movs	r0, r0
+     a48: 0004         	movs	r4, r0
+     a4a: 0000         	movs	r0, r0
+     a4c: 000a         	movs	r2, r1
+     a4e: 0000         	movs	r0, r0
+     a50: 0006         	movs	r6, r0
+     a52: 0000         	movs	r0, r0
+     a54: 0008         	movs	r0, r1
+     a56: 0000         	movs	r0, r0
+     a58: 0007         	movs	r7, r0
+     a5a: 0000         	movs	r0, r0
+     a5c: 0003         	movs	r3, r0
+     a5e: 0000         	movs	r0, r0
+     a60: 0005         	movs	r5, r0
+     a62: 0000         	movs	r0, r0
+     a64: 0001         	movs	r1, r0
+     a66: 0000         	movs	r0, r0
+     a68: 0001         	movs	r1, r0
+     a6a: 0000         	movs	r0, r0
+     a6c: 0005         	movs	r5, r0
+     a6e: 0000         	movs	r0, r0
+     a70: 000c         	movs	r4, r1
+     a72: 0000         	movs	r0, r0
+     a74: 0003         	movs	r3, r0
+     a76: 0000         	movs	r0, r0
+     a78: 0006         	movs	r6, r0
+     a7a: 0000         	movs	r0, r0
+     a7c: 0002         	movs	r2, r0
+     a7e: 0000         	movs	r0, r0
+     a80: 0008         	movs	r0, r1
+     a82: 0000         	movs	r0, r0
+     a84: 0009         	movs	r1, r1
+     a86: 0000         	movs	r0, r0
+     a88: 000a         	movs	r2, r1
+     a8a: 0000         	movs	r0, r0
+     a8c: 0004         	movs	r4, r0
+     a8e: 0000         	movs	r0, r0
+     a90: 0007         	movs	r7, r0
+     a92: 0000         	movs	r0, r0
+     a94: 000b         	movs	r3, r1
+     a96: 0000         	movs	r0, r0
+     a98: 0005         	movs	r5, r0
+     a9a: 0000         	movs	r0, r0
+     a9c: 0006         	movs	r6, r0
+     a9e: 0000         	movs	r0, r0
+     aa0: 0002         	movs	r2, r0
+     aa2: 0000         	movs	r0, r0
+     aa4: 0009         	movs	r1, r1
+     aa6: 0000         	movs	r0, r0
+     aa8: 000c         	movs	r4, r1
+     aaa: 0000         	movs	r0, r0
+     aac: 0008         	movs	r0, r1
+     aae: 0000         	movs	r0, r0
+     ab0: 0004         	movs	r4, r0
+     ab2: 0000         	movs	r0, r0
+     ab4: 0003         	movs	r3, r0
+     ab6: 0000         	movs	r0, r0
+     ab8: 0005         	movs	r5, r0
+     aba: 0000         	movs	r0, r0
+     abc: 0007         	movs	r7, r0
+     abe: 0000         	movs	r0, r0
+     ac0: 0002         	movs	r2, r0
+     ac2: 0000         	movs	r0, r0
+     ac4: 0006         	movs	r6, r0
+     ac6: 0000         	movs	r0, r0
+     ac8: 0003         	movs	r3, r0
+     aca: 0000         	movs	r0, r0
+     acc: 000c         	movs	r4, r1
+     ace: 0000         	movs	r0, r0
+     ad0: 0004         	movs	r4, r0
+     ad2: 0000         	movs	r0, r0
+     ad4: 0008         	movs	r0, r1
+     ad6: 0000         	movs	r0, r0
+     ad8: 0001         	movs	r1, r0
+     ada: 0000         	movs	r0, r0
+     adc: 0005         	movs	r5, r0
+     ade: 0000         	movs	r0, r0
+     ae0: 000a         	movs	r2, r1
+     ae2: 0000         	movs	r0, r0
+     ae4: 0009         	movs	r1, r1
+     ae6: 0000         	movs	r0, r0
+     ae8: 0002         	movs	r2, r0
+     aea: 0000         	movs	r0, r0
+     aec: 000b         	movs	r3, r1
+     aee: 0000         	movs	r0, r0
+     af0: 0007         	movs	r7, r0
+     af2: 0000         	movs	r0, r0
+     af4: 0003         	movs	r3, r0
+     af6: 0000         	movs	r0, r0
+     af8: 0001         	movs	r1, r0
+     afa: 0000         	movs	r0, r0
+     afc: 0006         	movs	r6, r0
+     afe: 0000         	movs	r0, r0
+     b00: 0009         	movs	r1, r1
+     b02: 0000         	movs	r0, r0
+     b04: 0005         	movs	r5, r0
+     b06: 0000         	movs	r0, r0
+     b08: 000b         	movs	r3, r1
+     b0a: 0000         	movs	r0, r0
+     b0c: 0004         	movs	r4, r0
+     b0e: 0000         	movs	r0, r0
+     b10: 000a         	movs	r2, r1
+     b12: 0000         	movs	r0, r0
+     b14: 0008         	movs	r0, r1
+     b16: 0000         	movs	r0, r0
+     b18: 0009         	movs	r1, r1
+     b1a: 0000         	movs	r0, r0
+     b1c: 0005         	movs	r5, r0
+     b1e: 0000         	movs	r0, r0
+     b20: 0002         	movs	r2, r0
+     b22: 0000         	movs	r0, r0
+     b24: 0003         	movs	r3, r0
+     b26: 0000         	movs	r0, r0
+     b28: 000c         	movs	r4, r1
+     b2a: 0000         	movs	r0, r0
+     b2c: 0006         	movs	r6, r0
+     b2e: 0000         	movs	r0, r0
+     b30: 0001         	movs	r1, r0
+     b32: 0000         	movs	r0, r0
+     b34: 0007         	movs	r7, r0
+     b36: 0000         	movs	r0, r0
+     b38: 0009         	movs	r1, r1
+     b3a: 0000         	movs	r0, r0
+     b3c: 0004         	movs	r4, r0
+     b3e: 0000         	movs	r0, r0
+     b40: 0005         	movs	r5, r0
+     b42: 0000         	movs	r0, r0
+     b44: 0008         	movs	r0, r1
+     b46: 0000         	movs	r0, r0
+     b48: 0002         	movs	r2, r0
+     b4a: 0000         	movs	r0, r0
+     b4c: 000a         	movs	r2, r1
+     b4e: 0000         	movs	r0, r0
+     b50: 0006         	movs	r6, r0
+     b52: 0000         	movs	r0, r0
+     b54: 0007         	movs	r7, r0
+     b56: 0000         	movs	r0, r0
+     b58: 0008         	movs	r0, r1
+     b5a: 0000         	movs	r0, r0
+     b5c: 0009         	movs	r1, r1
+     b5e: 0000         	movs	r0, r0
+     b60: 0005         	movs	r5, r0
+     b62: 0000         	movs	r0, r0
+     b64: 0001         	movs	r1, r0
+     b66: 0000         	movs	r0, r0
+     b68: 000b         	movs	r3, r1
+     b6a: 0000         	movs	r0, r0
+     b6c: 0007         	movs	r7, r0
+     b6e: 0000         	movs	r0, r0
+     b70: 0003         	movs	r3, r0
+     b72: 0000         	movs	r0, r0
+     b74: 0006         	movs	r6, r0
+     b76: 0000         	movs	r0, r0
+     b78: 0002         	movs	r2, r0
+     b7a: 0000         	movs	r0, r0
+     b7c: 000c         	movs	r4, r1
+     b7e: 0000         	movs	r0, r0
+     b80: 0004         	movs	r4, r0
+     b82: 0000         	movs	r0, r0
+     b84: 0008         	movs	r0, r1
+     b86: 0000         	movs	r0, r0
+     b88: 000a         	movs	r2, r1
+     b8a: 0000         	movs	r0, r0
+     b8c: 0005         	movs	r5, r0
+     b8e: 0000         	movs	r0, r0
+     b90: 0009         	movs	r1, r1
+     b92: 0000         	movs	r0, r0
+     b94: 0001         	movs	r1, r0
+     b96: 0000         	movs	r0, r0
+     b98: 0006         	movs	r6, r0
+     b9a: 0000         	movs	r0, r0
+     b9c: 0007         	movs	r7, r0
+     b9e: 0000         	movs	r0, r0
+     ba0: 000b         	movs	r3, r1
+     ba2: 0000         	movs	r0, r0
+     ba4: 0004         	movs	r4, r0
+     ba6: 0000         	movs	r0, r0
+     ba8: 0007         	movs	r7, r0
+     baa: 0000         	movs	r0, r0
+     bac: 0003         	movs	r3, r0
+     bae: 0000         	movs	r0, r0
+     bb0: 000b         	movs	r3, r1
+     bb2: 0000         	movs	r0, r0
+     bb4: 0005         	movs	r5, r0
+     bb6: 0000         	movs	r0, r0
+     bb8: 0002         	movs	r2, r0
+     bba: 0000         	movs	r0, r0
+     bbc: 0008         	movs	r0, r1
+     bbe: 0000         	movs	r0, r0
+     bc0: 0009         	movs	r1, r1
+     bc2: 0000         	movs	r0, r0
+     bc4: 0004         	movs	r4, r0
+     bc6: 0000         	movs	r0, r0
+     bc8: 000a         	movs	r2, r1
+     bca: 0000         	movs	r0, r0
+     bcc: 0001         	movs	r1, r0
+     bce: 0000         	movs	r0, r0
+     bd0: 0006         	movs	r6, r0
+     bd2: 0000         	movs	r0, r0
+     bd4: 0005         	movs	r5, r0
+     bd6: 0000         	movs	r0, r0
+     bd8: 0003         	movs	r3, r0
+     bda: 0000         	movs	r0, r0
+     bdc: 0007         	movs	r7, r0
+     bde: 0000         	movs	r0, r0
+     be0: 0002         	movs	r2, r0
+     be2: 0000         	movs	r0, r0
+     be4: 000c         	movs	r4, r1
+     be6: 0000         	movs	r0, r0
+     be8: 0008         	movs	r0, r1
+     bea: 0000         	movs	r0, r0
+     bec: 0009         	movs	r1, r1
+     bee: 0000         	movs	r0, r0
+     bf0: 0005         	movs	r5, r0
+     bf2: 0000         	movs	r0, r0
+     bf4: 000b         	movs	r3, r1
+     bf6: 0000         	movs	r0, r0
+     bf8: 0009         	movs	r1, r1
+     bfa: 0000         	movs	r0, r0
+     bfc: 0001         	movs	r1, r0
+     bfe: 0000         	movs	r0, r0
+     c00: 0006         	movs	r6, r0
+     c02: 0000         	movs	r0, r0
+     c04: 0007         	movs	r7, r0
+     c06: 0000         	movs	r0, r0
+     c08: 0008         	movs	r0, r1
+     c0a: 0000         	movs	r0, r0
+     c0c: 000c         	movs	r4, r1
+     c0e: 0000         	movs	r0, r0
+     c10: 000b         	movs	r3, r1
+     c12: 0000         	movs	r0, r0
+     c14: 0005         	movs	r5, r0
+     c16: 0000         	movs	r0, r0
+     c18: 0004         	movs	r4, r0
+     c1a: 0000         	movs	r0, r0
+     c1c: 0003         	movs	r3, r0
+     c1e: 0000         	movs	r0, r0
+     c20: 0007         	movs	r7, r0
+     c22: 0000         	movs	r0, r0
+     c24: 0002         	movs	r2, r0
+     c26: 0000         	movs	r0, r0
+     c28: 0001         	movs	r1, r0
+     c2a: 0000         	movs	r0, r0
+     c2c: 0009         	movs	r1, r1
+     c2e: 0000         	movs	r0, r0
+     c30: 0006         	movs	r6, r0
+     c32: 0000         	movs	r0, r0
+     c34: 000a         	movs	r2, r1
+     c36: 0000         	movs	r0, r0
+     c38: 0005         	movs	r5, r0
+     c3a: 0000         	movs	r0, r0
+     c3c: 000c         	movs	r4, r1
+     c3e: 0000         	movs	r0, r0
+     c40: 0008         	movs	r0, r1
+     c42: 0000         	movs	r0, r0
+     c44: 0006         	movs	r6, r0
+     c46: 0000         	movs	r0, r0
+     c48: 0006         	movs	r6, r0
+     c4a: 0000         	movs	r0, r0
+     c4c: 0008         	movs	r0, r1
+     c4e: 0000         	movs	r0, r0
+     c50: 0007         	movs	r7, r0
+     c52: 0000         	movs	r0, r0
+     c54: 000c         	movs	r4, r1
+     c56: 0000         	movs	r0, r0
+     c58: 0005         	movs	r5, r0
+     c5a: 0000         	movs	r0, r0
+     c5c: 0004         	movs	r4, r0
+     c5e: 0000         	movs	r0, r0
+     c60: 000a         	movs	r2, r1
+     c62: 0000         	movs	r0, r0
+     c64: 0002         	movs	r2, r0
+     c66: 0000         	movs	r0, r0
+     c68: 000b         	movs	r3, r1
+     c6a: 0000         	movs	r0, r0
+     c6c: 0009         	movs	r1, r1
+     c6e: 0000         	movs	r0, r0
+     c70: 0003         	movs	r3, r0
+     c72: 0000         	movs	r0, r0
+     c74: 0006         	movs	r6, r0
+     c76: 0000         	movs	r0, r0
+     c78: 0007         	movs	r7, r0
+     c7a: 0000         	movs	r0, r0
+     c7c: 0008         	movs	r0, r1
+     c7e: 0000         	movs	r0, r0
+     c80: 000c         	movs	r4, r1
+     c82: 0000         	movs	r0, r0
+     c84: 0004         	movs	r4, r0
+     c86: 0000         	movs	r0, r0
+     c88: 0001         	movs	r1, r0
+     c8a: 0000         	movs	r0, r0
+     c8c: 0005         	movs	r5, r0
+     c8e: 0000         	movs	r0, r0
+     c90: 0002         	movs	r2, r0
+     c92: 0000         	movs	r0, r0
+     c94: 0009         	movs	r1, r1
+     c96: 0000         	movs	r0, r0
+     c98: 0002         	movs	r2, r0
+     c9a: 0000         	movs	r0, r0
+     c9c: 000c         	movs	r4, r1
+     c9e: 0000         	movs	r0, r0
+     ca0: 0003         	movs	r3, r0
+     ca2: 0000         	movs	r0, r0
+     ca4: 000a         	movs	r2, r1
+     ca6: 0000         	movs	r0, r0
+     ca8: 0009         	movs	r1, r1
+     caa: 0000         	movs	r0, r0
+     cac: 0006         	movs	r6, r0
+     cae: 0000         	movs	r0, r0
+     cb0: 0001         	movs	r1, r0
+     cb2: 0000         	movs	r0, r0
+     cb4: 0008         	movs	r0, r1
+     cb6: 0000         	movs	r0, r0
+     cb8: 0005         	movs	r5, r0
+     cba: 0000         	movs	r0, r0
+     cbc: 0007         	movs	r7, r0
+     cbe: 0000         	movs	r0, r0
+     cc0: 000b         	movs	r3, r1
+     cc2: 0000         	movs	r0, r0
+     cc4: 0003         	movs	r3, r0
+     cc6: 0000         	movs	r0, r0
+     cc8: 000c         	movs	r4, r1
+     cca: 0000         	movs	r0, r0
+     ccc: 0002         	movs	r2, r0
+     cce: 0000         	movs	r0, r0
+     cd0: 0008         	movs	r0, r1
+     cd2: 0000         	movs	r0, r0
+     cd4: 0005         	movs	r5, r0
+     cd6: 0000         	movs	r0, r0
+     cd8: 0009         	movs	r1, r1
+     cda: 0000         	movs	r0, r0
+     cdc: 0006         	movs	r6, r0
+     cde: 0000         	movs	r0, r0
+     ce0: 0004         	movs	r4, r0
+     ce2: 0000         	movs	r0, r0
+     ce4: 0001         	movs	r1, r0
+     ce6: 0000         	movs	r0, r0
+     ce8: 0004         	movs	r4, r0
+     cea: 0000         	movs	r0, r0
+     cec: 0007         	movs	r7, r0
+     cee: 0000         	movs	r0, r0
+     cf0: 0008         	movs	r0, r1
+     cf2: 0000         	movs	r0, r0
+     cf4: 0002         	movs	r2, r0
+     cf6: 0000         	movs	r0, r0
+     cf8: 000c         	movs	r4, r1
+     cfa: 0000         	movs	r0, r0
+     cfc: 0005         	movs	r5, r0
+     cfe: 0000         	movs	r0, r0
+     d00: 0009         	movs	r1, r1
+     d02: 0000         	movs	r0, r0
+     d04: 000b         	movs	r3, r1
+     d06: 0000         	movs	r0, r0
+     d08: 0006         	movs	r6, r0
+     d0a: 0000         	movs	r0, r0
+     d0c: 0008         	movs	r0, r1
+     d0e: 0000         	movs	r0, r0
+     d10: 000a         	movs	r2, r1
+     d12: 0000         	movs	r0, r0
+     d14: 0004         	movs	r4, r0
+     d16: 0000         	movs	r0, r0
+     d18: 0003         	movs	r3, r0
+     d1a: 0000         	movs	r0, r0
+     d1c: 0001         	movs	r1, r0
+     d1e: 0000         	movs	r0, r0
+     d20: 0007         	movs	r7, r0
+     d22: 0000         	movs	r0, r0
+     d24: 0006         	movs	r6, r0
+     d26: 0000         	movs	r0, r0
+     d28: 000b         	movs	r3, r1
+     d2a: 0000         	movs	r0, r0
+     d2c: 0002         	movs	r2, r0
+     d2e: 0000         	movs	r0, r0
+     d30: 0005         	movs	r5, r0
+     d32: 0000         	movs	r0, r0
+     d34: 0009         	movs	r1, r1
+     d36: 0000         	movs	r0, r0
+
+Disassembly of section .data:
+
+20000000 <heap_ptr>:
+20000000: 0008         	movs	r0, r1
+20000002: 2000         	movs	r0, #0x0
+20000004: 0000         	movs	r0, r0
+20000006: 0000         	movs	r0, r0
+
+Disassembly of section .heap:
+
+20000008 <.heap>:
+...
+
+Disassembly of section .stack:
+
+20080008 <.stack>:
+...
+
+Disassembly of section .comment:
+
+00000000 <.comment>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 6300         	str	r0, [r0, #0x30]
+;     char* prev_heap_ptr = heap_ptr;
+       2: 616c         	str	r4, [r5, #0x14]
+       4: 676e         	str	r6, [r5, #0x74]
+;     if (increment > 0) {
+       6: 7620         	strb	r0, [r4, #0x18]
+       8: 7265         	strb	r5, [r4, #0x9]
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 6973         	ldr	r3, [r6, #0x14]
+       c: 6e6f         	ldr	r7, [r5, #0x64]
+       e: 3120         	adds	r1, #0x20
+      10: 2e39         	cmp	r6, #0x39
+      12: 2e31         	cmp	r6, #0x31
+      14: 0035         	movs	r5, r6
+; }
+      16: 694c         	ldr	r4, [r1, #0x14]
+;         heap_ptr += increment;
+      18: 6b6e         	ldr	r6, [r5, #0x34]
+; }
+      1a: 7265         	strb	r5, [r4, #0x9]
+      1c: 203a         	movs	r0, #0x3a
+      1e: 4c4c         	ldr	r4, [pc, #0x130]        @ 0x150 <.rodata+0x98>
+      20: 2044         	movs	r0, #0x44
+      22: 3931         	subs	r1, #0x31
+; int main() {
+      24: 312e         	adds	r1, #0x2e
+      26: 352e         	adds	r5, #0x2e
+      28: 00           	<unknown>
+
+Disassembly of section .debug_info:
+
+00000000 <.debug_info>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 0123         	lsls	r3, r4, #0x4
+;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
+       4: 0005         	movs	r5, r0
+;     if (increment > 0) {
+       6: 0401         	lsls	r1, r0, #0x10
+       8: 0000         	movs	r0, r0
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 0000         	movs	r0, r0
+       c: 0001         	movs	r1, r0
+       e: 001d         	movs	r5, r3
+      10: 0801         	lsrs	r1, r0, #0x20
+      12: 0000         	movs	r0, r0
+      14: 0000         	movs	r0, r0
+; }
+      16: 0000         	movs	r0, r0
+;         heap_ptr += increment;
+      18: 0200         	lsls	r0, r0, #0x8
+; }
+      1a: 9801         	ldr	r0, [sp, #0x4]
+      1c: 0000         	movs	r0, r0
+      1e: 0800         	lsrs	r0, r0, #0x20
+      20: 0000         	movs	r0, r0
+      22: 0c00         	lsrs	r0, r0, #0x10
+; int main() {
+      24: 0000         	movs	r0, r0
+      26: 0200         	lsls	r0, r0, #0x8
+      28: 3203         	adds	r2, #0x3
+      2a: 0000         	movs	r0, r0
+      2c: 0100         	lsls	r0, r0, #0x4
+      2e: 0209         	lsls	r1, r1, #0x8
+      30: 00a1         	lsls	r1, r4, #0x2
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 3703         	adds	r7, #0x3
+      34: 0000         	movs	r0, r0
+      36: 0400         	lsls	r0, r0, #0x10
+      38: 0804         	lsrs	r4, r0, #0x20
+      3a: 0501         	lsls	r1, r0, #0x14
+      3c: 0106         	lsls	r6, r0, #0x4
+      3e: 0024         	movs	r4, r4
+      40: 0000         	movs	r0, r0
+      42: 5701         	ldrsb	r1, [r0, r4]
+      44: 0109         	lsls	r1, r1, #0x4
+      46: 3b1a         	subs	r3, #0x1a
+      48: 0000         	movs	r0, r0
+      4a: 0700         	lsls	r0, r0, #0x1c
+      4c: 0c00         	lsrs	r0, r0, #0x10
+      4e: 1a01         	subs	r1, r0, r0
+      50: 00f1         	lsls	r1, r6, #0x3
+      52: 0000         	movs	r0, r0
+      54: 0108         	lsls	r0, r1, #0x4
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: 010e         	lsls	r6, r1, #0x4
+      58: 321b         	adds	r2, #0x1b
+      5a: 0000         	movs	r0, r0
+      5c: 0000         	movs	r0, r0
+      5e: 0509         	lsls	r1, r1, #0x14
+      60: 0b01         	lsrs	r1, r0, #0xc
+;             for (int k = 0; k < SIZE; k++) {
+      62: 060a         	lsls	r2, r1, #0x18
+      64: 0b01         	lsrs	r1, r0, #0xc
+      66: 0073         	lsls	r3, r6, #0x1
+      68: 0000         	movs	r0, r0
+      6a: 080b         	lsrs	r3, r1, #0x20
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 0c01         	lsrs	r1, r0, #0x10
+      6e: 0073         	lsls	r3, r6, #0x1
+      70: 0000         	movs	r0, r0
+      72: 0400         	lsls	r0, r0, #0x10
+;     for (int i = 0; i < SIZE; i++) {
+      74: 0707         	lsls	r7, r0, #0x1c
+      76: 0c04         	lsrs	r4, r0, #0x10
+      78: 7402         	strb	r2, [r0, #0x10]
+      7a: 0000         	movs	r0, r0
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 0100         	lsls	r0, r0, #0x4
+      7e: 0a57         	lsrs	r7, r2, #0x9
+      80: 0500         	lsls	r0, r0, #0x14
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 00ed         	lsls	r5, r5, #0x3
+; }
+      84: 0000         	movs	r0, r0
+      86: 020d         	lsls	r5, r1, #0x8
+      88: 147d         	asrs	r5, r7, #0x11
+      8a: 000f         	movs	r7, r1
+      8c: f934 0000    	<unknown>
+      90: 0b00         	lsrs	r0, r0, #0xc
+      92: 0014         	movs	r4, r2
+      94: 1406         	asrs	r6, r0, #0x10
+      96: 0001         	movs	r1, r0
+      98: 0b00         	lsrs	r0, r0, #0xc
+      9a: 0015         	movs	r5, r2
+      9c: 141d         	asrs	r5, r3, #0x10
+      9e: 0001         	movs	r1, r0
+      a0: 0e00         	lsrs	r0, r0, #0x18
+      a2: 2a03         	cmp	r2, #0x3
+      a4: 0000         	movs	r0, r0
+      a6: 0800         	lsrs	r0, r0, #0x20
+      a8: 1102         	asrs	r2, r0, #0x4
+      aa: 3700         	adds	r7, #0x0
+      ac: 00ed         	lsls	r5, r5, #0x3
+      ae: 0000         	movs	r0, r0
+      b0: 030e         	lsls	r6, r1, #0xc
+      b2: 001e         	movs	r6, r3
+      b4: 0000         	movs	r0, r0
+      b6: 010d         	lsls	r5, r1, #0x4
+      b8: 1255         	asrs	r5, r2, #0x9
+      ba: 3800         	subs	r0, #0x0
+      bc: 00ed         	lsls	r5, r5, #0x3
+      be: 0000         	movs	r0, r0
+      c0: 030e         	lsls	r6, r1, #0xc
+      c2: 0014         	movs	r4, r2
+      c4: 0000         	movs	r0, r0
+      c6: 0308         	lsls	r0, r1, #0xc
+      c8: 0013         	movs	r3, r2
+      ca: ed39 0000    	<unknown>
+      ce: 0000         	movs	r0, r0
+      d0: 0000         	movs	r0, r0
+      d2: 5e0f         	ldrsh	r7, [r1, r0]
+      d4: 0000         	movs	r0, r0
+      d6: 0400         	lsls	r0, r0, #0x10
+      d8: 0002         	movs	r2, r0
+      da: 0000         	movs	r0, r0
+      dc: 3f00         	subs	r7, #0x0
+      de: 1005         	asrs	r5, r0, #0x20
+      e0: 6200         	str	r0, [r0, #0x20]
+      e2: 0000         	movs	r0, r0
+      e4: 1100         	asrs	r0, r0, #0x4
+      e6: 6a00         	ldr	r0, [r0, #0x20]
+      e8: 0000         	movs	r0, r0
+      ea: 0000         	movs	r0, r0
+      ec: 0400         	lsls	r0, r0, #0x10
+      ee: 050b         	lsls	r3, r1, #0x14
+      f0: 1204         	asrs	r4, r0, #0x8
+      f2: 00ed         	lsls	r5, r5, #0x3
+      f4: 0000         	movs	r0, r0
+      f6: 020d         	lsls	r5, r1, #0x8
+      f8: 1312         	asrs	r2, r2, #0xc
+      fa: 010b         	lsls	r3, r1, #0x4
+      fc: 0000         	movs	r0, r0
+      fe: 1014         	asrs	r4, r2, #0x20
+     100: 0001         	movs	r1, r0
+     102: 1400         	asrs	r0, r0, #0x10
+     104: 1014         	asrs	r4, r2, #0x20
+     106: 0001         	movs	r1, r0
+     108: 1400         	asrs	r0, r0, #0x10
+     10a: 1500         	asrs	r0, r0, #0x14
+     10c: 00ed         	lsls	r5, r5, #0x3
+     10e: 0000         	movs	r0, r0
+     110: 1016         	asrs	r6, r2, #0x20
+     112: 0708         	lsls	r0, r1, #0x1c
+     114: ed13 0000    	<unknown>
+     118: 1400         	asrs	r0, r0, #0x10
+     11a: 0110         	lsls	r0, r2, #0x4
+     11c: 0000         	movs	r0, r0
+     11e: 1414         	asrs	r4, r2, #0x10
+     120: 0110         	lsls	r0, r2, #0x4
+     122: 0000         	movs	r0, r0
+     124: 0014         	movs	r4, r2
+     126: 4f00         	ldr	r7, [pc, #0x0]          @ 0x128 <.rodata+0x70>
+     128: 0000         	movs	r0, r0
+     12a: 0500         	lsls	r0, r0, #0x14
+     12c: 0100         	lsls	r0, r0, #0x4
+     12e: 2304         	movs	r3, #0x4
+     130: 0001         	movs	r1, r0
+     132: 0100         	lsls	r0, r0, #0x4
+     134: 1d00         	adds	r0, r0, #0x4
+     136: 0100         	lsls	r0, r0, #0x4
+     138: 0068         	lsls	r0, r5, #0x1
+     13a: 0000         	movs	r0, r0
+     13c: 0106         	lsls	r6, r0, #0x4
+     13e: 0000         	movs	r0, r0
+     140: 0002         	movs	r2, r0
+     142: 000e         	movs	r6, r1
+     144: 0000         	movs	r0, r0
+     146: 0024         	movs	r4, r4
+     148: 0000         	movs	r0, r0
+     14a: 0069         	lsls	r1, r5, #0x1
+     14c: 0000         	movs	r0, r0
+     14e: 0002         	movs	r2, r0
+     150: 000e         	movs	r6, r1
+     152: 0000         	movs	r0, r0
+     154: 5701         	ldrsb	r1, [r0, r4]
+     156: 0103         	lsls	r3, r0, #0x4
+     158: 0331         	lsls	r1, r6, #0xc
+     15a: 0400         	lsls	r0, r0, #0x10
+     15c: 3101         	adds	r1, #0x1
+     15e: 0045         	lsls	r5, r0, #0x1
+     160: 0000         	movs	r0, r0
+     162: 0103         	lsls	r3, r0, #0x4
+     164: 0105         	lsls	r5, r0, #0x4
+     166: 4631         	mov	r1, r6
+     168: 0000         	movs	r0, r0
+     16a: 0000         	movs	r0, r0
+     16c: 0504         	lsls	r4, r0, #0x14
+     16e: 004e         	lsls	r6, r1, #0x1
+     170: 0000         	movs	r0, r0
+     172: 0207         	lsls	r7, r0, #0x8
+     174: 0612         	lsls	r2, r2, #0x18
+     176: 0706         	lsls	r6, r0, #0x1c
+     178: 0004         	movs	r4, r0
+     17a: 0074         	lsls	r4, r6, #0x1
+     17c: 0000         	movs	r0, r0
+     17e: 0005         	movs	r5, r0
+     180: 0401         	lsls	r1, r0, #0x10
+     182: 0181         	lsls	r1, r0, #0x6
+     184: 0000         	movs	r0, r0
+     186: 0001         	movs	r1, r0
+     188: 001d         	movs	r5, r3
+     18a: 9001         	str	r0, [sp, #0x4]
+     18c: 0000         	movs	r0, r0
+     18e: 9200         	str	r2, [sp]
+     190: 0001         	movs	r1, r0
+     192: 0200         	lsls	r0, r0, #0x8
+     194: 0e00         	lsrs	r0, r0, #0x18
+     196: 0000         	movs	r0, r0
+     198: 3000         	adds	r0, #0x0
+     19a: 0000         	movs	r0, r0
+     19c: 9600         	str	r6, [sp]
+     19e: 0000         	movs	r0, r0
+     1a0: 0200         	lsls	r0, r0, #0x8
+     1a2: 002c         	movs	r4, r5
+     1a4: 0000         	movs	r0, r0
+     1a6: 0303         	lsls	r3, r0, #0xc
+     1a8: 0108         	lsls	r0, r1, #0x4
+     1aa: 0004         	movs	r4, r0
+     1ac: 000e         	movs	r6, r1
+     1ae: 0000         	movs	r0, r0
+     1b0: 5701         	ldrsb	r1, [r0, r4]
+     1b2: 0104         	lsls	r4, r0, #0x4
+     1b4: 6639         	str	r1, [r7, #0x60]
+     1b6: 0000         	movs	r0, r0
+     1b8: 0500         	lsls	r0, r0, #0x14
+     1ba: 5001         	str	r1, [r0, r0]
+     1bc: 0105         	lsls	r5, r0, #0x4
+     1be: 6639         	str	r1, [r7, #0x60]
+     1c0: 0000         	movs	r0, r0
+     1c2: 0500         	lsls	r0, r0, #0x14
+     1c4: 5101         	str	r1, [r0, r4]
+     1c6: 0106         	lsls	r6, r0, #0x4
+     1c8: 673a         	str	r2, [r7, #0x70]
+     1ca: 0000         	movs	r0, r0
+     1cc: 0600         	lsls	r0, r0, #0x18
+     1ce: 0800         	lsrs	r0, r0, #0x20
+     1d0: 3b01         	subs	r3, #0x1
+     1d2: 006b         	lsls	r3, r5, #0x1
+     1d4: 0000         	movs	r0, r0
+     1d6: 0107         	lsls	r7, r0, #0x4
+     1d8: 010b         	lsls	r3, r1, #0x4
+     1da: 273d         	movs	r7, #0x3d
+     1dc: 0000         	movs	r0, r0
+     1de: 0000         	movs	r0, r0
+     1e0: 0308         	lsls	r0, r1, #0xc
+     1e2: 0507         	lsls	r7, r0, #0x14
+     1e4: 0904         	lsrs	r4, r0, #0x4
+     1e6: 0073         	lsls	r3, r6, #0x1
+     1e8: 0000         	movs	r0, r0
+     1ea: 020a         	lsls	r2, r1, #0x8
+     1ec: 0312         	lsls	r2, r2, #0xc
+     1ee: 0709         	lsls	r1, r1, #0x1c
+     1f0: 0004         	movs	r4, r0
+
+Disassembly of section .debug_abbrev:
+
+00000000 <.debug_abbrev>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 1101         	asrs	r1, r0, #0x4
+;     char* prev_heap_ptr = heap_ptr;
+       2: 2501         	movs	r5, #0x1
+       4: 1325         	asrs	r5, r4, #0xc
+;     if (increment > 0) {
+       6: 0305         	lsls	r5, r0, #0xc
+       8: 7225         	strb	r5, [r4, #0x8]
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 1017         	asrs	r7, r2, #0x20
+       c: 1b17         	subs	r7, r2, r4
+       e: 1125         	asrs	r5, r4, #0x4
+      10: 121b         	asrs	r3, r3, #0x8
+      12: 7306         	strb	r6, [r0, #0xc]
+      14: 8c17         	ldrh	r7, [r2, #0x20]
+; }
+      16: 1701         	asrs	r1, r0, #0x1c
+;         heap_ptr += increment;
+      18: 0000         	movs	r0, r0
+; }
+      1a: 3402         	adds	r4, #0x2
+      1c: 0300         	lsls	r0, r0, #0xc
+      1e: 4925         	ldr	r1, [pc, #0x94]         @ 0xb4 <.debug_abbrev+0xb4>
+      20: 3a13         	subs	r2, #0x13
+      22: 3b0b         	subs	r3, #0xb
+; int main() {
+      24: 020b         	lsls	r3, r1, #0x8
+      26: 0018         	movs	r0, r3
+      28: 0300         	lsls	r0, r0, #0xc
+      2a: 000f         	movs	r7, r1
+      2c: 1349         	asrs	r1, r1, #0xd
+      2e: 0000         	movs	r0, r0
+      30: 2404         	movs	r4, #0x4
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 0300         	lsls	r0, r0, #0xc
+      34: 3e25         	subs	r6, #0x25
+      36: 0b0b         	lsrs	r3, r1, #0xc
+      38: 000b         	movs	r3, r1
+      3a: 0500         	lsls	r0, r0, #0x14
+      3c: 000f         	movs	r7, r1
+      3e: 0000         	movs	r0, r0
+      40: 2e06         	cmp	r6, #0x6
+      42: 1101         	asrs	r1, r0, #0x4
+      44: 121b         	asrs	r3, r3, #0x8
+      46: 4006         	ands	r6, r0
+      48: 7a18         	ldrb	r0, [r3, #0x8]
+      4a: 0319         	lsls	r1, r3, #0xc
+      4c: 3a25         	subs	r2, #0x25
+      4e: 3b0b         	subs	r3, #0xb
+      50: 270b         	movs	r7, #0xb
+      52: 4919         	ldr	r1, [pc, #0x64]         @ 0xb8 <.rodata>
+      54: 3f13         	subs	r7, #0x13
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: 0019         	movs	r1, r3
+      58: 0700         	lsls	r0, r0, #0x1c
+      5a: 0005         	movs	r5, r0
+      5c: 2202         	movs	r2, #0x2
+      5e: 2503         	movs	r5, #0x3
+      60: 0b3a         	lsrs	r2, r7, #0xc
+;             for (int k = 0; k < SIZE; k++) {
+      62: 0b3b         	lsrs	r3, r7, #0xc
+      64: 1349         	asrs	r1, r1, #0xd
+      66: 0000         	movs	r0, r0
+      68: 3408         	adds	r4, #0x8
+      6a: 0200         	lsls	r0, r0, #0x8
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 0322         	lsls	r2, r4, #0xc
+      6e: 3a25         	subs	r2, #0x25
+      70: 3b0b         	subs	r3, #0xb
+      72: 490b         	ldr	r1, [pc, #0x2c]         @ 0xa0 <.debug_abbrev+0xa0>
+;     for (int i = 0; i < SIZE; i++) {
+      74: 0013         	movs	r3, r2
+      76: 0900         	lsrs	r0, r0, #0x4
+      78: 012e         	lsls	r6, r5, #0x4
+      7a: 2503         	movs	r5, #0x3
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 0b3a         	lsrs	r2, r7, #0xc
+      7e: 0b3b         	lsrs	r3, r7, #0xc
+      80: 1927         	adds	r7, r4, r4
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 2120         	movs	r1, #0x20
+; }
+      84: 0001         	movs	r1, r0
+      86: 0a00         	lsrs	r0, r0, #0x8
+      88: 0005         	movs	r5, r0
+      8a: 2503         	movs	r5, #0x3
+      8c: 0b3a         	lsrs	r2, r7, #0xc
+      8e: 0b3b         	lsrs	r3, r7, #0xc
+      90: 1349         	asrs	r1, r1, #0xd
+      92: 0000         	movs	r0, r0
+      94: 340b         	adds	r4, #0xb
+      96: 0300         	lsls	r0, r0, #0xc
+      98: 3a25         	subs	r2, #0x25
+      9a: 3b0b         	subs	r3, #0xb
+      9c: 490b         	ldr	r1, [pc, #0x2c]         @ 0xcc <.rodata+0x14>
+      9e: 0013         	movs	r3, r2
+      a0: 0c00         	lsrs	r0, r0, #0x10
+      a2: 012e         	lsls	r6, r5, #0x4
+      a4: 1b11         	subs	r1, r2, r4
+      a6: 0612         	lsls	r2, r2, #0x18
+      a8: 1840         	adds	r0, r0, r1
+      aa: 197a         	adds	r2, r7, r5
+      ac: 2503         	movs	r5, #0x3
+      ae: 0b3a         	lsrs	r2, r7, #0xc
+      b0: 0b3b         	lsrs	r3, r7, #0xc
+      b2: 1349         	asrs	r1, r1, #0xd
+      b4: 193f         	adds	r7, r7, r4
+      b6: 0000         	movs	r0, r0
+      b8: 340d         	adds	r4, #0xd
+      ba: 0200         	lsls	r0, r0, #0x8
+      bc: 0318         	lsls	r0, r3, #0xc
+      be: 3a25         	subs	r2, #0x25
+      c0: 3b0b         	subs	r3, #0xb
+      c2: 490b         	ldr	r1, [pc, #0x2c]         @ 0xf0 <.rodata+0x38>
+      c4: 0013         	movs	r3, r2
+      c6: 0e00         	lsrs	r0, r0, #0x18
+      c8: 010b         	lsls	r3, r1, #0x4
+      ca: 1b11         	subs	r1, r2, r4
+      cc: 0612         	lsls	r2, r2, #0x18
+      ce: 0000         	movs	r0, r0
+      d0: 1d0f         	adds	r7, r1, #0x4
+      d2: 3101         	adds	r1, #0x1
+      d4: 1113         	asrs	r3, r2, #0x4
+      d6: 121b         	asrs	r3, r3, #0x8
+      d8: 5806         	ldr	r6, [r0, r0]
+      da: 590b         	ldr	r3, [r1, r4]
+      dc: 570b         	ldrsb	r3, [r1, r4]
+      de: 000b         	movs	r3, r1
+      e0: 1000         	asrs	r0, r0, #0x20
+      e2: 0005         	movs	r5, r0
+      e4: 0f1c         	lsrs	r4, r3, #0x1c
+      e6: 1331         	asrs	r1, r6, #0xc
+      e8: 0000         	movs	r0, r0
+      ea: 3411         	adds	r4, #0x11
+      ec: 1c00         	adds	r0, r0, #0x0
+      ee: 310f         	adds	r1, #0xf
+      f0: 0013         	movs	r3, r2
+      f2: 1200         	asrs	r0, r0, #0x8
+      f4: 0016         	movs	r6, r2
+      f6: 1349         	asrs	r1, r1, #0xd
+      f8: 2503         	movs	r5, #0x3
+      fa: 0b3a         	lsrs	r2, r7, #0xc
+      fc: 0b3b         	lsrs	r3, r7, #0xc
+      fe: 0000         	movs	r0, r0
+     100: 0113         	lsls	r3, r2, #0x4
+     102: 4901         	ldr	r1, [pc, #0x4]          @ 0x108 <.rodata+0x50>
+     104: 0013         	movs	r3, r2
+     106: 1400         	asrs	r0, r0, #0x10
+     108: 0021         	movs	r1, r4
+     10a: 1349         	asrs	r1, r1, #0xd
+     10c: 0b37         	lsrs	r7, r6, #0xc
+     10e: 0000         	movs	r0, r0
+     110: 3515         	adds	r5, #0x15
+     112: 4900         	ldr	r1, [pc, #0x0]          @ 0x114 <.rodata+0x5c>
+     114: 0013         	movs	r3, r2
+     116: 1600         	asrs	r0, r0, #0x18
+     118: 0024         	movs	r4, r4
+     11a: 2503         	movs	r5, #0x3
+     11c: 0b0b         	lsrs	r3, r1, #0xc
+     11e: 0b3e         	lsrs	r6, r7, #0xc
+     120: 0000         	movs	r0, r0
+     122: 0100         	lsls	r0, r0, #0x4
+     124: 0111         	lsls	r1, r2, #0x4
+     126: 2525         	movs	r5, #0x25
+     128: 0513         	lsls	r3, r2, #0x14
+     12a: 2503         	movs	r5, #0x3
+     12c: 1772         	asrs	r2, r6, #0x1d
+     12e: 1710         	asrs	r0, r2, #0x1c
+     130: 251b         	movs	r5, #0x1b
+     132: 1b11         	subs	r1, r2, r4
+     134: 0612         	lsls	r2, r2, #0x18
+     136: 1773         	asrs	r3, r6, #0x1d
+     138: 018c         	lsls	r4, r1, #0x6
+     13a: 0017         	movs	r7, r2
+     13c: 0200         	lsls	r0, r0, #0x8
+     13e: 012e         	lsls	r6, r5, #0x4
+     140: 1b11         	subs	r1, r2, r4
+     142: 0612         	lsls	r2, r2, #0x18
+     144: 1840         	adds	r0, r0, r1
+     146: 197a         	adds	r2, r7, r5
+     148: 2503         	movs	r5, #0x3
+     14a: 0b3a         	lsrs	r2, r7, #0xc
+     14c: 0b3b         	lsrs	r3, r7, #0xc
+     14e: 1927         	adds	r7, r4, r4
+     150: 193f         	adds	r7, r7, r4
+     152: 0000         	movs	r0, r0
+     154: 0503         	lsls	r3, r0, #0x14
+     156: 0200         	lsls	r0, r0, #0x8
+     158: 0322         	lsls	r2, r4, #0xc
+     15a: 3a25         	subs	r2, #0x25
+     15c: 3b0b         	subs	r3, #0xb
+     15e: 490b         	ldr	r1, [pc, #0x2c]         @ 0x18c <.rodata+0xd4>
+     160: 0013         	movs	r3, r2
+     162: 0400         	lsls	r0, r0, #0x10
+     164: 000f         	movs	r7, r1
+     166: 0000         	movs	r0, r0
+     168: 1605         	asrs	r5, r0, #0x18
+     16a: 4900         	ldr	r1, [pc, #0x0]          @ 0x16c <.rodata+0xb4>
+     16c: 0313         	lsls	r3, r2, #0xc
+     16e: 3a25         	subs	r2, #0x25
+     170: 3b0b         	subs	r3, #0xb
+     172: 000b         	movs	r3, r1
+     174: 0600         	lsls	r0, r0, #0x18
+     176: 0024         	movs	r4, r4
+     178: 2503         	movs	r5, #0x3
+     17a: 0b3e         	lsrs	r6, r7, #0xc
+     17c: 0b0b         	lsrs	r3, r1, #0xc
+     17e: 0000         	movs	r0, r0
+     180: 0100         	lsls	r0, r0, #0x4
+     182: 0111         	lsls	r1, r2, #0x4
+     184: 2525         	movs	r5, #0x25
+     186: 0513         	lsls	r3, r2, #0x14
+     188: 2503         	movs	r5, #0x3
+     18a: 1772         	asrs	r2, r6, #0x1d
+     18c: 1710         	asrs	r0, r2, #0x1c
+     18e: 251b         	movs	r5, #0x1b
+     190: 1b11         	subs	r1, r2, r4
+     192: 0612         	lsls	r2, r2, #0x18
+     194: 1773         	asrs	r3, r6, #0x1d
+     196: 018c         	lsls	r4, r1, #0x6
+     198: 0017         	movs	r7, r2
+     19a: 0200         	lsls	r0, r0, #0x8
+     19c: 000f         	movs	r7, r1
+     19e: 1349         	asrs	r1, r1, #0xd
+     1a0: 0000         	movs	r0, r0
+     1a2: 2403         	movs	r4, #0x3
+     1a4: 0300         	lsls	r0, r0, #0xc
+     1a6: 3e25         	subs	r6, #0x25
+     1a8: 0b0b         	lsrs	r3, r1, #0xc
+     1aa: 000b         	movs	r3, r1
+     1ac: 0400         	lsls	r0, r0, #0x10
+     1ae: 012e         	lsls	r6, r5, #0x4
+     1b0: 1b11         	subs	r1, r2, r4
+     1b2: 0612         	lsls	r2, r2, #0x18
+     1b4: 1840         	adds	r0, r0, r1
+     1b6: 197a         	adds	r2, r7, r5
+     1b8: 2503         	movs	r5, #0x3
+     1ba: 0b3a         	lsrs	r2, r7, #0xc
+     1bc: 0b3b         	lsrs	r3, r7, #0xc
+     1be: 1927         	adds	r7, r4, r4
+     1c0: 1349         	asrs	r1, r1, #0xd
+     1c2: 193f         	adds	r7, r7, r4
+     1c4: 0000         	movs	r0, r0
+     1c6: 0505         	lsls	r5, r0, #0x14
+     1c8: 0200         	lsls	r0, r0, #0x8
+     1ca: 0318         	lsls	r0, r3, #0xc
+     1cc: 3a25         	subs	r2, #0x25
+     1ce: 3b0b         	subs	r3, #0xb
+     1d0: 490b         	ldr	r1, [pc, #0x2c]         @ 0x200 <.rodata+0x148>
+     1d2: 0013         	movs	r3, r2
+     1d4: 0600         	lsls	r0, r0, #0x18
+     1d6: 0005         	movs	r5, r0
+     1d8: 2202         	movs	r2, #0x2
+     1da: 2503         	movs	r5, #0x3
+     1dc: 0b3a         	lsrs	r2, r7, #0xc
+     1de: 0b3b         	lsrs	r3, r7, #0xc
+     1e0: 1349         	asrs	r1, r1, #0xd
+     1e2: 0000         	movs	r0, r0
+     1e4: 3407         	adds	r4, #0x7
+     1e6: 0200         	lsls	r0, r0, #0x8
+     1e8: 0322         	lsls	r2, r4, #0xc
+     1ea: 3a25         	subs	r2, #0x25
+     1ec: 3b0b         	subs	r3, #0xb
+     1ee: 490b         	ldr	r1, [pc, #0x2c]         @ 0x21c <.rodata+0x164>
+     1f0: 0013         	movs	r3, r2
+     1f2: 0800         	lsrs	r0, r0, #0x20
+     1f4: 000f         	movs	r7, r1
+     1f6: 0000         	movs	r0, r0
+     1f8: 1609         	asrs	r1, r1, #0x18
+     1fa: 4900         	ldr	r1, [pc, #0x0]          @ 0x1fc <.rodata+0x144>
+     1fc: 0313         	lsls	r3, r2, #0xc
+     1fe: 3a25         	subs	r2, #0x25
+     200: 3b0b         	subs	r3, #0xb
+     202: 000b         	movs	r3, r1
+     204: 0000         	movs	r0, r0
+
+Disassembly of section .debug_line:
+
+00000000 <.debug_line>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 0102         	lsls	r2, r0, #0x4
+;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
+       4: 0005         	movs	r5, r0
+;     if (increment > 0) {
+       6: 0004         	movs	r4, r0
+       8: 0069         	lsls	r1, r5, #0x1
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 0000         	movs	r0, r0
+       c: 0101         	lsls	r1, r0, #0x4
+       e: fb01 0d0e    	<unknown>
+      12: 0100         	lsls	r0, r0, #0x4
+      14: 0101         	lsls	r1, r0, #0x4
+; }
+      16: 0001         	movs	r1, r0
+;         heap_ptr += increment;
+      18: 0000         	movs	r0, r0
+; }
+      1a: 0001         	movs	r1, r0
+      1c: 0100         	lsls	r0, r0, #0x4
+      1e: 0101         	lsls	r1, r0, #0x4
+      20: 031f         	lsls	r7, r3, #0xc
+      22: 0040         	lsls	r0, r0, #0x1
+; int main() {
+      24: 0000         	movs	r0, r0
+      26: 0059         	lsls	r1, r3, #0x1
+      28: 0000         	movs	r0, r0
+      2a: 0008         	movs	r0, r1
+      2c: 0000         	movs	r0, r0
+      2e: 0103         	lsls	r3, r0, #0x4
+      30: 021f         	lsls	r7, r3, #0x8
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 050f         	lsls	r7, r1, #0x14
+      34: 031e         	lsls	r6, r3, #0xc
+      36: 0070         	lsls	r0, r6, #0x1
+      38: 0000         	movs	r0, r0
+      3a: 8800         	ldrh	r0, [r0]
+      3c: b903         	<unknown>
+      3e: d866         	bhi	0x10e <.rodata+0x56>    @ imm = #0xcc
+      40: 1a13         	subs	r3, r2, r0
+      42: 6268         	str	r0, [r5, #0x24]
+      44: 3c92         	subs	r4, #0x92
+      46: ef56 8d64    	<unknown>
+      4a: 735c         	strb	r4, [r3, #0xd]
+      4c: 0002         	movs	r2, r0
+      4e: 0100         	lsls	r0, r0, #0x4
+      50: 9c5b         	ldr	r4, [sp, #0x16c]
+      52: 2155         	movs	r1, #0x55
+      54: e3d5         	b	0x802 <.rodata+0x74a>   @ imm = #0x7aa
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: a127         	adr	r1, #156 <.debug_line+0x81>
+      58: a52a         	adr	r5, #168 <.debug_line+0x86>
+      5a: 8fab         	ldrh	r3, [r5, #0x3c]
+      5c: b551         	push	{r0, r4, r6, lr}
+      5e: 7e63         	ldrb	r3, [r4, #0x19]
+      60: 008d         	lsls	r5, r1, #0x2
+;             for (int k = 0; k < SIZE; k++) {
+      62: 0000         	movs	r0, r0
+      64: 2102         	movs	r1, #0x2
+      66: c4e0         	stm	r4!, {r5, r6, r7}
+      68: 330f         	adds	r3, #0xf
+      6a: 7915         	ldrb	r5, [r2, #0x4]
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 917d         	str	r1, [sp, #0x1f4]
+      6e: c75c         	stm	r7!, {r2, r3, r4, r6}
+      70: 60ea         	str	r2, [r5, #0xc]
+      72: 0a04         	lsrs	r4, r0, #0x8
+;     for (int i = 0; i < SIZE; i++) {
+      74: 0098         	lsls	r0, r3, #0x2
+      76: 0205         	lsls	r5, r0, #0x8
+      78: 0000         	movs	r0, r0
+      7a: 0000         	movs	r0, r0
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 1903         	adds	r3, r0, r4
+      7e: 0501         	lsls	r1, r0, #0x14
+      80: 0a1b         	lsrs	r3, r3, #0x8
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 052f         	lsls	r7, r5, #0x14
+; }
+      84: 4d09         	ldr	r5, [pc, #0x24]         @ 0xac <.debug_line+0xac>
+      86: 1605         	asrs	r5, r0, #0x18
+      88: 054c         	lsls	r4, r1, #0x15
+      8a: 0622         	lsls	r2, r4, #0x18
+      8c: 052e         	lsls	r6, r5, #0x14
+      8e: 2e0d         	cmp	r6, #0xd
+      90: 6003         	str	r3, [r0]
+      92: 054a         	lsls	r2, r1, #0x15
+      94: 0601         	lsls	r1, r0, #0x18
+      96: 2a03         	cmp	r2, #0x3
+      98: 054a         	lsls	r2, r1, #0x15
+      9a: 2912         	cmp	r1, #0x12
+      9c: 0105         	lsls	r5, r0, #0x4
+      9e: 0633         	lsls	r3, r6, #0x18
+      a0: 5603         	ldrsb	r3, [r0, r0]
+      a2: 042e         	lsls	r6, r5, #0x10
+      a4: 0500         	lsls	r0, r0, #0x14
+      a6: 0600         	lsls	r0, r0, #0x18
+      a8: 0587         	lsls	r7, r0, #0x16
+      aa: 0a12         	lsrs	r2, r2, #0x8
+      ac: 2f03         	cmp	r7, #0x3
+      ae: 06d6         	lsls	r6, r2, #0x1b
+      b0: 4c03         	ldr	r4, [pc, #0xc]          @ 0xc0 <.rodata+0x8>
+      b2: 054a         	lsls	r2, r1, #0x15
+      b4: 0621         	lsls	r1, r4, #0x18
+      b6: 3a03         	subs	r2, #0x3
+      b8: e408         	b	0xfffff8cc <.stack+0xffffffffdff7f8c4> @ imm = #-0x7f0
+      ba: 3105         	adds	r1, #0x5
+      bc: 2e06         	cmp	r6, #0x6
+      be: 2f05         	cmp	r7, #0x5
+      c0: 052e         	lsls	r6, r5, #0x14
+      c2: 2e1e         	cmp	r6, #0x1e
+      c4: 1f05         	subs	r5, r0, #0x4
+      c6: 6506         	str	r6, [r0, #0x50]
+      c8: 0d05         	lsrs	r5, r0, #0x14
+      ca: 4a06         	ldr	r2, [pc, #0x18]         @ 0xe4 <.rodata+0x2c>
+      cc: 4703         	bx	r0
+      ce: 054a         	lsls	r2, r1, #0x15
+      d0: 0609         	lsls	r1, r1, #0x18
+      d2: 3803         	subs	r0, #0x3
+      d4: 052e         	lsls	r6, r5, #0x14
+      d6: 0624         	lsls	r4, r4, #0x18
+      d8: 052e         	lsls	r6, r5, #0x14
+      da: 2e09         	cmp	r6, #0x9
+      dc: 0505         	lsls	r5, r0, #0x14
+      de: 4906         	ldr	r1, [pc, #0x18]         @ 0xf8 <.rodata+0x40>
+      e0: 2005         	movs	r0, #0x5
+      e2: 4a06         	ldr	r2, [pc, #0x18]         @ 0xfc <.rodata+0x44>
+      e4: 4903         	ldr	r1, [pc, #0xc]          @ 0xf4 <.rodata+0x3c>
+      e6: 052e         	lsls	r6, r5, #0x14
+      e8: 0305         	lsls	r5, r0, #0xc
+      ea: 2e37         	cmp	r6, #0x37
+      ec: 4903         	ldr	r1, [pc, #0xc]          @ 0xfc <.rodata+0x44>
+      ee: 044a         	lsls	r2, r1, #0x11
+      f0: 0601         	lsls	r1, r0, #0x18
+      f2: 0d03         	lsrs	r3, r0, #0x14
+      f4: 042e         	lsls	r6, r5, #0x10
+      f6: 0500         	lsls	r0, r0, #0x14
+      f8: 0b01         	lsrs	r1, r0, #0xc
+      fa: 3303         	adds	r3, #0x3
+      fc: 062e         	lsls	r6, r5, #0x18
+      fe: 4003         	ands	r3, r0
+     100: 0282         	lsls	r2, r0, #0xa
+     102: 000c         	movs	r4, r1
+     104: 0101         	lsls	r1, r0, #0x4
+     106: 0088         	lsls	r0, r1, #0x2
+     108: 0000         	movs	r0, r0
+     10a: 0005         	movs	r5, r0
+     10c: 0004         	movs	r4, r0
+     10e: 0069         	lsls	r1, r5, #0x1
+     110: 0000         	movs	r0, r0
+     112: 0101         	lsls	r1, r0, #0x4
+     114: fb01 0d0e    	<unknown>
+     118: 0100         	lsls	r0, r0, #0x4
+     11a: 0101         	lsls	r1, r0, #0x4
+     11c: 0001         	movs	r1, r0
+     11e: 0000         	movs	r0, r0
+     120: 0001         	movs	r1, r0
+     122: 0100         	lsls	r0, r0, #0x4
+     124: 0101         	lsls	r1, r0, #0x4
+     126: 031f         	lsls	r7, r3, #0xc
+     128: 01da         	lsls	r2, r3, #0x7
+     12a: 0000         	movs	r0, r0
+     12c: 015d         	lsls	r5, r3, #0x5
+     12e: 0000         	movs	r0, r0
+     130: 00d7         	lsls	r7, r2, #0x3
+     132: 0000         	movs	r0, r0
+     134: 0103         	lsls	r3, r0, #0x4
+     136: 021f         	lsls	r7, r3, #0x8
+     138: 050f         	lsls	r7, r1, #0x14
+     13a: 031e         	lsls	r6, r3, #0xc
+     13c: 019e         	lsls	r6, r3, #0x6
+     13e: 0000         	movs	r0, r0
+     140: e000         	b	0x144 <.rodata+0x8c>    @ imm = #0x0
+     142: 8283         	strh	r3, [r0, #0x14]
+     144: 7ef3         	ldrb	r3, [r6, #0x1b]
+     146: 0b5f         	lsrs	r7, r3, #0xd
+     148: 5ab0         	ldrh	r0, [r6, r2]
+     14a: 9591         	str	r5, [sp, #0x244]
+     14c: 1213         	asrs	r3, r2, #0x8
+     14e: 0325         	lsls	r5, r4, #0xc
+     150: 00e0         	lsls	r0, r4, #0x3
+     152: 0000         	movs	r0, r0
+     154: 0100         	lsls	r0, r0, #0x4
+     156: 3f9d         	subs	r7, #0x9d
+     158: 8f23         	ldrh	r3, [r4, #0x38]
+     15a: 4fc4         	ldr	r7, [pc, #0x310]        @ 0x46c <.rodata+0x3b4>
+     15c: bbfe         	<unknown>
+     15e: 3940         	subs	r1, #0x40
+     160: 9002         	str	r0, [sp, #0x8]
+     162: ae6a         	add	r6, sp, #0x1a8
+     164: 74b9         	strb	r1, [r7, #0x12]
+     166: 0014         	movs	r4, r2
+     168: 0000         	movs	r0, r0
+     16a: 2c02         	cmp	r4, #0x2
+     16c: e844 a221    	<unknown>
+     170: 95b1         	str	r5, [sp, #0x2c4]
+     172: de1c         	udf	#0x1c
+     174: b02e         	add	sp, #0xb8
+     176: 2efb         	cmp	r6, #0xfb
+     178: 6865         	ldr	r5, [r4, #0x4]
+     17a: 0067         	lsls	r7, r4, #0x1
+     17c: 0205         	lsls	r5, r0, #0x8
+     17e: 0098         	lsls	r0, r3, #0x2
+     180: 0000         	movs	r0, r0
+     182: 3103         	adds	r1, #0x3
+     184: 0501         	lsls	r1, r0, #0x14
+     186: 0a02         	lsrs	r2, r0, #0x8
+     188: 0583         	lsls	r3, r0, #0x16
+     18a: 0b01         	lsrs	r1, r0, #0xc
+     18c: 024b         	lsls	r3, r1, #0x9
+     18e: 0002         	movs	r2, r0
+     190: 0101         	lsls	r1, r0, #0x4
+     192: 008d         	lsls	r5, r1, #0x2
+     194: 0000         	movs	r0, r0
+     196: 0005         	movs	r5, r0
+     198: 0004         	movs	r4, r0
+     19a: 0069         	lsls	r1, r5, #0x1
+     19c: 0000         	movs	r0, r0
+     19e: 0101         	lsls	r1, r0, #0x4
+     1a0: fb01 0d0e    	<unknown>
+     1a4: 0100         	lsls	r0, r0, #0x4
+     1a6: 0101         	lsls	r1, r0, #0x4
+     1a8: 0001         	movs	r1, r0
+     1aa: 0000         	movs	r0, r0
+     1ac: 0001         	movs	r1, r0
+     1ae: 0100         	lsls	r0, r0, #0x4
+     1b0: 0101         	lsls	r1, r0, #0x4
+     1b2: 031f         	lsls	r7, r3, #0xc
+     1b4: 01da         	lsls	r2, r3, #0x7
+     1b6: 0000         	movs	r0, r0
+     1b8: 015d         	lsls	r5, r3, #0x5
+     1ba: 0000         	movs	r0, r0
+     1bc: 00d7         	lsls	r7, r2, #0x3
+     1be: 0000         	movs	r0, r0
+     1c0: 0103         	lsls	r3, r0, #0x4
+     1c2: 021f         	lsls	r7, r3, #0x8
+     1c4: 050f         	lsls	r7, r1, #0x14
+     1c6: 031e         	lsls	r6, r3, #0xc
+     1c8: 0120         	lsls	r0, r4, #0x4
+     1ca: 0000         	movs	r0, r0
+     1cc: 9c00         	ldr	r4, [sp]
+     1ce: c7f5         	stm	r7!, {r0, r2, r4, r5, r6, r7}
+     1d0: fd87 f13b    	<unknown>
+     1d4: 1117         	asrs	r7, r2, #0x4
+     1d6: 9b76         	ldr	r3, [sp, #0x1d8]
+     1d8: bd7c         	pop	{r2, r3, r4, r5, r6, pc}
+     1da: c786         	stm	r7!, {r1, r2, r7}
+     1dc: 842e         	strh	r6, [r5, #0x20]
+     1de: 0000         	movs	r0, r0
+     1e0: 0100         	lsls	r0, r0, #0x4
+     1e2: 8f50         	ldrh	r0, [r2, #0x3a]
+     1e4: a569         	adr	r5, #420 <.rodata+0x199>
+     1e6: 5250         	strh	r0, [r2, r1]
+     1e8: ee0c 866b    	<unknown>
+     1ec: e373         	b	0x8d6 <.rodata+0x81e>   @ imm = #0x6e6
+     1ee: 95a1         	str	r5, [sp, #0x284]
+     1f0: 13fd         	asrs	r5, r7, #0xf
+     1f2: 0014         	movs	r4, r2
+     1f4: 0000         	movs	r0, r0
+     1f6: 2c02         	cmp	r4, #0x2
+     1f8: e844 a221    	<unknown>
+     1fc: 95b1         	str	r5, [sp, #0x2c4]
+     1fe: de1c         	udf	#0x1c
+     200: b02e         	add	sp, #0xb8
+     202: 2efb         	cmp	r6, #0xfb
+     204: 6865         	ldr	r5, [r4, #0x4]
+     206: 0067         	lsls	r7, r4, #0x1
+     208: 0205         	lsls	r5, r0, #0x8
+     20a: 00a8         	lsls	r0, r5, #0x2
+     20c: 0000         	movs	r0, r0
+     20e: 3b03         	subs	r3, #0x3
+     210: 0501         	lsls	r1, r0, #0x14
+     212: 0a03         	lsrs	r3, r0, #0x8
+     214: 3303         	adds	r3, #0x3
+     216: 052e         	lsls	r6, r5, #0x14
+     218: 4b0a         	ldr	r3, [pc, #0x28]         @ 0x244 <.rodata+0x18c>
+     21a: 0305         	lsls	r5, r0, #0xc
+     21c: 4d2d         	ldr	r5, [pc, #0xb4]         @ 0x2d4 <.rodata+0x21c>
+     21e: 0202         	lsls	r2, r0, #0x8
+     220: 0100         	lsls	r0, r0, #0x4
+     222: 01           	<unknown>
+
+Disassembly of section .debug_frame:
+
+00000000 <.debug_frame>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 0010         	movs	r0, r2
+;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
+       4: ffff ffff    	<unknown>
+;     if (increment > 0) {
+       8: 0004         	movs	r4, r0
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 0004         	movs	r4, r0
+       c: 7c01         	ldrb	r1, [r0, #0x10]
+       e: 0c0e         	lsrs	r6, r1, #0x10
+      10: 000d         	movs	r5, r1
+      12: 0000         	movs	r0, r0
+      14: 000c         	movs	r4, r1
+		...
+      1e: 0000         	movs	r0, r0
+      20: 0024         	movs	r4, r4
+      22: 0000         	movs	r0, r0
+; int main() {
+      24: 0020         	movs	r0, r4
+      26: 0000         	movs	r0, r0
+      28: 0000         	movs	r0, r0
+      2a: 0000         	movs	r0, r0
+      2c: 0024         	movs	r4, r4
+      2e: 0000         	movs	r0, r0
+      30: 0074         	lsls	r4, r6, #0x1
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 0000         	movs	r0, r0
+      34: 0e42         	lsrs	r2, r0, #0x19
+      36: 8e14         	ldrh	r4, [r2, #0x30]
+      38: 8701         	strh	r1, [r0, #0x38]
+      3a: 8602         	strh	r2, [r0, #0x30]
+      3c: 8503         	strh	r3, [r0, #0x28]
+      3e: 8404         	strh	r4, [r0, #0x20]
+      40: 4205         	tst	r5, r0
+      42: 070c         	lsls	r4, r1, #0x1c
+      44: 0008         	movs	r0, r1
+      46: 0000         	movs	r0, r0
+      48: 0010         	movs	r0, r2
+      4a: 0000         	movs	r0, r0
+      4c: ffff ffff    	<unknown>
+      50: 0004         	movs	r4, r0
+      52: 0004         	movs	r4, r0
+      54: 7c01         	ldrb	r1, [r0, #0x10]
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: 0c0e         	lsrs	r6, r1, #0x10
+      58: 000d         	movs	r5, r1
+      5a: 0000         	movs	r0, r0
+      5c: 0018         	movs	r0, r3
+      5e: 0000         	movs	r0, r0
+      60: 0048         	lsls	r0, r1, #0x1
+;             for (int k = 0; k < SIZE; k++) {
+      62: 0000         	movs	r0, r0
+      64: 0098         	lsls	r0, r3, #0x2
+      66: 0000         	movs	r0, r0
+      68: 000e         	movs	r6, r1
+      6a: 0000         	movs	r0, r0
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 0e42         	lsrs	r2, r0, #0x19
+      6e: 8e08         	ldrh	r0, [r1, #0x30]
+      70: 8701         	strh	r1, [r0, #0x38]
+      72: 4202         	tst	r2, r0
+;     for (int i = 0; i < SIZE; i++) {
+      74: 070d         	lsls	r5, r1, #0x1c
+      76: 0000         	movs	r0, r0
+      78: 0010         	movs	r0, r2
+      7a: 0000         	movs	r0, r0
+;     for (int i = 0; i < SIZE; i++) {
+      7c: ffff ffff    	<unknown>
+      80: 0004         	movs	r4, r0
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 0004         	movs	r4, r0
+; }
+      84: 7c01         	ldrb	r1, [r0, #0x10]
+      86: 0c0e         	lsrs	r6, r1, #0x10
+      88: 000d         	movs	r5, r1
+      8a: 0000         	movs	r0, r0
+      8c: 000c         	movs	r4, r1
+      8e: 0000         	movs	r0, r0
+      90: 0078         	lsls	r0, r7, #0x1
+      92: 0000         	movs	r0, r0
+      94: 00a8         	lsls	r0, r5, #0x2
+      96: 0000         	movs	r0, r0
+      98: 000e         	movs	r6, r1
+      9a: 0000         	movs	r0, r0
+
+Disassembly of section .debug_str:
+
+00000000 <.debug_str>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 6e69         	ldr	r1, [r5, #0x64]
+;     char* prev_heap_ptr = heap_ptr;
+       2: 7263         	strb	r3, [r4, #0x9]
+       4: 6d65         	ldr	r5, [r4, #0x54]
+;     if (increment > 0) {
+       6: 6e65         	ldr	r5, [r4, #0x64]
+       8: 0074         	lsls	r4, r6, #0x1
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 0069         	lsls	r1, r5, #0x1
+       c: 6f63         	ldr	r3, [r4, #0x74]
+       e: 6564         	str	r4, [r4, #0x54]
+      10: 7200         	strb	r0, [r0, #0x8]
+      12: 7365         	strb	r5, [r4, #0xd]
+      14: 6c75         	ldr	r5, [r6, #0x44]
+; }
+      16: 0074         	lsls	r4, r6, #0x1
+;         heap_ptr += increment;
+      18: 7470         	strb	r0, [r6, #0x11]
+; }
+      1a: 6472         	str	r2, [r6, #0x44]
+      1c: 6669         	str	r1, [r5, #0x64]
+      1e: 5f66         	ldrsh	r6, [r4, r5]
+      20: 0074         	lsls	r4, r6, #0x1
+      22: 006e         	lsls	r6, r5, #0x1
+; int main() {
+      24: 6973         	ldr	r3, [r6, #0x14]
+      26: 657a         	str	r2, [r7, #0x54]
+      28: 745f         	strb	r7, [r3, #0x11]
+      2a: 6300         	str	r0, [r0, #0x30]
+      2c: 616c         	str	r4, [r5, #0x14]
+      2e: 676e         	str	r6, [r5, #0x74]
+      30: 7620         	strb	r0, [r4, #0x18]
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 7265         	strb	r5, [r4, #0x9]
+      34: 6973         	ldr	r3, [r6, #0x14]
+      36: 6e6f         	ldr	r7, [r5, #0x64]
+      38: 3120         	adds	r1, #0x20
+      3a: 2e39         	cmp	r6, #0x39
+      3c: 2e31         	cmp	r6, #0x31
+      3e: 0035         	movs	r5, r6
+      40: 7270         	strb	r0, [r6, #0x9]
+      42: 7665         	strb	r5, [r4, #0x19]
+      44: 685f         	ldr	r7, [r3, #0x4]
+      46: 6165         	str	r5, [r4, #0x14]
+      48: 5f70         	ldrsh	r0, [r6, r5]
+      4a: 7470         	strb	r0, [r6, #0x11]
+      4c: 0072         	lsls	r2, r6, #0x1
+      4e: 0062         	lsls	r2, r4, #0x1
+      50: 006d         	lsls	r5, r5, #0x1
+      52: 0063         	lsls	r3, r4, #0x1
+      54: 682f         	ldr	r7, [r5]
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: 6d6f         	ldr	r7, [r5, #0x54]
+      58: 2f65         	cmp	r7, #0x65
+      5a: 696b         	ldr	r3, [r5, #0x14]
+      5c: 6172         	str	r2, [r6, #0x14]
+      5e: 2f6e         	cmp	r7, #0x6e
+      60: 4341         	muls	r1, r0, r1
+;             for (int k = 0; k < SIZE; k++) {
+      62: 2f41         	cmp	r7, #0x41
+      64: 7270         	strb	r0, [r6, #0x9]
+      66: 676f         	str	r7, [r5, #0x74]
+      68: 6172         	str	r2, [r6, #0x14]
+      6a: 736d         	strb	r5, [r5, #0xd]
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 6b00         	ldr	r0, [r0, #0x30]
+      6e: 7300         	strb	r0, [r0, #0xc]
+      70: 7200         	strb	r0, [r0, #0x8]
+      72: 0030         	movs	r0, r6
+;     for (int i = 0; i < SIZE; i++) {
+      74: 616d         	str	r5, [r5, #0x14]
+      76: 7274         	strb	r4, [r6, #0x9]
+      78: 7869         	ldrb	r1, [r5, #0x1]
+      7a: 0032         	movs	r2, r6
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 6568         	str	r0, [r5, #0x54]
+      7e: 7061         	strb	r1, [r4, #0x1]
+      80: 705f         	strb	r7, [r3, #0x1]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 7274         	strb	r4, [r6, #0x9]
+; }
+      84: 6200         	str	r0, [r0, #0x20]
+      86: 6e65         	ldr	r5, [r4, #0x64]
+      88: 6863         	ldr	r3, [r4, #0x4]
+      8a: 616d         	str	r5, [r5, #0x14]
+      8c: 6b72         	ldr	r2, [r6, #0x34]
+      8e: 2f73         	cmp	r7, #0x73
+      90: 616d         	str	r5, [r5, #0x14]
+      92: 6d74         	ldr	r4, [r6, #0x54]
+      94: 6c75         	ldr	r5, [r6, #0x44]
+      96: 632e         	str	r6, [r5, #0x30]
+      98: 7300         	strb	r0, [r0, #0xc]
+      9a: 6376         	str	r6, [r6, #0x34]
+      9c: 655f         	str	r7, [r3, #0x54]
+      9e: 6978         	ldr	r0, [r7, #0x14]
+      a0: 0074         	lsls	r4, r6, #0x1
+      a2: 616d         	str	r5, [r5, #0x14]
+      a4: 6e69         	ldr	r1, [r5, #0x64]
+      a6: 6300         	str	r0, [r0, #0x30]
+      a8: 6168         	str	r0, [r5, #0x14]
+      aa: 0072         	lsls	r2, r6, #0x1
+      ac: 6e69         	ldr	r1, [r5, #0x64]
+      ae: 0074         	lsls	r4, r6, #0x1
+      b0: 656d         	str	r5, [r5, #0x54]
+      b2: 736d         	strb	r5, [r5, #0xd]
+      b4: 7465         	strb	r5, [r4, #0x11]
+      b6: 6c00         	ldr	r0, [r0, #0x40]
+      b8: 6e65         	ldr	r5, [r4, #0x64]
+      ba: 7467         	strb	r7, [r4, #0x11]
+      bc: 0068         	lsls	r0, r5, #0x1
+      be: 2e2e         	cmp	r6, #0x2e
+      c0: 2e2f         	cmp	r6, #0x2f
+      c2: 2f2e         	cmp	r7, #0x2e
+      c4: 2e2e         	cmp	r6, #0x2e
+      c6: 2e2f         	cmp	r6, #0x2f
+      c8: 2f2e         	cmp	r7, #0x2e
+      ca: 2e2e         	cmp	r6, #0x2e
+      cc: 732f         	strb	r7, [r5, #0xc]
+      ce: 6372         	str	r2, [r6, #0x34]
+      d0: 702f         	strb	r7, [r5]
+      d2: 6369         	str	r1, [r5, #0x34]
+      d4: 6c6f         	ldr	r7, [r5, #0x44]
+      d6: 6269         	str	r1, [r5, #0x24]
+      d8: 2f63         	cmp	r7, #0x63
+      da: 656e         	str	r6, [r5, #0x54]
+      dc: 6c77         	ldr	r7, [r6, #0x44]
+      de: 6269         	str	r1, [r5, #0x24]
+      e0: 6c2f         	ldr	r7, [r5, #0x40]
+      e2: 6269         	str	r1, [r5, #0x24]
+      e4: 2f63         	cmp	r7, #0x63
+      e6: 616d         	str	r5, [r5, #0x14]
+      e8: 6863         	ldr	r3, [r4, #0x4]
+      ea: 6e69         	ldr	r1, [r5, #0x64]
+      ec: 2f65         	cmp	r7, #0x65
+      ee: 7261         	strb	r1, [r4, #0x9]
+      f0: 2f6d         	cmp	r7, #0x6d
+      f2: 656d         	str	r5, [r5, #0x54]
+      f4: 736d         	strb	r5, [r5, #0xd]
+      f6: 7465         	strb	r5, [r4, #0x11]
+      f8: 632e         	str	r6, [r5, #0x30]
+      fa: 7500         	strb	r0, [r0, #0x14]
+      fc: 736e         	strb	r6, [r5, #0xd]
+      fe: 6769         	str	r1, [r5, #0x74]
+     100: 656e         	str	r6, [r5, #0x54]
+     102: 2064         	movs	r0, #0x64
+     104: 6e69         	ldr	r1, [r5, #0x64]
+     106: 0074         	lsls	r4, r6, #0x1
+     108: 5f5f         	ldrsh	r7, [r3, r5]
+     10a: 5241         	strh	r1, [r0, r1]
+     10c: 4152         	adcs	r2, r2
+     10e: 5f59         	ldrsh	r1, [r3, r5]
+     110: 4953         	ldr	r1, [pc, #0x14c]        @ 0x260 <.rodata+0x1a8>
+     112: 455a         	cmp	r2, r11
+     114: 545f         	strb	r7, [r3, r1]
+     116: 5059         	str	r1, [r3, r1]
+     118: 5f45         	ldrsh	r5, [r0, r5]
+     11a: 005f         	lsls	r7, r3, #0x1
+     11c: 616d         	str	r5, [r5, #0x14]
+     11e: 7274         	strb	r4, [r6, #0x9]
+     120: 7869         	ldrb	r1, [r5, #0x1]
+     122: 0031         	movs	r1, r6
+     124: 7a62         	ldrb	r2, [r4, #0x9]
+     126: 7265         	strb	r5, [r4, #0x9]
+     128: 006f         	lsls	r7, r5, #0x1
+     12a: 2e2e         	cmp	r6, #0x2e
+     12c: 2e2f         	cmp	r6, #0x2f
+     12e: 2f2e         	cmp	r7, #0x2e
+     130: 2e2e         	cmp	r6, #0x2e
+     132: 2e2f         	cmp	r6, #0x2f
+     134: 2f2e         	cmp	r7, #0x2e
+     136: 2e2e         	cmp	r6, #0x2e
+     138: 732f         	strb	r7, [r5, #0xc]
+     13a: 6372         	str	r2, [r6, #0x34]
+     13c: 702f         	strb	r7, [r5]
+     13e: 6369         	str	r1, [r5, #0x34]
+     140: 6c6f         	ldr	r7, [r5, #0x44]
+     142: 6269         	str	r1, [r5, #0x24]
+     144: 2f63         	cmp	r7, #0x63
+     146: 656e         	str	r6, [r5, #0x54]
+     148: 6c77         	ldr	r7, [r6, #0x44]
+     14a: 6269         	str	r1, [r5, #0x24]
+     14c: 6c2f         	ldr	r7, [r5, #0x40]
+     14e: 6269         	str	r1, [r5, #0x24]
+     150: 2f63         	cmp	r7, #0x63
+     152: 616d         	str	r5, [r5, #0x14]
+     154: 6863         	ldr	r3, [r4, #0x4]
+     156: 6e69         	ldr	r1, [r5, #0x64]
+     158: 2f65         	cmp	r7, #0x65
+     15a: 7261         	strb	r1, [r4, #0x9]
+     15c: 2f6d         	cmp	r7, #0x6d
+     15e: 7a62         	ldrb	r2, [r4, #0x9]
+     160: 7265         	strb	r5, [r4, #0x9]
+     162: 2e6f         	cmp	r6, #0x6f
+     164: 0063         	lsls	r3, r4, #0x1
+     166: 682f         	ldr	r7, [r5]
+     168: 6d6f         	ldr	r7, [r5, #0x54]
+     16a: 2f65         	cmp	r7, #0x65
+     16c: 656a         	str	r2, [r5, #0x54]
+     16e: 6b6e         	ldr	r6, [r5, #0x34]
+     170: 6e69         	ldr	r1, [r5, #0x64]
+     172: 2f73         	cmp	r7, #0x73
+     174: 6761         	str	r1, [r4, #0x74]
+     176: 6e65         	ldr	r5, [r4, #0x64]
+     178: 2f74         	cmp	r7, #0x74
+     17a: 6f77         	ldr	r7, [r6, #0x74]
+     17c: 6b72         	ldr	r2, [r6, #0x34]
+     17e: 7073         	strb	r3, [r6, #0x1]
+     180: 6361         	str	r1, [r4, #0x34]
+     182: 2f65         	cmp	r7, #0x65
+     184: 6c6c         	ldr	r4, [r5, #0x44]
+     186: 6d76         	ldr	r6, [r6, #0x54]
+     188: 652d         	str	r5, [r5, #0x50]
+     18a: 626d         	str	r5, [r5, #0x24]
+     18c: 6465         	str	r5, [r4, #0x44]
+     18e: 6564         	str	r4, [r4, #0x54]
+     190: 2f64         	cmp	r7, #0x64
+     192: 6c6c         	ldr	r4, [r5, #0x44]
+     194: 6d76         	ldr	r6, [r6, #0x54]
+     196: 312d         	adds	r1, #0x2d
+     198: 2f39         	cmp	r7, #0x39
+     19a: 7562         	strb	r2, [r4, #0x15]
+     19c: 6c69         	ldr	r1, [r5, #0x44]
+     19e: 2d64         	cmp	r5, #0x64
+     1a0: 6e61         	ldr	r1, [r4, #0x64]
+     1a2: 2d64         	cmp	r5, #0x64
+     1a4: 6574         	str	r4, [r6, #0x54]
+     1a6: 7473         	strb	r3, [r6, #0x11]
+     1a8: 622f         	str	r7, [r5, #0x20]
+     1aa: 6975         	ldr	r5, [r6, #0x14]
+     1ac: 646c         	str	r4, [r5, #0x44]
+     1ae: 702f         	strb	r7, [r5]
+     1b0: 6369         	str	r1, [r5, #0x34]
+     1b2: 6c6f         	ldr	r7, [r5, #0x44]
+     1b4: 6269         	str	r1, [r5, #0x24]
+     1b6: 2f63         	cmp	r7, #0x63
+     1b8: 7261         	strb	r1, [r4, #0x9]
+     1ba: 766d         	strb	r5, [r5, #0x19]
+     1bc: 6d36         	ldr	r6, [r6, #0x50]
+     1be: 735f         	strb	r7, [r3, #0xd]
+     1c0: 666f         	str	r7, [r5, #0x64]
+     1c2: 5f74         	ldrsh	r4, [r6, r5]
+     1c4: 6f6e         	ldr	r6, [r5, #0x74]
+     1c6: 7066         	strb	r6, [r4, #0x1]
+     1c8: 655f         	str	r7, [r3, #0x54]
+     1ca: 6e78         	ldr	r0, [r7, #0x64]
+     1cc: 725f         	strb	r7, [r3, #0x9]
+     1ce: 7474         	strb	r4, [r6, #0x11]
+     1d0: 2f69         	cmp	r7, #0x69
+     1d2: 7273         	strb	r3, [r6, #0x9]
+     1d4: 2f63         	cmp	r7, #0x63
+     1d6: 6970         	ldr	r0, [r6, #0x14]
+     1d8: 6f63         	ldr	r3, [r4, #0x74]
+     1da: 696c         	ldr	r4, [r5, #0x14]
+     1dc: 6362         	str	r2, [r4, #0x34]
+     1de: 615f         	str	r7, [r3, #0x14]
+     1e0: 6d72         	ldr	r2, [r6, #0x54]
+     1e2: 3676         	adds	r6, #0x76
+     1e4: 5f6d         	ldrsh	r5, [r5, r5]
+     1e6: 6f73         	ldr	r3, [r6, #0x74]
+     1e8: 7466         	strb	r6, [r4, #0x11]
+     1ea: 6e5f         	ldr	r7, [r3, #0x64]
+     1ec: 666f         	str	r7, [r5, #0x64]
+     1ee: 5f70         	ldrsh	r0, [r6, r5]
+     1f0: 7865         	ldrb	r5, [r4, #0x1]
+     1f2: 5f6e         	ldrsh	r6, [r5, r5]
+     1f4: 7472         	strb	r2, [r6, #0x11]
+     1f6: 6974         	ldr	r4, [r6, #0x14]
+     1f8: 622d         	str	r5, [r5, #0x20]
+     1fa: 6975         	ldr	r5, [r6, #0x14]
+     1fc: 646c         	str	r4, [r5, #0x44]
+     1fe: 7300         	strb	r0, [r0, #0xc]
+     200: 7262         	strb	r2, [r4, #0x9]
+     202: 006b         	lsls	r3, r5, #0x1
+     204: 006a         	lsls	r2, r5, #0x1
+
+Disassembly of section .debug_addr:
+
+00000000 <.debug_addr>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 0018         	movs	r0, r3
+;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
+       4: 0005         	movs	r5, r0
+;     if (increment > 0) {
+       6: 0004         	movs	r4, r0
+       8: 0000         	movs	r0, r0
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 2000         	movs	r0, #0x0
+       c: 0000         	movs	r0, r0
+       e: 0000         	movs	r0, r0
+      10: 0024         	movs	r4, r4
+      12: 0000         	movs	r0, r0
+      14: 0056         	lsls	r6, r2, #0x1
+; }
+      16: 0000         	movs	r0, r0
+;         heap_ptr += increment;
+      18: 0082         	lsls	r2, r0, #0x2
+; }
+      1a: 0000         	movs	r0, r0
+      1c: 0008         	movs	r0, r1
+      1e: 0000         	movs	r0, r0
+      20: 0005         	movs	r5, r0
+      22: 0004         	movs	r4, r0
+; int main() {
+      24: 0098         	lsls	r0, r3, #0x2
+      26: 0000         	movs	r0, r0
+      28: 0008         	movs	r0, r1
+      2a: 0000         	movs	r0, r0
+      2c: 0005         	movs	r5, r0
+      2e: 0004         	movs	r4, r0
+      30: 00a8         	lsls	r0, r5, #0x2
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 0000         	movs	r0, r0
+
+Disassembly of section .debug_line_str:
+
+00000000 <.debug_line_str>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 7a62         	ldrb	r2, [r4, #0x9]
+;     char* prev_heap_ptr = heap_ptr;
+       2: 7265         	strb	r5, [r4, #0x9]
+       4: 2e6f         	cmp	r6, #0x6f
+;     if (increment > 0) {
+       6: 0063         	lsls	r3, r4, #0x1
+       8: 682f         	ldr	r7, [r5]
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 6d6f         	ldr	r7, [r5, #0x54]
+       c: 2f65         	cmp	r7, #0x65
+       e: 696b         	ldr	r3, [r5, #0x14]
+      10: 6172         	str	r2, [r6, #0x14]
+      12: 006e         	lsls	r6, r5, #0x1
+      14: 6c6c         	ldr	r4, [r5, #0x44]
+; }
+      16: 6d76         	ldr	r6, [r6, #0x54]
+;         heap_ptr += increment;
+      18: 6c2f         	ldr	r7, [r5, #0x40]
+; }
+      1a: 6269         	str	r1, [r5, #0x24]
+      1c: 632f         	str	r7, [r5, #0x30]
+      1e: 616c         	str	r4, [r5, #0x14]
+      20: 676e         	str	r6, [r5, #0x74]
+      22: 312f         	adds	r1, #0x2f
+; int main() {
+      24: 2f39         	cmp	r7, #0x39
+      26: 6e69         	ldr	r1, [r5, #0x64]
+      28: 6c63         	ldr	r3, [r4, #0x44]
+      2a: 6475         	str	r5, [r6, #0x44]
+      2c: 2f65         	cmp	r7, #0x65
+      2e: 5f5f         	ldrsh	r7, [r3, r5]
+      30: 7473         	strb	r3, [r6, #0x11]
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 6464         	str	r4, [r4, #0x44]
+      34: 6665         	str	r5, [r4, #0x64]
+      36: 735f         	strb	r7, [r3, #0xd]
+      38: 7a69         	ldrb	r1, [r5, #0x9]
+      3a: 5f65         	ldrsh	r5, [r4, r5]
+      3c: 2e74         	cmp	r6, #0x74
+      3e: 0068         	lsls	r0, r5, #0x1
+      40: 682f         	ldr	r7, [r5]
+      42: 6d6f         	ldr	r7, [r5, #0x54]
+      44: 2f65         	cmp	r7, #0x65
+      46: 696b         	ldr	r3, [r5, #0x14]
+      48: 6172         	str	r2, [r6, #0x14]
+      4a: 2f6e         	cmp	r7, #0x6e
+      4c: 4341         	muls	r1, r0, r1
+      4e: 2f41         	cmp	r7, #0x41
+      50: 7270         	strb	r0, [r6, #0x9]
+      52: 676f         	str	r7, [r5, #0x74]
+      54: 6172         	str	r2, [r6, #0x14]
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: 736d         	strb	r5, [r5, #0xd]
+      58: 6200         	str	r0, [r0, #0x20]
+      5a: 6e65         	ldr	r5, [r4, #0x64]
+      5c: 6863         	ldr	r3, [r4, #0x4]
+      5e: 616d         	str	r5, [r5, #0x14]
+      60: 6b72         	ldr	r2, [r6, #0x34]
+;             for (int k = 0; k < SIZE; k++) {
+      62: 2f73         	cmp	r7, #0x73
+      64: 2e2e         	cmp	r6, #0x2e
+      66: 732f         	strb	r7, [r5, #0xc]
+      68: 7379         	strb	r1, [r7, #0xd]
+      6a: 6163         	str	r3, [r4, #0x14]
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 6c6c         	ldr	r4, [r5, #0x44]
+      6e: 0073         	lsls	r3, r6, #0x1
+      70: 6562         	str	r2, [r4, #0x54]
+      72: 636e         	str	r6, [r5, #0x34]
+;     for (int i = 0; i < SIZE; i++) {
+      74: 6d68         	ldr	r0, [r5, #0x54]
+      76: 7261         	strb	r1, [r4, #0x9]
+      78: 736b         	strb	r3, [r5, #0xd]
+      7a: 6d2f         	ldr	r7, [r5, #0x50]
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 7461         	strb	r1, [r4, #0x11]
+      7e: 756d         	strb	r5, [r5, #0x15]
+      80: 2e6c         	cmp	r6, #0x6c
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 0063         	lsls	r3, r4, #0x1
+; }
+      84: 656d         	str	r5, [r5, #0x54]
+      86: 736d         	strb	r5, [r5, #0xd]
+      88: 7465         	strb	r5, [r4, #0x11]
+      8a: 632e         	str	r6, [r5, #0x30]
+      8c: 4c00         	ldr	r4, [pc, #0x0]          @ 0x90 <.debug_line_str+0x90>
+      8e: 564c         	ldrsb	r4, [r1, r1]
+      90: 2d4d         	cmp	r5, #0x4d
+      92: 5445         	strb	r5, [r0, r1]
+      94: 412d         	asrs	r5, r5
+      96: 6d72         	ldr	r2, [r6, #0x54]
+      98: 312d         	adds	r1, #0x2d
+      9a: 2e39         	cmp	r6, #0x39
+      9c: 2e31         	cmp	r6, #0x31
+      9e: 2d35         	cmp	r5, #0x35
+      a0: 694c         	ldr	r4, [r1, #0x14]
+      a2: 756e         	strb	r6, [r5, #0x15]
+      a4: 2d78         	cmp	r5, #0x78
+      a6: 3878         	subs	r0, #0x78
+      a8: 5f36         	ldrsh	r6, [r6, r4]
+      aa: 3436         	adds	r4, #0x36
+      ac: 6c2f         	ldr	r7, [r5, #0x40]
+      ae: 6269         	str	r1, [r5, #0x24]
+      b0: 632f         	str	r7, [r5, #0x30]
+      b2: 616c         	str	r4, [r5, #0x14]
+      b4: 676e         	str	r6, [r5, #0x74]
+      b6: 312f         	adds	r1, #0x2f
+      b8: 2f39         	cmp	r7, #0x39
+      ba: 6e69         	ldr	r1, [r5, #0x64]
+      bc: 6c63         	ldr	r3, [r4, #0x44]
+      be: 6475         	str	r5, [r6, #0x44]
+      c0: 2f65         	cmp	r7, #0x65
+      c2: 5f5f         	ldrsh	r7, [r3, r5]
+      c4: 7473         	strb	r3, [r6, #0x11]
+      c6: 6464         	str	r4, [r4, #0x44]
+      c8: 6665         	str	r5, [r4, #0x64]
+      ca: 705f         	strb	r7, [r3, #0x1]
+      cc: 7274         	strb	r4, [r6, #0x9]
+      ce: 6964         	ldr	r4, [r4, #0x14]
+      d0: 6666         	str	r6, [r4, #0x64]
+      d2: 745f         	strb	r7, [r3, #0x11]
+      d4: 682e         	ldr	r6, [r5]
+      d6: 2f00         	cmp	r7, #0x0
+      d8: 6f68         	ldr	r0, [r5, #0x74]
+      da: 656d         	str	r5, [r5, #0x54]
+      dc: 6a2f         	ldr	r7, [r5, #0x20]
+      de: 6e65         	ldr	r5, [r4, #0x64]
+      e0: 696b         	ldr	r3, [r5, #0x14]
+      e2: 736e         	strb	r6, [r5, #0xd]
+      e4: 612f         	str	r7, [r5, #0x10]
+      e6: 6567         	str	r7, [r4, #0x54]
+      e8: 746e         	strb	r6, [r5, #0x11]
+      ea: 772f         	strb	r7, [r5, #0x1c]
+      ec: 726f         	strb	r7, [r5, #0x9]
+      ee: 736b         	strb	r3, [r5, #0xd]
+      f0: 6170         	str	r0, [r6, #0x14]
+      f2: 6563         	str	r3, [r4, #0x54]
+      f4: 6c2f         	ldr	r7, [r5, #0x40]
+      f6: 766c         	strb	r4, [r5, #0x19]
+      f8: 2d6d         	cmp	r5, #0x6d
+      fa: 6d65         	ldr	r5, [r4, #0x54]
+      fc: 6562         	str	r2, [r4, #0x54]
+      fe: 6464         	str	r4, [r4, #0x44]
+     100: 6465         	str	r5, [r4, #0x44]
+     102: 6c2f         	ldr	r7, [r5, #0x40]
+     104: 766c         	strb	r4, [r5, #0x19]
+     106: 2d6d         	cmp	r5, #0x6d
+     108: 3931         	subs	r1, #0x31
+     10a: 622f         	str	r7, [r5, #0x20]
+     10c: 6975         	ldr	r5, [r6, #0x14]
+     10e: 646c         	str	r4, [r5, #0x44]
+     110: 612d         	str	r5, [r5, #0x10]
+     112: 646e         	str	r6, [r5, #0x44]
+     114: 742d         	strb	r5, [r5, #0x10]
+     116: 7365         	strb	r5, [r4, #0xd]
+     118: 2f74         	cmp	r7, #0x74
+     11a: 7562         	strb	r2, [r4, #0x15]
+     11c: 6c69         	ldr	r1, [r5, #0x44]
+     11e: 0064         	lsls	r4, r4, #0x1
+     120: 2e2e         	cmp	r6, #0x2e
+     122: 2e2f         	cmp	r6, #0x2f
+     124: 2f2e         	cmp	r7, #0x2e
+     126: 2e2e         	cmp	r6, #0x2e
+     128: 2e2f         	cmp	r6, #0x2f
+     12a: 2f2e         	cmp	r7, #0x2e
+     12c: 2e2e         	cmp	r6, #0x2e
+     12e: 732f         	strb	r7, [r5, #0xc]
+     130: 6372         	str	r2, [r6, #0x34]
+     132: 702f         	strb	r7, [r5]
+     134: 6369         	str	r1, [r5, #0x34]
+     136: 6c6f         	ldr	r7, [r5, #0x44]
+     138: 6269         	str	r1, [r5, #0x24]
+     13a: 2f63         	cmp	r7, #0x63
+     13c: 656e         	str	r6, [r5, #0x54]
+     13e: 6c77         	ldr	r7, [r6, #0x44]
+     140: 6269         	str	r1, [r5, #0x24]
+     142: 6c2f         	ldr	r7, [r5, #0x40]
+     144: 6269         	str	r1, [r5, #0x24]
+     146: 2f63         	cmp	r7, #0x63
+     148: 616d         	str	r5, [r5, #0x14]
+     14a: 6863         	ldr	r3, [r4, #0x4]
+     14c: 6e69         	ldr	r1, [r5, #0x64]
+     14e: 2f65         	cmp	r7, #0x65
+     150: 7261         	strb	r1, [r4, #0x9]
+     152: 2f6d         	cmp	r7, #0x6d
+     154: 656d         	str	r5, [r5, #0x54]
+     156: 736d         	strb	r5, [r5, #0xd]
+     158: 7465         	strb	r5, [r4, #0x11]
+     15a: 632e         	str	r6, [r5, #0x30]
+     15c: 2e00         	cmp	r6, #0x0
+     15e: 2f2e         	cmp	r7, #0x2e
+     160: 2e2e         	cmp	r6, #0x2e
+     162: 2e2f         	cmp	r6, #0x2f
+     164: 2f2e         	cmp	r7, #0x2e
+     166: 2e2e         	cmp	r6, #0x2e
+     168: 2e2f         	cmp	r6, #0x2f
+     16a: 2f2e         	cmp	r7, #0x2e
+     16c: 7273         	strb	r3, [r6, #0x9]
+     16e: 2f63         	cmp	r7, #0x63
+     170: 6970         	ldr	r0, [r6, #0x14]
+     172: 6f63         	ldr	r3, [r4, #0x74]
+     174: 696c         	ldr	r4, [r5, #0x14]
+     176: 6362         	str	r2, [r4, #0x34]
+     178: 6e2f         	ldr	r7, [r5, #0x60]
+     17a: 7765         	strb	r5, [r4, #0x1d]
+     17c: 696c         	ldr	r4, [r5, #0x14]
+     17e: 2f62         	cmp	r7, #0x62
+     180: 696c         	ldr	r4, [r5, #0x14]
+     182: 6362         	str	r2, [r4, #0x34]
+     184: 6d2f         	ldr	r7, [r5, #0x50]
+     186: 6361         	str	r1, [r4, #0x34]
+     188: 6968         	ldr	r0, [r5, #0x14]
+     18a: 656e         	str	r6, [r5, #0x54]
+     18c: 612f         	str	r7, [r5, #0x10]
+     18e: 6d72         	ldr	r2, [r6, #0x54]
+     190: 2e2f         	cmp	r6, #0x2f
+     192: 2f2e         	cmp	r7, #0x2e
+     194: 2e2e         	cmp	r6, #0x2e
+     196: 732f         	strb	r7, [r5, #0xc]
+     198: 7274         	strb	r4, [r6, #0x9]
+     19a: 6e69         	ldr	r1, [r5, #0x64]
+     19c: 0067         	lsls	r7, r4, #0x1
+     19e: 2e2e         	cmp	r6, #0x2e
+     1a0: 2e2f         	cmp	r6, #0x2f
+     1a2: 2f2e         	cmp	r7, #0x2e
+     1a4: 2e2e         	cmp	r6, #0x2e
+     1a6: 2e2f         	cmp	r6, #0x2f
+     1a8: 2f2e         	cmp	r7, #0x2e
+     1aa: 2e2e         	cmp	r6, #0x2e
+     1ac: 732f         	strb	r7, [r5, #0xc]
+     1ae: 6372         	str	r2, [r6, #0x34]
+     1b0: 702f         	strb	r7, [r5]
+     1b2: 6369         	str	r1, [r5, #0x34]
+     1b4: 6c6f         	ldr	r7, [r5, #0x44]
+     1b6: 6269         	str	r1, [r5, #0x24]
+     1b8: 2f63         	cmp	r7, #0x63
+     1ba: 656e         	str	r6, [r5, #0x54]
+     1bc: 6c77         	ldr	r7, [r6, #0x44]
+     1be: 6269         	str	r1, [r5, #0x24]
+     1c0: 6c2f         	ldr	r7, [r5, #0x40]
+     1c2: 6269         	str	r1, [r5, #0x24]
+     1c4: 2f63         	cmp	r7, #0x63
+     1c6: 616d         	str	r5, [r5, #0x14]
+     1c8: 6863         	ldr	r3, [r4, #0x4]
+     1ca: 6e69         	ldr	r1, [r5, #0x64]
+     1cc: 2f65         	cmp	r7, #0x65
+     1ce: 7261         	strb	r1, [r4, #0x9]
+     1d0: 2f6d         	cmp	r7, #0x6d
+     1d2: 7a62         	ldrb	r2, [r4, #0x9]
+     1d4: 7265         	strb	r5, [r4, #0x9]
+     1d6: 2e6f         	cmp	r6, #0x6f
+     1d8: 0063         	lsls	r3, r4, #0x1
+     1da: 682f         	ldr	r7, [r5]
+     1dc: 6d6f         	ldr	r7, [r5, #0x54]
+     1de: 2f65         	cmp	r7, #0x65
+     1e0: 656a         	str	r2, [r5, #0x54]
+     1e2: 6b6e         	ldr	r6, [r5, #0x34]
+     1e4: 6e69         	ldr	r1, [r5, #0x64]
+     1e6: 2f73         	cmp	r7, #0x73
+     1e8: 6761         	str	r1, [r4, #0x74]
+     1ea: 6e65         	ldr	r5, [r4, #0x64]
+     1ec: 2f74         	cmp	r7, #0x74
+     1ee: 6f77         	ldr	r7, [r6, #0x74]
+     1f0: 6b72         	ldr	r2, [r6, #0x34]
+     1f2: 7073         	strb	r3, [r6, #0x1]
+     1f4: 6361         	str	r1, [r4, #0x34]
+     1f6: 2f65         	cmp	r7, #0x65
+     1f8: 6c6c         	ldr	r4, [r5, #0x44]
+     1fa: 6d76         	ldr	r6, [r6, #0x54]
+     1fc: 652d         	str	r5, [r5, #0x50]
+     1fe: 626d         	str	r5, [r5, #0x24]
+     200: 6465         	str	r5, [r4, #0x44]
+     202: 6564         	str	r4, [r4, #0x54]
+     204: 2f64         	cmp	r7, #0x64
+     206: 6c6c         	ldr	r4, [r5, #0x44]
+     208: 6d76         	ldr	r6, [r6, #0x54]
+     20a: 312d         	adds	r1, #0x2d
+     20c: 2f39         	cmp	r7, #0x39
+     20e: 7562         	strb	r2, [r4, #0x15]
+     210: 6c69         	ldr	r1, [r5, #0x44]
+     212: 2d64         	cmp	r5, #0x64
+     214: 6e61         	ldr	r1, [r4, #0x64]
+     216: 2d64         	cmp	r5, #0x64
+     218: 6574         	str	r4, [r6, #0x54]
+     21a: 7473         	strb	r3, [r6, #0x11]
+     21c: 622f         	str	r7, [r5, #0x20]
+     21e: 6975         	ldr	r5, [r6, #0x14]
+     220: 646c         	str	r4, [r5, #0x44]
+     222: 702f         	strb	r7, [r5]
+     224: 6369         	str	r1, [r5, #0x34]
+     226: 6c6f         	ldr	r7, [r5, #0x44]
+     228: 6269         	str	r1, [r5, #0x24]
+     22a: 2f63         	cmp	r7, #0x63
+     22c: 7261         	strb	r1, [r4, #0x9]
+     22e: 766d         	strb	r5, [r5, #0x19]
+     230: 6d36         	ldr	r6, [r6, #0x50]
+     232: 735f         	strb	r7, [r3, #0xd]
+     234: 666f         	str	r7, [r5, #0x64]
+     236: 5f74         	ldrsh	r4, [r6, r5]
+     238: 6f6e         	ldr	r6, [r5, #0x74]
+     23a: 7066         	strb	r6, [r4, #0x1]
+     23c: 655f         	str	r7, [r3, #0x54]
+     23e: 6e78         	ldr	r0, [r7, #0x64]
+     240: 725f         	strb	r7, [r3, #0x9]
+     242: 7474         	strb	r4, [r6, #0x11]
+     244: 2f69         	cmp	r7, #0x69
+     246: 7273         	strb	r3, [r6, #0x9]
+     248: 2f63         	cmp	r7, #0x63
+     24a: 6970         	ldr	r0, [r6, #0x14]
+     24c: 6f63         	ldr	r3, [r4, #0x74]
+     24e: 696c         	ldr	r4, [r5, #0x14]
+     250: 6362         	str	r2, [r4, #0x34]
+     252: 615f         	str	r7, [r3, #0x14]
+     254: 6d72         	ldr	r2, [r6, #0x54]
+     256: 3676         	adds	r6, #0x76
+     258: 5f6d         	ldrsh	r5, [r5, r5]
+     25a: 6f73         	ldr	r3, [r6, #0x74]
+     25c: 7466         	strb	r6, [r4, #0x11]
+     25e: 6e5f         	ldr	r7, [r3, #0x64]
+     260: 666f         	str	r7, [r5, #0x64]
+     262: 5f70         	ldrsh	r0, [r6, r5]
+     264: 7865         	ldrb	r5, [r4, #0x1]
+     266: 5f6e         	ldrsh	r6, [r5, r5]
+     268: 7472         	strb	r2, [r6, #0x11]
+     26a: 6974         	ldr	r4, [r6, #0x14]
+     26c: 622d         	str	r5, [r5, #0x20]
+     26e: 6975         	ldr	r5, [r6, #0x14]
+     270: 646c         	str	r4, [r5, #0x44]
+     272: 7300         	strb	r0, [r0, #0xc]
+     274: 7379         	strb	r1, [r7, #0xd]
+     276: 6163         	str	r3, [r4, #0x14]
+     278: 6c6c         	ldr	r4, [r5, #0x44]
+     27a: 2e73         	cmp	r6, #0x73
+     27c: 0068         	lsls	r0, r5, #0x1
+
+Disassembly of section .debug_loclists:
+
+00000000 <.debug_loclists>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 0059         	lsls	r1, r3, #0x1
+;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
+       4: 0005         	movs	r5, r0
+;     if (increment > 0) {
+       6: 0004         	movs	r4, r0
+       8: 0004         	movs	r4, r0
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 0000         	movs	r0, r0
+       c: 0010         	movs	r0, r2
+       e: 0000         	movs	r0, r0
+      10: 001b         	movs	r3, r3
+      12: 0000         	movs	r0, r0
+      14: 0026         	movs	r6, r4
+; }
+      16: 0000         	movs	r0, r0
+;         heap_ptr += increment;
+      18: 0039         	movs	r1, r7
+; }
+      1a: 0000         	movs	r0, r0
+      1c: 0004         	movs	r4, r0
+      1e: 0102         	lsls	r2, r0, #0x4
+      20: 0450         	lsls	r0, r2, #0x11
+      22: 0c02         	lsrs	r2, r0, #0x10
+; int main() {
+      24: 5101         	str	r1, [r0, r4]
+      26: 0400         	lsls	r0, r0, #0x10
+      28: 1406         	asrs	r6, r0, #0x10
+      2a: 5001         	str	r1, [r0, r0]
+      2c: 1804         	adds	r4, r0, r0
+      2e: 011c         	lsls	r4, r3, #0x4
+      30: 0050         	lsls	r0, r2, #0x1
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 5604         	ldrsb	r4, [r0, r0]
+      34: 027a         	lsls	r2, r7, #0x9
+      36: 0c7d         	lsrs	r5, r7, #0x11
+      38: 7a04         	ldrb	r4, [r0, #0x8]
+      3a: 017c         	lsls	r4, r7, #0x5
+      3c: 0450         	lsls	r0, r2, #0x11
+      3e: 807c         	strh	r4, [r7, #0x2]
+      40: 0201         	lsls	r1, r0, #0x8
+      42: 0c7d         	lsrs	r5, r7, #0x11
+      44: 0400         	lsls	r0, r0, #0x10
+      46: 6456         	str	r6, [r2, #0x44]
+      48: 7006         	strb	r6, [r0]
+      4a: 1100         	asrs	r0, r0, #0x4
+      4c: 1b04         	subs	r4, r0, r4
+      4e: 049f         	lsls	r7, r3, #0x12
+      50: 6664         	str	r4, [r4, #0x64]
+      52: 7009         	strb	r1, [r1]
+      54: 1100         	asrs	r0, r0, #0x4
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: 1b04         	subs	r4, r0, r4
+      58: 0111         	lsls	r1, r2, #0x4
+      5a: 9f22         	ldr	r7, [sp, #0x88]
+      5c: 2900         	cmp	r1, #0x0
+      5e: 0000         	movs	r0, r0
+      60: 0500         	lsls	r0, r0, #0x14
+;             for (int k = 0; k < SIZE; k++) {
+      62: 0400         	lsls	r0, r0, #0x10
+      64: 0200         	lsls	r0, r0, #0x8
+      66: 0000         	movs	r0, r0
+      68: 0800         	lsrs	r0, r0, #0x20
+      6a: 0000         	movs	r0, r0
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 1600         	asrs	r0, r0, #0x18
+      6e: 0000         	movs	r0, r0
+      70: 0400         	lsls	r0, r0, #0x10
+      72: 0c00         	lsrs	r0, r0, #0x10
+;     for (int i = 0; i < SIZE; i++) {
+      74: 5001         	str	r1, [r0, r0]
+      76: 0c04         	lsrs	r4, r0, #0x10
+      78: 040e         	lsls	r6, r1, #0x10
+      7a: 01a3         	lsls	r3, r4, #0x6
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 9f50         	ldr	r7, [sp, #0x140]
+      7e: 0400         	lsls	r0, r0, #0x10
+      80: 0600         	lsls	r0, r0, #0x18
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 5101         	str	r1, [r0, r4]
+; }
+      84: 0604         	lsls	r4, r0, #0x18
+      86: 010c         	lsls	r4, r1, #0x4
+      88: 0052         	lsls	r2, r2, #0x1
+      8a: 004b         	lsls	r3, r1, #0x1
+      8c: 0000         	movs	r0, r0
+      8e: 0005         	movs	r5, r0
+      90: 0004         	movs	r4, r0
+      92: 0002         	movs	r2, r0
+      94: 0000         	movs	r0, r0
+      96: 0008         	movs	r0, r1
+      98: 0000         	movs	r0, r0
+      9a: 001c         	movs	r4, r3
+      9c: 0000         	movs	r0, r0
+      9e: 0004         	movs	r4, r0
+      a0: 0102         	lsls	r2, r0, #0x4
+      a2: 0452         	lsls	r2, r2, #0x11
+      a4: 0602         	lsls	r2, r0, #0x18
+      a6: 7303         	strb	r3, [r0, #0xc]
+      a8: 9f7f         	ldr	r7, [sp, #0x1fc]
+      aa: 0c04         	lsrs	r4, r0, #0x10
+      ac: 030e         	lsls	r6, r1, #0xc
+      ae: 7f73         	ldrb	r3, [r6, #0x1d]
+      b0: 009f         	lsls	r7, r3, #0x2
+      b2: 0004         	movs	r4, r0
+      b4: 0102         	lsls	r2, r0, #0x4
+      b6: 0450         	lsls	r0, r2, #0x11
+      b8: 0602         	lsls	r2, r0, #0x18
+      ba: 7306         	strb	r6, [r0, #0xc]
+      bc: 7000         	strb	r0, [r0]
+      be: 2200         	movs	r2, #0x0
+      c0: 049f         	lsls	r7, r3, #0x12
+      c2: 0a06         	lsrs	r6, r0, #0x8
+      c4: 7309         	strb	r1, [r1, #0xc]
+      c6: 1100         	asrs	r0, r0, #0x4
+      c8: 7001         	strb	r1, [r0]
+      ca: 2200         	movs	r2, #0x0
+      cc: 9f22         	ldr	r7, [sp, #0x88]
+      ce: 0c04         	lsrs	r4, r0, #0x10
+      d0: 060e         	lsls	r6, r1, #0x18
+      d2: 0073         	lsls	r3, r6, #0x1
+      d4: 0070         	lsls	r0, r6, #0x1
+      d6: 9f22         	ldr	r7, [sp, #0x88]
+      d8: 00           	<unknown>
+
+Disassembly of section .debug_str_offsets:
+
+00000000 <.debug_str_offsets>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 005c         	lsls	r4, r3, #0x1
+;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
+       4: 0005         	movs	r5, r0
+;     if (increment > 0) {
+       6: 0000         	movs	r0, r0
+       8: 002b         	movs	r3, r5
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 0000         	movs	r0, r0
+       c: 0085         	lsls	r5, r0, #0x2
+       e: 0000         	movs	r0, r0
+      10: 0054         	lsls	r4, r2, #0x1
+      12: 0000         	movs	r0, r0
+      14: 007c         	lsls	r4, r7, #0x1
+; }
+      16: 0000         	movs	r0, r0
+;         heap_ptr += increment;
+      18: 00a7         	lsls	r7, r4, #0x2
+; }
+      1a: 0000         	movs	r0, r0
+      1c: 0099         	lsls	r1, r3, #0x2
+      1e: 0000         	movs	r0, r0
+      20: 000c         	movs	r4, r1
+      22: 0000         	movs	r0, r0
+; int main() {
+      24: 00fb         	lsls	r3, r7, #0x3
+      26: 0000         	movs	r0, r0
+      28: 0071         	lsls	r1, r6, #0x1
+      2a: 0000         	movs	r0, r0
+      2c: 01ff         	lsls	r7, r7, #0x7
+      2e: 0000         	movs	r0, r0
+      30: 00a2         	lsls	r2, r4, #0x2
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 0000         	movs	r0, r0
+      34: 00ac         	lsls	r4, r5, #0x2
+      36: 0000         	movs	r0, r0
+      38: 0000         	movs	r0, r0
+      3a: 0000         	movs	r0, r0
+      3c: 0018         	movs	r0, r3
+      3e: 0000         	movs	r0, r0
+      40: 0040         	lsls	r0, r0, #0x1
+      42: 0000         	movs	r0, r0
+      44: 0011         	movs	r1, r2
+      46: 0000         	movs	r0, r0
+      48: 0108         	lsls	r0, r1, #0x4
+      4a: 0000         	movs	r0, r0
+      4c: 000a         	movs	r2, r1
+      4e: 0000         	movs	r0, r0
+      50: 0204         	lsls	r4, r0, #0x8
+      52: 0000         	movs	r0, r0
+      54: 006d         	lsls	r5, r5, #0x1
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: 0000         	movs	r0, r0
+      58: 011c         	lsls	r4, r3, #0x4
+      5a: 0000         	movs	r0, r0
+      5c: 0074         	lsls	r4, r6, #0x1
+      5e: 0000         	movs	r0, r0
+      60: 0024         	movs	r4, r4
+;             for (int k = 0; k < SIZE; k++) {
+      62: 0000         	movs	r0, r0
+      64: 0005         	movs	r5, r0
+      66: 0000         	movs	r0, r0
+      68: 002b         	movs	r3, r5
+      6a: 0000         	movs	r0, r0
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 012a         	lsls	r2, r5, #0x4
+      6e: 0000         	movs	r0, r0
+      70: 0166         	lsls	r6, r4, #0x5
+      72: 0000         	movs	r0, r0
+;     for (int i = 0; i < SIZE; i++) {
+      74: 0124         	lsls	r4, r4, #0x4
+      76: 0000         	movs	r0, r0
+      78: 004e         	lsls	r6, r1, #0x1
+      7a: 0000         	movs	r0, r0
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 00b7         	lsls	r7, r6, #0x2
+      7e: 0000         	movs	r0, r0
+      80: 00fb         	lsls	r3, r7, #0x3
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 0000         	movs	r0, r0
+; }
+      84: 0024         	movs	r4, r4
+      86: 0000         	movs	r0, r0
+      88: 0034         	movs	r4, r6
+      8a: 0000         	movs	r0, r0
+      8c: 0005         	movs	r5, r0
+      8e: 0000         	movs	r0, r0
+      90: 002b         	movs	r3, r5
+      92: 0000         	movs	r0, r0
+      94: 00be         	lsls	r6, r7, #0x2
+      96: 0000         	movs	r0, r0
+      98: 0166         	lsls	r6, r4, #0x5
+      9a: 0000         	movs	r0, r0
+      9c: 00a7         	lsls	r7, r4, #0x2
+      9e: 0000         	movs	r0, r0
+      a0: 00b0         	lsls	r0, r6, #0x2
+      a2: 0000         	movs	r0, r0
+      a4: 0050         	lsls	r0, r2, #0x1
+      a6: 0000         	movs	r0, r0
+      a8: 0052         	lsls	r2, r2, #0x1
+      aa: 0000         	movs	r0, r0
+      ac: 00ac         	lsls	r4, r5, #0x2
+      ae: 0000         	movs	r0, r0
+      b0: 0022         	movs	r2, r4
+      b2: 0000         	movs	r0, r0
+      b4: 00fb         	lsls	r3, r7, #0x3
+      b6: 0000         	movs	r0, r0
+      b8: 0024         	movs	r4, r4
+      ba: 0000         	movs	r0, r0
+      bc: 006f         	lsls	r7, r5, #0x1
+      be: 0000         	movs	r0, r0
+
+Disassembly of section .ARM.attributes:
+
+00000000 <.ARM.attributes>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 4041         	eors	r1, r0
+;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
+       4: 6100         	str	r0, [r0, #0x10]
+;     if (increment > 0) {
+       6: 6165         	str	r5, [r4, #0x14]
+       8: 6962         	ldr	r2, [r4, #0x14]
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 0100         	lsls	r0, r0, #0x4
+       c: 0036         	movs	r6, r6
+       e: 0000         	movs	r0, r0
+      10: 3243         	adds	r2, #0x43
+      12: 302e         	adds	r0, #0x2e
+      14: 0039         	movs	r1, r7
+; }
+      16: 6305         	str	r5, [r0, #0x30]
+;         heap_ptr += increment;
+      18: 726f         	strb	r7, [r5, #0x9]
+; }
+      1a: 6574         	str	r4, [r6, #0x54]
+      1c: 2d78         	cmp	r5, #0x78
+      1e: 306d         	adds	r0, #0x6d
+      20: 0600         	lsls	r0, r0, #0x18
+      22: 070c         	lsls	r4, r1, #0x1c
+; int main() {
+      24: 084d         	lsrs	r5, r1, #0x1
+      26: 0900         	lsrs	r0, r0, #0x4
+      28: 0e01         	lsrs	r1, r0, #0x18
+      2a: 1100         	asrs	r0, r0, #0x4
+      2c: 1201         	asrs	r1, r0, #0x8
+      2e: 1404         	asrs	r4, r0, #0x10
+      30: 1501         	asrs	r1, r0, #0x14
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 1700         	asrs	r0, r0, #0x1c
+      34: 1803         	adds	r3, r0, r0
+      36: 1901         	adds	r1, r0, r4
+      38: 1a01         	subs	r1, r0, r0
+      3a: 1e02         	subs	r2, r0, #0x0
+      3c: 2201         	movs	r2, #0x1
+      3e: 2600         	movs	r6, #0x0
+      40: 01           	<unknown>
+
+Disassembly of section .symtab:
+
+00000000 <.symtab>:
+		...
+;         if (heap_ptr + increment > &__heap_end) {
+      10: 0001         	movs	r1, r0
+		...
+; }
+      1a: 0000         	movs	r0, r0
+      1c: 0004         	movs	r4, r0
+      1e: fff1 000a    	<unknown>
+		...
+; int main() {
+      2e: 0001         	movs	r1, r0
+      30: 000d         	movs	r5, r1
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 0000         	movs	r0, r0
+      34: 001c         	movs	r4, r3
+		...
+      3e: 0001         	movs	r1, r0
+      40: 0010         	movs	r0, r2
+      42: 0000         	movs	r0, r0
+      44: 0000         	movs	r0, r0
+      46: 2000         	movs	r0, #0x0
+      48: 0004         	movs	r4, r0
+      4a: 0000         	movs	r0, r0
+      4c: 0001         	movs	r1, r0
+      4e: 0003         	movs	r3, r0
+      50: 0019         	movs	r1, r3
+      52: 0000         	movs	r0, r0
+      54: 0024         	movs	r4, r4
+		...
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      5e: 0001         	movs	r1, r0
+      60: 001c         	movs	r4, r3
+;             for (int k = 0; k < SIZE; k++) {
+      62: 0000         	movs	r0, r0
+      64: 008c         	lsls	r4, r1, #0x2
+		...
+;         for (int j = 0; j < SIZE; j++) {
+      6e: 0001         	movs	r1, r0
+      70: 001f         	movs	r7, r3
+		...
+      7a: 0000         	movs	r0, r0
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 0004         	movs	r4, r0
+      7e: fff1 0027    	<unknown>
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 0000         	movs	r0, r0
+; }
+      84: 0098         	lsls	r0, r3, #0x2
+		...
+      8e: 0001         	movs	r1, r0
+      90: 002a         	movs	r2, r5
+		...
+      9a: 0000         	movs	r0, r0
+      9c: 0004         	movs	r4, r0
+      9e: fff1 0033    	<unknown>
+      a2: 0000         	movs	r0, r0
+      a4: 00a8         	lsls	r0, r5, #0x2
+		...
+      ae: 0001         	movs	r1, r0
+      b0: 0068         	lsls	r0, r5, #0x1
+		...
+      ba: 0000         	movs	r0, r0
+      bc: 0200         	lsls	r0, r0, #0x8
+      be: 0001         	movs	r1, r0
+      c0: 0036         	movs	r6, r6
+      c2: 0000         	movs	r0, r0
+      c4: 0001         	movs	r1, r0
+      c6: 0000         	movs	r0, r0
+      c8: 0024         	movs	r4, r4
+      ca: 0000         	movs	r0, r0
+      cc: 0012         	movs	r2, r2
+      ce: 0001         	movs	r1, r0
+      d0: 003b         	movs	r3, r7
+      d2: 0000         	movs	r0, r0
+      d4: 0000         	movs	r0, r0
+      d6: 21f8         	movs	r1, #0xf8
+      d8: 0000         	movs	r0, r0
+      da: 0000         	movs	r0, r0
+      dc: 0010         	movs	r0, r2
+      de: fff1 0046    	<unknown>
+      e2: 0000         	movs	r0, r0
+      e4: 0025         	movs	r5, r4
+      e6: 0000         	movs	r0, r0
+      e8: 0074         	lsls	r4, r6, #0x1
+      ea: 0000         	movs	r0, r0
+      ec: 0012         	movs	r2, r2
+      ee: 0001         	movs	r1, r0
+      f0: 004b         	lsls	r3, r1, #0x1
+      f2: 0000         	movs	r0, r0
+      f4: 0099         	lsls	r1, r3, #0x2
+      f6: 0000         	movs	r0, r0
+      f8: 000e         	movs	r6, r1
+      fa: 0000         	movs	r0, r0
+      fc: 0022         	movs	r2, r4
+      fe: 0001         	movs	r1, r0
+     100: 005b         	lsls	r3, r3, #0x1
+     102: 0000         	movs	r0, r0
+     104: 0008         	movs	r0, r1
+     106: 2000         	movs	r0, #0x0
+     108: 0000         	movs	r0, r0
+     10a: 0000         	movs	r0, r0
+     10c: 0010         	movs	r0, r2
+     10e: 0006         	movs	r6, r0
+     110: 0075         	lsls	r5, r6, #0x1
+     112: 0000         	movs	r0, r0
+     114: 0099         	lsls	r1, r3, #0x2
+     116: 0000         	movs	r0, r0
+     118: 000e         	movs	r6, r1
+     11a: 0000         	movs	r0, r0
+     11c: 0012         	movs	r2, r2
+     11e: 0001         	movs	r1, r0
+     120: 007b         	lsls	r3, r7, #0x1
+     122: 0000         	movs	r0, r0
+     124: 00a9         	lsls	r1, r5, #0x2
+     126: 0000         	movs	r0, r0
+     128: 000e         	movs	r6, r1
+     12a: 0000         	movs	r0, r0
+     12c: 0012         	movs	r2, r2
+     12e: 0001         	movs	r1, r0
+     130: 0082         	lsls	r2, r0, #0x2
+     132: 0000         	movs	r0, r0
+     134: 0099         	lsls	r1, r3, #0x2
+     136: 0000         	movs	r0, r0
+     138: 000e         	movs	r6, r1
+     13a: 0000         	movs	r0, r0
+     13c: 0022         	movs	r2, r4
+     13e: 0001         	movs	r1, r0
+     140: 0092         	lsls	r2, r2, #0x2
+     142: 0000         	movs	r0, r0
+     144: 0099         	lsls	r1, r3, #0x2
+     146: 0000         	movs	r0, r0
+     148: 000e         	movs	r6, r1
+     14a: 0000         	movs	r0, r0
+     14c: 0022         	movs	r2, r4
+     14e: 0001         	movs	r1, r0
+     150: 00a1         	lsls	r1, r4, #0x2
+		...
+     15a: 0000         	movs	r0, r0
+     15c: 0010         	movs	r0, r2
+     15e: fff1 00a9    	<unknown>
+     162: 0000         	movs	r0, r0
+     164: 0000         	movs	r0, r0
+     166: 0010         	movs	r0, r2
+     168: 0000         	movs	r0, r0
+     16a: 0000         	movs	r0, r0
+     16c: 0010         	movs	r0, r2
+     16e: fff1 00b6    	<unknown>
+     172: 0000         	movs	r0, r0
+     174: 0000         	movs	r0, r0
+     176: 2000         	movs	r0, #0x0
+     178: 0000         	movs	r0, r0
+     17a: 0000         	movs	r0, r0
+     17c: 0010         	movs	r0, r2
+     17e: fff1 00bc    	<unknown>
+     182: 0000         	movs	r0, r0
+     184: 0000         	movs	r0, r0
+     186: 0200         	lsls	r0, r0, #0x8
+     188: 0000         	movs	r0, r0
+     18a: 0000         	movs	r0, r0
+     18c: 0010         	movs	r0, r2
+     18e: fff1 00c7    	<unknown>
+     192: 0000         	movs	r0, r0
+     194: 0001         	movs	r1, r0
+     196: 0000         	movs	r0, r0
+     198: 0000         	movs	r0, r0
+     19a: 0000         	movs	r0, r0
+     19c: 0010         	movs	r0, r2
+     19e: fff1 00d3    	<unknown>
+     1a2: 0000         	movs	r0, r0
+     1a4: 0008         	movs	r0, r1
+     1a6: 2000         	movs	r0, #0x0
+     1a8: 0000         	movs	r0, r0
+     1aa: 0000         	movs	r0, r0
+     1ac: 0010         	movs	r0, r2
+     1ae: 0006         	movs	r6, r0
+     1b0: 00dd         	lsls	r5, r3, #0x3
+     1b2: 0000         	movs	r0, r0
+     1b4: 0000         	movs	r0, r0
+     1b6: 0008         	movs	r0, r1
+     1b8: 0000         	movs	r0, r0
+     1ba: 0000         	movs	r0, r0
+     1bc: 0010         	movs	r0, r2
+     1be: fff1 00ed    	<unknown>
+     1c2: 0000         	movs	r0, r0
+     1c4: 0000         	movs	r0, r0
+     1c6: 0008         	movs	r0, r1
+     1c8: 0000         	movs	r0, r0
+     1ca: 0000         	movs	r0, r0
+     1cc: 0010         	movs	r0, r2
+     1ce: fff1 00fa    	<unknown>
+     1d2: 0000         	movs	r0, r0
+     1d4: 0008         	movs	r0, r1
+     1d6: 0000         	movs	r0, r0
+     1d8: 0000         	movs	r0, r0
+     1da: 0000         	movs	r0, r0
+     1dc: 0010         	movs	r0, r2
+     1de: fff1 0106    	<unknown>
+     1e2: 0000         	movs	r0, r0
+     1e4: 0008         	movs	r0, r1
+     1e6: 0000         	movs	r0, r0
+     1e8: 0000         	movs	r0, r0
+     1ea: 0000         	movs	r0, r0
+     1ec: 0010         	movs	r0, r2
+     1ee: fff1 0119    	<unknown>
+     1f2: 0000         	movs	r0, r0
+     1f4: 0000         	movs	r0, r0
+     1f6: 2200         	movs	r2, #0x0
+     1f8: 0000         	movs	r0, r0
+     1fa: 0000         	movs	r0, r0
+     1fc: 0010         	movs	r0, r2
+     1fe: fff1 0121    	<unknown>
+     202: 0000         	movs	r0, r0
+     204: 0008         	movs	r0, r1
+     206: 2000         	movs	r0, #0x0
+     208: 0000         	movs	r0, r0
+     20a: 0000         	movs	r0, r0
+     20c: 0010         	movs	r0, r2
+     20e: 0006         	movs	r6, r0
+     210: 0127         	lsls	r7, r4, #0x4
+     212: 0000         	movs	r0, r0
+     214: 0d40         	lsrs	r0, r0, #0x15
+     216: 0000         	movs	r0, r0
+     218: 0000         	movs	r0, r0
+     21a: 0000         	movs	r0, r0
+     21c: 0010         	movs	r0, r2
+     21e: fff1 0139    	<unknown>
+     222: 0000         	movs	r0, r0
+     224: 0d38         	lsrs	r0, r7, #0x14
+     226: 0000         	movs	r0, r0
+     228: 0000         	movs	r0, r0
+     22a: 0000         	movs	r0, r0
+     22c: 0010         	movs	r0, r2
+     22e: fff1 0147    	<unknown>
+     232: 0000         	movs	r0, r0
+     234: 0d40         	lsrs	r0, r0, #0x15
+     236: 0000         	movs	r0, r0
+     238: 0000         	movs	r0, r0
+     23a: 0000         	movs	r0, r0
+     23c: 0010         	movs	r0, r2
+     23e: fff1 015a    	<unknown>
+     242: 0000         	movs	r0, r0
+     244: 0008         	movs	r0, r1
+     246: 2000         	movs	r0, #0x0
+     248: 0000         	movs	r0, r0
+     24a: 0000         	movs	r0, r0
+     24c: 0010         	movs	r0, r2
+     24e: 0004         	movs	r4, r0
+     250: 0165         	lsls	r5, r4, #0x5
+     252: 0000         	movs	r0, r0
+     254: 0000         	movs	r0, r0
+     256: 2000         	movs	r0, #0x0
+     258: 0000         	movs	r0, r0
+     25a: 0000         	movs	r0, r0
+     25c: 0010         	movs	r0, r2
+     25e: 0003         	movs	r3, r0
+     260: 0172         	lsls	r2, r6, #0x5
+     262: 0000         	movs	r0, r0
+     264: 00b6         	lsls	r6, r6, #0x2
+     266: 0000         	movs	r0, r0
+     268: 0000         	movs	r0, r0
+     26a: 0000         	movs	r0, r0
+     26c: 0010         	movs	r0, r2
+     26e: 0001         	movs	r1, r0
+     270: 017d         	lsls	r5, r7, #0x5
+     272: 0000         	movs	r0, r0
+     274: 0008         	movs	r0, r1
+     276: 2000         	movs	r0, #0x0
+     278: 0000         	movs	r0, r0
+     27a: 0000         	movs	r0, r0
+     27c: 0010         	movs	r0, r2
+     27e: 0006         	movs	r6, r0
+
+Disassembly of section .shstrtab:
+
+00000000 <.shstrtab>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 2e00         	cmp	r6, #0x0
+;     char* prev_heap_ptr = heap_ptr;
+       2: 6574         	str	r4, [r6, #0x54]
+       4: 7478         	strb	r0, [r7, #0x11]
+;     if (increment > 0) {
+       6: 2e00         	cmp	r6, #0x0
+       8: 6f72         	ldr	r2, [r6, #0x74]
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 6164         	str	r4, [r4, #0x14]
+       c: 6174         	str	r4, [r6, #0x14]
+       e: 2e00         	cmp	r6, #0x0
+      10: 6164         	str	r4, [r4, #0x14]
+      12: 6174         	str	r4, [r6, #0x14]
+      14: 2e00         	cmp	r6, #0x0
+; }
+      16: 6474         	str	r4, [r6, #0x44]
+;         heap_ptr += increment;
+      18: 7461         	strb	r1, [r4, #0x11]
+; }
+      1a: 0061         	lsls	r1, r4, #0x1
+      1c: 742e         	strb	r6, [r5, #0x10]
+      1e: 7362         	strb	r2, [r4, #0xd]
+      20: 0073         	lsls	r3, r6, #0x1
+      22: 622e         	str	r6, [r5, #0x20]
+; int main() {
+      24: 7373         	strb	r3, [r6, #0xd]
+      26: 2e00         	cmp	r6, #0x0
+      28: 6568         	str	r0, [r5, #0x54]
+      2a: 7061         	strb	r1, [r4, #0x1]
+      2c: 2e00         	cmp	r6, #0x0
+      2e: 7473         	strb	r3, [r6, #0x11]
+      30: 6361         	str	r1, [r4, #0x34]
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 006b         	lsls	r3, r5, #0x1
+      34: 632e         	str	r6, [r5, #0x30]
+      36: 6d6f         	ldr	r7, [r5, #0x54]
+      38: 656d         	str	r5, [r5, #0x54]
+      3a: 746e         	strb	r6, [r5, #0x11]
+      3c: 2e00         	cmp	r6, #0x0
+      3e: 6564         	str	r4, [r4, #0x54]
+      40: 7562         	strb	r2, [r4, #0x15]
+      42: 5f67         	ldrsh	r7, [r4, r5]
+      44: 6e69         	ldr	r1, [r5, #0x64]
+      46: 6f66         	ldr	r6, [r4, #0x74]
+      48: 2e00         	cmp	r6, #0x0
+      4a: 6564         	str	r4, [r4, #0x54]
+      4c: 7562         	strb	r2, [r4, #0x15]
+      4e: 5f67         	ldrsh	r7, [r4, r5]
+      50: 6261         	str	r1, [r4, #0x24]
+      52: 7262         	strb	r2, [r4, #0x9]
+      54: 7665         	strb	r5, [r4, #0x19]
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: 2e00         	cmp	r6, #0x0
+      58: 6564         	str	r4, [r4, #0x54]
+      5a: 7562         	strb	r2, [r4, #0x15]
+      5c: 5f67         	ldrsh	r7, [r4, r5]
+      5e: 696c         	ldr	r4, [r5, #0x14]
+      60: 656e         	str	r6, [r5, #0x54]
+;             for (int k = 0; k < SIZE; k++) {
+      62: 2e00         	cmp	r6, #0x0
+      64: 6564         	str	r4, [r4, #0x54]
+      66: 7562         	strb	r2, [r4, #0x15]
+      68: 5f67         	ldrsh	r7, [r4, r5]
+      6a: 7266         	strb	r6, [r4, #0x9]
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 6d61         	ldr	r1, [r4, #0x54]
+      6e: 0065         	lsls	r5, r4, #0x1
+      70: 642e         	str	r6, [r5, #0x40]
+      72: 6265         	str	r5, [r4, #0x24]
+;     for (int i = 0; i < SIZE; i++) {
+      74: 6775         	str	r5, [r6, #0x74]
+      76: 735f         	strb	r7, [r3, #0xd]
+      78: 7274         	strb	r4, [r6, #0x9]
+      7a: 2e00         	cmp	r6, #0x0
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 6564         	str	r4, [r4, #0x54]
+      7e: 7562         	strb	r2, [r4, #0x15]
+      80: 5f67         	ldrsh	r7, [r4, r5]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 6461         	str	r1, [r4, #0x44]
+; }
+      84: 7264         	strb	r4, [r4, #0x9]
+      86: 2e00         	cmp	r6, #0x0
+      88: 6564         	str	r4, [r4, #0x54]
+      8a: 7562         	strb	r2, [r4, #0x15]
+      8c: 5f67         	ldrsh	r7, [r4, r5]
+      8e: 696c         	ldr	r4, [r5, #0x14]
+      90: 656e         	str	r6, [r5, #0x54]
+      92: 735f         	strb	r7, [r3, #0xd]
+      94: 7274         	strb	r4, [r6, #0x9]
+      96: 2e00         	cmp	r6, #0x0
+      98: 6564         	str	r4, [r4, #0x54]
+      9a: 7562         	strb	r2, [r4, #0x15]
+      9c: 5f67         	ldrsh	r7, [r4, r5]
+      9e: 6f6c         	ldr	r4, [r5, #0x74]
+      a0: 6c63         	ldr	r3, [r4, #0x44]
+      a2: 7369         	strb	r1, [r5, #0xd]
+      a4: 7374         	strb	r4, [r6, #0xd]
+      a6: 2e00         	cmp	r6, #0x0
+      a8: 6564         	str	r4, [r4, #0x54]
+      aa: 7562         	strb	r2, [r4, #0x15]
+      ac: 5f67         	ldrsh	r7, [r4, r5]
+      ae: 7473         	strb	r3, [r6, #0x11]
+      b0: 5f72         	ldrsh	r2, [r6, r5]
+      b2: 666f         	str	r7, [r5, #0x64]
+      b4: 7366         	strb	r6, [r4, #0xd]
+      b6: 7465         	strb	r5, [r4, #0x11]
+      b8: 0073         	lsls	r3, r6, #0x1
+      ba: 412e         	asrs	r6, r5
+      bc: 4d52         	ldr	r5, [pc, #0x148]        @ 0x208 <.rodata+0x150>
+      be: 612e         	str	r6, [r5, #0x10]
+      c0: 7474         	strb	r4, [r6, #0x11]
+      c2: 6972         	ldr	r2, [r6, #0x14]
+      c4: 7562         	strb	r2, [r4, #0x15]
+      c6: 6574         	str	r4, [r6, #0x54]
+      c8: 0073         	lsls	r3, r6, #0x1
+      ca: 732e         	strb	r6, [r5, #0xc]
+      cc: 6d79         	ldr	r1, [r7, #0x54]
+      ce: 6174         	str	r4, [r6, #0x14]
+      d0: 0062         	lsls	r2, r4, #0x1
+      d2: 732e         	strb	r6, [r5, #0xc]
+      d4: 7368         	strb	r0, [r5, #0xd]
+      d6: 7274         	strb	r4, [r6, #0x9]
+      d8: 6174         	str	r4, [r6, #0x14]
+      da: 0062         	lsls	r2, r4, #0x1
+      dc: 732e         	strb	r6, [r5, #0xc]
+      de: 7274         	strb	r4, [r6, #0x9]
+      e0: 6174         	str	r4, [r6, #0x14]
+      e2: 0062         	lsls	r2, r4, #0x1
+
+Disassembly of section .strtab:
+
+00000000 <.strtab>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 6d00         	ldr	r0, [r0, #0x50]
+;     char* prev_heap_ptr = heap_ptr;
+       2: 7461         	strb	r1, [r4, #0x11]
+       4: 756d         	strb	r5, [r5, #0x15]
+;     if (increment > 0) {
+       6: 2e6c         	cmp	r6, #0x6c
+       8: 0063         	lsls	r3, r4, #0x1
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 7424         	strb	r4, [r4, #0x10]
+       c: 2400         	movs	r4, #0x0
+       e: 0064         	lsls	r4, r4, #0x1
+      10: 6568         	str	r0, [r5, #0x54]
+      12: 7061         	strb	r1, [r4, #0x1]
+      14: 705f         	strb	r7, [r3, #0x1]
+; }
+      16: 7274         	strb	r4, [r6, #0x9]
+;         heap_ptr += increment;
+      18: 2400         	movs	r4, #0x0
+; }
+      1a: 0074         	lsls	r4, r6, #0x1
+      1c: 6424         	str	r4, [r4, #0x40]
+      1e: 6200         	str	r0, [r0, #0x20]
+      20: 657a         	str	r2, [r7, #0x54]
+      22: 6f72         	ldr	r2, [r6, #0x74]
+; int main() {
+      24: 632e         	str	r6, [r5, #0x30]
+      26: 2400         	movs	r4, #0x0
+      28: 0074         	lsls	r4, r6, #0x1
+      2a: 656d         	str	r5, [r5, #0x54]
+      2c: 736d         	strb	r5, [r5, #0xd]
+      2e: 7465         	strb	r5, [r4, #0x11]
+      30: 632e         	str	r6, [r5, #0x30]
+;     volatile int result[SIZE][SIZE] = {0};
+      32: 2400         	movs	r4, #0x0
+      34: 0074         	lsls	r4, r6, #0x1
+      36: 6273         	str	r3, [r6, #0x24]
+      38: 6b72         	ldr	r2, [r6, #0x34]
+      3a: 5f00         	ldrsh	r0, [r0, r4]
+      3c: 685f         	ldr	r7, [r3, #0x4]
+      3e: 6165         	str	r5, [r4, #0x14]
+      40: 5f70         	ldrsh	r0, [r6, r5]
+      42: 6e65         	ldr	r5, [r4, #0x64]
+      44: 0064         	lsls	r4, r4, #0x1
+      46: 616d         	str	r5, [r5, #0x14]
+      48: 6e69         	ldr	r1, [r5, #0x64]
+      4a: 5f00         	ldrsh	r0, [r0, r4]
+      4c: 615f         	str	r7, [r3, #0x14]
+      4e: 6165         	str	r5, [r4, #0x14]
+      50: 6962         	ldr	r2, [r4, #0x14]
+      52: 6d5f         	ldr	r7, [r3, #0x54]
+      54: 6d65         	ldr	r5, [r4, #0x54]
+;                 result[i][j] += matrix1[i][k] * matrix2[k][j];
+      56: 6c63         	ldr	r3, [r4, #0x44]
+      58: 3472         	adds	r4, #0x72
+      5a: 5f00         	ldrsh	r0, [r0, r4]
+      5c: 685f         	ldr	r7, [r3, #0x4]
+      5e: 6165         	str	r5, [r4, #0x14]
+      60: 5f70         	ldrsh	r0, [r6, r5]
+;             for (int k = 0; k < SIZE; k++) {
+      62: 7473         	strb	r3, [r6, #0x11]
+      64: 7261         	strb	r1, [r4, #0x9]
+      66: 0074         	lsls	r4, r6, #0x1
+      68: 5f5f         	ldrsh	r7, [r3, r5]
+      6a: 7364         	strb	r4, [r4, #0xd]
+;         for (int j = 0; j < SIZE; j++) {
+      6c: 5f6f         	ldrsh	r7, [r5, r5]
+      6e: 6168         	str	r0, [r5, #0x14]
+      70: 646e         	str	r6, [r5, #0x44]
+      72: 656c         	str	r4, [r5, #0x54]
+;     for (int i = 0; i < SIZE; i++) {
+      74: 6200         	str	r0, [r0, #0x20]
+      76: 657a         	str	r2, [r7, #0x54]
+      78: 6f72         	ldr	r2, [r6, #0x74]
+      7a: 6d00         	ldr	r0, [r0, #0x50]
+;     for (int i = 0; i < SIZE; i++) {
+      7c: 6d65         	ldr	r5, [r4, #0x54]
+      7e: 6573         	str	r3, [r6, #0x54]
+      80: 0074         	lsls	r4, r6, #0x1
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      82: 5f5f         	ldrsh	r7, [r3, r5]
+; }
+      84: 6561         	str	r1, [r4, #0x54]
+      86: 6261         	str	r1, [r4, #0x24]
+      88: 5f69         	ldrsh	r1, [r5, r5]
+      8a: 656d         	str	r5, [r5, #0x54]
+      8c: 636d         	str	r5, [r5, #0x34]
+      8e: 726c         	strb	r4, [r5, #0x9]
+      90: 0038         	movs	r0, r7
+      92: 5f5f         	ldrsh	r7, [r3, r5]
+      94: 6561         	str	r1, [r4, #0x54]
+      96: 6261         	str	r1, [r4, #0x24]
+      98: 5f69         	ldrsh	r1, [r5, r5]
+      9a: 656d         	str	r5, [r5, #0x54]
+      9c: 636d         	str	r5, [r5, #0x34]
+      9e: 726c         	strb	r4, [r5, #0x9]
+      a0: 5f00         	ldrsh	r0, [r0, r4]
+      a2: 665f         	str	r7, [r3, #0x64]
+      a4: 616c         	str	r4, [r5, #0x14]
+      a6: 6873         	ldr	r3, [r6, #0x4]
+      a8: 5f00         	ldrsh	r0, [r0, r4]
+      aa: 665f         	str	r7, [r3, #0x64]
+      ac: 616c         	str	r4, [r5, #0x14]
+      ae: 6873         	ldr	r3, [r6, #0x4]
+      b0: 735f         	strb	r7, [r3, #0xd]
+      b2: 7a69         	ldrb	r1, [r5, #0x9]
+      b4: 0065         	lsls	r5, r4, #0x1
+      b6: 5f5f         	ldrsh	r7, [r3, r5]
+      b8: 6172         	str	r2, [r6, #0x14]
+      ba: 006d         	lsls	r5, r5, #0x1
+      bc: 5f5f         	ldrsh	r7, [r3, r5]
+      be: 6172         	str	r2, [r6, #0x14]
+      c0: 5f6d         	ldrsh	r5, [r5, r5]
+      c2: 6973         	ldr	r3, [r6, #0x14]
+      c4: 657a         	str	r2, [r7, #0x54]
+      c6: 5f00         	ldrsh	r0, [r0, r4]
+      c8: 745f         	strb	r7, [r3, #0x11]
+      ca: 736c         	strb	r4, [r5, #0xd]
+      cc: 615f         	str	r7, [r3, #0x14]
+      ce: 696c         	ldr	r4, [r5, #0x14]
+      d0: 6e67         	ldr	r7, [r4, #0x64]
+      d2: 5f00         	ldrsh	r0, [r0, r4]
+      d4: 625f         	str	r7, [r3, #0x24]
+      d6: 7373         	strb	r3, [r6, #0xd]
+      d8: 655f         	str	r7, [r3, #0x54]
+      da: 646e         	str	r6, [r5, #0x44]
+      dc: 5f00         	ldrsh	r0, [r0, r4]
+      de: 685f         	ldr	r7, [r3, #0x4]
+      e0: 6165         	str	r5, [r4, #0x14]
+      e2: 5f70         	ldrsh	r0, [r6, r5]
+      e4: 6973         	ldr	r3, [r6, #0x14]
+      e6: 657a         	str	r2, [r7, #0x54]
+      e8: 6d5f         	ldr	r7, [r3, #0x54]
+      ea: 6e69         	ldr	r1, [r5, #0x64]
+      ec: 5f00         	ldrsh	r0, [r0, r4]
+      ee: 735f         	strb	r7, [r3, #0xd]
+      f0: 6174         	str	r4, [r6, #0x14]
+      f2: 6b63         	ldr	r3, [r4, #0x34]
+      f4: 735f         	strb	r7, [r3, #0xd]
+      f6: 7a69         	ldrb	r1, [r5, #0x9]
+      f8: 0065         	lsls	r5, r4, #0x1
+      fa: 5f5f         	ldrsh	r7, [r3, r5]
+      fc: 6164         	str	r4, [r4, #0x14]
+      fe: 6174         	str	r4, [r6, #0x14]
+     100: 735f         	strb	r7, [r3, #0xd]
+     102: 7a69         	ldrb	r1, [r5, #0x9]
+     104: 0065         	lsls	r5, r4, #0x1
+     106: 5f5f         	ldrsh	r7, [r3, r5]
+     108: 6164         	str	r4, [r4, #0x14]
+     10a: 6174         	str	r4, [r6, #0x14]
+     10c: 735f         	strb	r7, [r3, #0xd]
+     10e: 756f         	strb	r7, [r5, #0x15]
+     110: 6372         	str	r2, [r6, #0x34]
+     112: 5f65         	ldrsh	r5, [r4, r5]
+     114: 6973         	ldr	r3, [r6, #0x14]
+     116: 657a         	str	r2, [r7, #0x54]
+     118: 5f00         	ldrsh	r0, [r0, r4]
+     11a: 735f         	strb	r7, [r3, #0xd]
+     11c: 6174         	str	r4, [r6, #0x14]
+     11e: 6b63         	ldr	r3, [r4, #0x34]
+     120: 5f00         	ldrsh	r0, [r0, r4]
+     122: 655f         	str	r7, [r3, #0x54]
+     124: 646e         	str	r6, [r5, #0x44]
+     126: 5f00         	ldrsh	r0, [r0, r4]
+     128: 645f         	str	r7, [r3, #0x44]
+     12a: 7461         	strb	r1, [r4, #0x11]
+     12c: 5f61         	ldrsh	r1, [r4, r5]
+     12e: 6f73         	ldr	r3, [r6, #0x74]
+     130: 7275         	strb	r5, [r6, #0x9]
+     132: 6563         	str	r3, [r4, #0x54]
+     134: 655f         	str	r7, [r3, #0x54]
+     136: 646e         	str	r6, [r5, #0x44]
+     138: 5f00         	ldrsh	r0, [r0, r4]
+     13a: 645f         	str	r7, [r3, #0x44]
+     13c: 7461         	strb	r1, [r4, #0x11]
+     13e: 5f61         	ldrsh	r1, [r4, r5]
+     140: 6f73         	ldr	r3, [r6, #0x74]
+     142: 7275         	strb	r5, [r6, #0x9]
+     144: 6563         	str	r3, [r4, #0x54]
+     146: 5f00         	ldrsh	r0, [r0, r4]
+     148: 745f         	strb	r7, [r3, #0x11]
+     14a: 6164         	str	r4, [r4, #0x14]
+     14c: 6174         	str	r4, [r6, #0x14]
+     14e: 735f         	strb	r7, [r3, #0xd]
+     150: 756f         	strb	r7, [r5, #0x15]
+     152: 6372         	str	r2, [r6, #0x34]
+     154: 5f65         	ldrsh	r5, [r4, r5]
+     156: 6e65         	ldr	r5, [r4, #0x64]
+     158: 0064         	lsls	r4, r4, #0x1
+     15a: 5f5f         	ldrsh	r7, [r3, r5]
+     15c: 6164         	str	r4, [r4, #0x14]
+     15e: 6174         	str	r4, [r6, #0x14]
+     160: 655f         	str	r7, [r3, #0x54]
+     162: 646e         	str	r6, [r5, #0x44]
+     164: 5f00         	ldrsh	r0, [r0, r4]
+     166: 645f         	str	r7, [r3, #0x44]
+     168: 7461         	strb	r1, [r4, #0x11]
+     16a: 5f61         	ldrsh	r1, [r4, r5]
+     16c: 7473         	strb	r3, [r6, #0x11]
+     16e: 7261         	strb	r1, [r4, #0x9]
+     170: 0074         	lsls	r4, r6, #0x1
+     172: 5f5f         	ldrsh	r7, [r3, r5]
+     174: 6574         	str	r4, [r6, #0x54]
+     176: 7478         	strb	r0, [r7, #0x11]
+     178: 655f         	str	r7, [r3, #0x54]
+     17a: 646e         	str	r6, [r5, #0x44]
+     17c: 5f00         	ldrsh	r0, [r0, r4]
+     17e: 6e65         	ldr	r5, [r4, #0x64]
+     180: 0064         	lsls	r4, r4, #0x1
