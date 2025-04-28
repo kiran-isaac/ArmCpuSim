@@ -27,9 +27,9 @@ pub enum PredictionAlgorithms {
     AlwaysUntaken,
 }
 
-pub const N_ISSUE: usize = 2;
-const CDB_WIDTH: usize = 4;
-const LQ_SIZE: usize = 8;
+pub const N_ISSUE: usize = 4;
+const CDB_WIDTH: usize = 1000;
+const LQ_SIZE: usize = 16;
 pub const N_LS_EXECS: usize = 3;
 pub const N_ALUSHIFTERS: usize = 3;
 pub const N_MULS: usize = 1;
@@ -137,10 +137,10 @@ impl<'a> OoOSpeculative<'a> {
             fb: [None; N_ISSUE],
             iq: VecDeque::new(),
 
-            rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 16),
-            rs_mul: RSSet::new(IssueType::MUL,  16),
-            rs_control: RSSet::new(IssueType::Control, 16),
-            rs_ls: RSSet::new(IssueType::LoadStore, 16),
+            rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, 8),
+            rs_mul: RSSet::new(IssueType::MUL,  4),
+            rs_control: RSSet::new(IssueType::Control, 4),
+            rs_ls: RSSet::new(IssueType::LoadStore, 8),
 
             rob,
             flush_delay: 0,
