@@ -1,6 +1,12 @@
-ARMET := $(USERPROFILE)/LLVM-ET-Arm-19.1.5
+
 CLANG_TARGET_OPTIONS := --target=armv6m-none-eabi -mfloat-abi=soft -mthumb
 LINKER_SCRIPT := script.ld
+
+ifeq ($(OS),Windows_NT)
+    ARMET := $(USERPROFILE)/LLVM-ET-Arm-19.1.5
+else
+    ARMET := $(HOME)/LLVM-ET-Arm-19.1.5
+endif
 
 %.dis : %.out
 	$(ARMET)/bin/llvm-objdump -D -S  $< > $@
