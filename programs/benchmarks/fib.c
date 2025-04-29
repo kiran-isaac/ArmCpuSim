@@ -16,11 +16,11 @@ unsigned long long fibonacci(int n) {
 }
 
 int main() {
-	unsigned arr[N] = {0};
-	for (unsigned i = 0; i < N; i++) {
-		arr[i] = fibonacci(i + 1);
-	}
+    unsigned arr[N] = {0};
+    for (unsigned i = 0; i < N; i++) {
+        arr[i] = fibonacci(i + 1);
+    }
 
     svc_putint(arr[N - 1]);
-	svc_exit(0);
+    svc_exit(0);
 }
