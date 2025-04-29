@@ -25,7 +25,7 @@ matmulbench:
 	$(ARMET)/bin/llvm-objdump -D -S  benchmarks/matmul.out > benchmarks/matmul.dis
 
 facbench:
-	$(ARMET)/bin/clang -O0 -g $(CLANG_TARGET_OPTIONS) benchmarks/fac.c -o benchmarks/fac.out -T $(LINKER_SCRIPT)
+	$(ARMET)/bin/clang -O1 -g $(CLANG_TARGET_OPTIONS) benchmarks/fac.c -o benchmarks/fac.out -T $(LINKER_SCRIPT)
 	$(ARMET)/bin/llvm-objdump -D -S  benchmarks/fac.out > benchmarks/fac.dis
 
 fibbench:

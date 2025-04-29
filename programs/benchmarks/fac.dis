@@ -5,131 +5,73 @@ Disassembly of section .text:
 
 00000000 <sbrk>:
 ; extern void* sbrk(ptrdiff_t increment) {
-       0: b083         	sub	sp, #0xc
-       2: 9001         	str	r0, [sp, #0x4]
+       0: 4601         	mov	r1, r0
 ;     char* prev_heap_ptr = heap_ptr;
-       4: 480f         	ldr	r0, [pc, #0x3c]         @ 0x44 <sbrk+0x44>
-       6: 6800         	ldr	r0, [r0]
-       8: 9000         	str	r0, [sp]
+       2: 4a06         	ldr	r2, [pc, #0x18]         @ 0x1c <sbrk+0x1c>
+       4: 6810         	ldr	r0, [r2]
 ;     if (increment > 0) {
-       a: 9801         	ldr	r0, [sp, #0x4]
-       c: 2801         	cmp	r0, #0x1
-       e: db12         	blt	0x36 <sbrk+0x36>        @ imm = #0x24
-      10: e7ff         	b	0x12 <sbrk+0x12>        @ imm = #-0x2
+       6: 2901         	cmp	r1, #0x1
+       8: db07         	blt	0x1a <sbrk+0x1a>        @ imm = #0xe
 ;         if (heap_ptr + increment > &__heap_end) {
-      12: 480c         	ldr	r0, [pc, #0x30]         @ 0x44 <sbrk+0x44>
-      14: 6800         	ldr	r0, [r0]
-      16: 9901         	ldr	r1, [sp, #0x4]
-      18: 1840         	adds	r0, r0, r1
-      1a: 490b         	ldr	r1, [pc, #0x2c]         @ 0x48 <sbrk+0x48>
-      1c: 4288         	cmp	r0, r1
-      1e: d904         	bls	0x2a <sbrk+0x2a>        @ imm = #0x8
-      20: e7ff         	b	0x22 <sbrk+0x22>        @ imm = #-0x2
-      22: 2000         	movs	r0, #0x0
-      24: 43c0         	mvns	r0, r0
-;             return (void*)-1;  // Return error if the heap is full
-      26: 9002         	str	r0, [sp, #0x8]
-      28: e008         	b	0x3c <sbrk+0x3c>        @ imm = #0x10
+       a: 1841         	adds	r1, r0, r1
+       c: 4b04         	ldr	r3, [pc, #0x10]         @ 0x20 <sbrk+0x20>
+       e: 4299         	cmp	r1, r3
+      10: d902         	bls	0x18 <sbrk+0x18>        @ imm = #0x4
+      12: 2000         	movs	r0, #0x0
+      14: 43c0         	mvns	r0, r0
+; }
+      16: 4770         	bx	lr
 ;         heap_ptr += increment;
-      2a: 9a01         	ldr	r2, [sp, #0x4]
-      2c: 4905         	ldr	r1, [pc, #0x14]         @ 0x44 <sbrk+0x44>
-      2e: 6808         	ldr	r0, [r1]
-      30: 1880         	adds	r0, r0, r2
-      32: 6008         	str	r0, [r1]
-;     }
-      34: e7ff         	b	0x36 <sbrk+0x36>        @ imm = #-0x2
-;     return (void*)prev_heap_ptr;
-      36: 9800         	ldr	r0, [sp]
-      38: 9002         	str	r0, [sp, #0x8]
-      3a: e7ff         	b	0x3c <sbrk+0x3c>        @ imm = #-0x2
+      18: 6011         	str	r1, [r2]
 ; }
-      3c: 9802         	ldr	r0, [sp, #0x8]
-      3e: b003         	add	sp, #0xc
-      40: 4770         	bx	lr
-      42: 46c0         	mov	r8, r8
-      44: 00 00 00 20  	.word	0x20000000
-      48: 00 00 f8 21  	.word	0x21f80000
+      1a: 4770         	bx	lr
+      1c: 00 00 00 20  	.word	0x20000000
+      20: 00 00 f8 21  	.word	0x21f80000
 
-0000004c <factorial>:
+00000024 <factorial>:
 ; unsigned factorial(unsigned n) {
-      4c: b580         	push	{r7, lr}
-      4e: af00         	add	r7, sp, #0x0
-      50: b084         	sub	sp, #0x10
-      52: 9002         	str	r0, [sp, #0x8]
+      24: 4601         	mov	r1, r0
+      26: 2001         	movs	r0, #0x1
 ;     if (n <= 1) {
-      54: 9802         	ldr	r0, [sp, #0x8]
-      56: 2801         	cmp	r0, #0x1
-      58: d803         	bhi	0x62 <factorial+0x16>   @ imm = #0x6
-      5a: e7ff         	b	0x5c <factorial+0x10>   @ imm = #-0x2
-      5c: 2001         	movs	r0, #0x1
-;         return 1;
-      5e: 9003         	str	r0, [sp, #0xc]
-      60: e008         	b	0x74 <factorial+0x28>   @ imm = #0x10
+      28: 2902         	cmp	r1, #0x2
+      2a: d303         	blo	0x34 <factorial+0x10>   @ imm = #0x6
 ;         return n * factorial(n - 1);
-      62: 9802         	ldr	r0, [sp, #0x8]
-      64: 9001         	str	r0, [sp, #0x4]
-      66: 1e40         	subs	r0, r0, #0x1
-      68: f7ff fff0    	bl	0x4c <factorial>        @ imm = #-0x20
-      6c: 9901         	ldr	r1, [sp, #0x4]
-      6e: 4348         	muls	r0, r1, r0
-      70: 9003         	str	r0, [sp, #0xc]
-      72: e7ff         	b	0x74 <factorial+0x28>   @ imm = #-0x2
+      2c: 4348         	muls	r0, r1, r0
+      2e: 1e49         	subs	r1, r1, #0x1
+;     if (n <= 1) {
+      30: 2902         	cmp	r1, #0x2
+      32: d2fb         	bhs	0x2c <factorial+0x8>    @ imm = #-0xa
 ; }
-      74: 9803         	ldr	r0, [sp, #0xc]
-      76: b004         	add	sp, #0x10
-      78: bd80         	pop	{r7, pc}
-      7a: 46c0         	mov	r8, r8
+      34: 4770         	bx	lr
+      36: 46c0         	mov	r8, r8
 
-0000007c <main>:
+00000038 <main>:
 ; int main() {
-      7c: b580         	push	{r7, lr}
-      7e: af00         	add	r7, sp, #0x0
-      80: b082         	sub	sp, #0x8
-      82: 2000         	movs	r0, #0x0
-      84: 9001         	str	r0, [sp, #0x4]
-      86: 200a         	movs	r0, #0xa
+      38: b580         	push	{r7, lr}
+      3a: af00         	add	r7, sp, #0x0
+      3c: 200a         	movs	r0, #0xa
 ;     unsigned result = factorial(10);
-      88: f7ff ffe0    	bl	0x4c <factorial>        @ imm = #-0x40
-      8c: 9000         	str	r0, [sp]
+      3e: f7ff fff1    	bl	0x24 <factorial>        @ imm = #-0x1e
+      42: 4905         	ldr	r1, [pc, #0x14]         @ 0x58 <main+0x20>
 ;     if (result == 3628800) {
-      8e: 9800         	ldr	r0, [sp]
-      90: 4907         	ldr	r1, [pc, #0x1c]         @ 0xb0 <main+0x34>
-      92: 4288         	cmp	r0, r1
-      94: d104         	bne	0xa0 <main+0x24>        @ imm = #0x8
-      96: e7ff         	b	0x98 <main+0x1c>        @ imm = #-0x2
-      98: 2000         	movs	r0, #0x0
-;         svc_exit(0);
-      9a: f000 f80b    	bl	0xb4 <svc_exit>         @ imm = #0x16
-;     } else {
-      9e: e003         	b	0xa8 <main+0x2c>        @ imm = #0x6
-      a0: 2001         	movs	r0, #0x1
-;         svc_exit(1);
-      a2: f000 f807    	bl	0xb4 <svc_exit>         @ imm = #0xe
-      a6: e7ff         	b	0xa8 <main+0x2c>        @ imm = #-0x2
-; }
-      a8: 9801         	ldr	r0, [sp, #0x4]
-      aa: b002         	add	sp, #0x8
-      ac: bd80         	pop	{r7, pc}
-      ae: 46c0         	mov	r8, r8
-      b0: 00 5f 37 00  	.word	0x00375f00
-
-000000b4 <svc_exit>:
-; static inline void svc_exit(unsigned code) {
-      b4: b082         	sub	sp, #0x8
-      b6: 9001         	str	r0, [sp, #0x4]
-;     register unsigned r0 __asm__("r0") = code;
-      b8: 9801         	ldr	r0, [sp, #0x4]
-      ba: 9000         	str	r0, [sp]
+      44: 4288         	cmp	r0, r1
+      46: d103         	bne	0x50 <main+0x18>        @ imm = #0x6
+      48: 2000         	movs	r0, #0x0
 ;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
-      bc: 9800         	ldr	r0, [sp]
-      be: df00         	svc	#0x0
-; };
-      c0: b002         	add	sp, #0x8
-      c2: 4770         	bx	lr
+      4a: df00         	svc	#0x0
+      4c: 2000         	movs	r0, #0x0
+; }
+      4e: bd80         	pop	{r7, pc}
+      50: 2001         	movs	r0, #0x1
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      52: df00         	svc	#0x0
+      54: 2000         	movs	r0, #0x0
+; }
+      56: bd80         	pop	{r7, pc}
+      58: 00 5f 37 00  	.word	0x00375f00
 
-000000c4 <__text_end>:
-      c4: d4d4         	bmi	0x70 <factorial+0x24>   @ imm = #-0x58
-      c6: d4d4         	bmi	0x72 <factorial+0x26>   @ imm = #-0x58
+0000005c <__text_end>:
+      5c: d4 d4 d4 d4  	.word	0xd4d4d4d4
 
 Disassembly of section .data:
 
@@ -154,332 +96,393 @@ Disassembly of section .comment:
 00000000 <.comment>:
 ; extern void* sbrk(ptrdiff_t increment) {
        0: 6300         	str	r0, [r0, #0x30]
-       2: 616c         	str	r4, [r5, #0x14]
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 616c         	str	r4, [r5, #0x14]
        4: 676e         	str	r6, [r5, #0x74]
+;     if (increment > 0) {
        6: 7620         	strb	r0, [r4, #0x18]
        8: 7265         	strb	r5, [r4, #0x9]
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
        a: 6973         	ldr	r3, [r6, #0x14]
        c: 6e6f         	ldr	r7, [r5, #0x64]
        e: 3120         	adds	r1, #0x20
       10: 2e39         	cmp	r6, #0x39
-;         if (heap_ptr + increment > &__heap_end) {
       12: 2e31         	cmp	r6, #0x31
       14: 0035         	movs	r5, r6
+; }
       16: 694c         	ldr	r4, [r1, #0x14]
+;         heap_ptr += increment;
       18: 6b6e         	ldr	r6, [r5, #0x34]
+; }
       1a: 7265         	strb	r5, [r4, #0x9]
       1c: 203a         	movs	r0, #0x3a
-      1e: 4c4c         	ldr	r4, [pc, #0x130]        @ 0x150 <__text_end+0x8c>
+      1e: 4c4c         	ldr	r4, [pc, #0x130]        @ 0x150 <__text_end+0xf4>
       20: 2044         	movs	r0, #0x44
       22: 3931         	subs	r1, #0x31
+; unsigned factorial(unsigned n) {
       24: 312e         	adds	r1, #0x2e
-;             return (void*)-1;  // Return error if the heap is full
       26: 352e         	adds	r5, #0x2e
+;     if (n <= 1) {
       28: 00           	<unknown>
 
 Disassembly of section .debug_info:
 
 00000000 <.debug_info>:
 ; extern void* sbrk(ptrdiff_t increment) {
-       0: 00c3         	lsls	r3, r0, #0x3
-       2: 0000         	movs	r0, r0
+       0: 00e7         	lsls	r7, r4, #0x3
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
        4: 0005         	movs	r5, r0
+;     if (increment > 0) {
        6: 0401         	lsls	r1, r0, #0x10
        8: 0000         	movs	r0, r0
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
        a: 0000         	movs	r0, r0
        c: 0001         	movs	r1, r0
        e: 001d         	movs	r5, r3
       10: 0801         	lsrs	r1, r0, #0x20
-;         if (heap_ptr + increment > &__heap_end) {
       12: 0000         	movs	r0, r0
       14: 0000         	movs	r0, r0
+; }
       16: 0000         	movs	r0, r0
+;         heap_ptr += increment;
       18: 0200         	lsls	r0, r0, #0x8
-      1a: c401         	stm	r4!, {r0}
+; }
+      1a: 5c01         	ldrb	r1, [r0, r0]
       1c: 0000         	movs	r0, r0
       1e: 0800         	lsrs	r0, r0, #0x20
       20: 0000         	movs	r0, r0
-      22: 0200         	lsls	r0, r0, #0x8
-      24: 2e03         	cmp	r6, #0x3
-;             return (void*)-1;  // Return error if the heap is full
-      26: 0000         	movs	r0, r0
-      28: 0100         	lsls	r0, r0, #0x4
-;         heap_ptr += increment;
-      2a: 0209         	lsls	r1, r1, #0x8
-      2c: 00a1         	lsls	r1, r4, #0x2
-      2e: 3303         	adds	r3, #0x3
-      30: 0000         	movs	r0, r0
-      32: 0400         	lsls	r0, r0, #0x10
-;     }
-      34: 0804         	lsrs	r4, r0, #0x20
-;     return (void*)prev_heap_ptr;
-      36: 0501         	lsls	r1, r0, #0x14
-      38: 0106         	lsls	r6, r0, #0x4
-      3a: 004c         	lsls	r4, r1, #0x1
-; }
-      3c: 0000         	movs	r0, r0
-      3e: 5701         	ldrsb	r1, [r0, r4]
-      40: 0105         	lsls	r5, r0, #0x4
-      42: 371a         	adds	r7, #0x1a
-      44: 0000         	movs	r0, r0
-      46: 0700         	lsls	r0, r0, #0x1c
-      48: 7d02         	ldrb	r2, [r0, #0x14]
-      4a: 0b04         	lsrs	r4, r0, #0xc
+      22: 0c00         	lsrs	r0, r0, #0x10
 ; unsigned factorial(unsigned n) {
-      4c: 1a01         	subs	r1, r0, r0
-      4e: 00be         	lsls	r6, r7, #0x2
-      50: 0000         	movs	r0, r0
-      52: 0208         	lsls	r0, r1, #0x8
+      24: 0000         	movs	r0, r0
+      26: 0200         	lsls	r0, r0, #0x8
 ;     if (n <= 1) {
-      54: 007d         	lsls	r5, r7, #0x1
-      56: 010d         	lsls	r5, r1, #0x4
-      58: 2e1b         	cmp	r6, #0x1b
+      28: 3203         	adds	r2, #0x3
+      2a: 0000         	movs	r0, r0
+;         return n * factorial(n - 1);
+      2c: 0100         	lsls	r0, r0, #0x4
+      2e: 0209         	lsls	r1, r1, #0x8
+;     if (n <= 1) {
+      30: 00a1         	lsls	r1, r4, #0x2
+      32: 3703         	adds	r7, #0x3
+; }
+      34: 0000         	movs	r0, r0
+      36: 0400         	lsls	r0, r0, #0x10
+; int main() {
+      38: 0804         	lsrs	r4, r0, #0x20
+      3a: 0501         	lsls	r1, r0, #0x14
+      3c: 0106         	lsls	r6, r0, #0x4
+;     unsigned result = factorial(10);
+      3e: 0024         	movs	r4, r4
+      40: 0000         	movs	r0, r0
+      42: 5701         	ldrsb	r1, [r0, r4]
+;     if (result == 3628800) {
+      44: 0109         	lsls	r1, r1, #0x4
+      46: 3b1a         	subs	r3, #0x1a
+      48: 0000         	movs	r0, r0
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      4a: 0700         	lsls	r0, r0, #0x1c
+      4c: 0d00         	lsrs	r0, r0, #0x14
+; }
+      4e: 1a01         	subs	r1, r0, r0
+      50: 00e2         	lsls	r2, r4, #0x3
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      52: 0000         	movs	r0, r0
+      54: 0108         	lsls	r0, r1, #0x4
+; }
+      56: 010f         	lsls	r7, r1, #0x4
+      58: 321b         	adds	r2, #0x1b
       5a: 0000         	movs	r0, r0
       5c: 0000         	movs	r0, r0
-;         return 1;
       5e: 0206         	lsls	r6, r0, #0x8
-      60: 002e         	movs	r6, r5
-;         return n * factorial(n - 1);
+      60: 0012         	movs	r2, r2
       62: 0000         	movs	r0, r0
       64: 5701         	ldrsb	r1, [r0, r4]
-      66: 0206         	lsls	r6, r0, #0x8
-      68: b603         	<unknown>
+      66: 020a         	lsls	r2, r1, #0x8
+      68: 8d03         	ldrh	r3, [r0, #0x28]
       6a: 0000         	movs	r0, r0
-      6c: 0700         	lsls	r0, r0, #0x1c
-      6e: 7d02         	ldrb	r2, [r0, #0x14]
-      70: 0e08         	lsrs	r0, r1, #0x18
-      72: 0302         	lsls	r2, r0, #0xc
-; }
-      74: 00b6         	lsls	r6, r6, #0x2
+      6c: 0900         	lsrs	r0, r0, #0x4
+      6e: 5101         	str	r1, [r0, r4]
+      70: 0210         	lsls	r0, r2, #0x8
+      72: 8d03         	ldrh	r3, [r0, #0x28]
+      74: 0000         	movs	r0, r0
       76: 0000         	movs	r0, r0
-      78: 0900         	lsrs	r0, r0, #0x4
-      7a: 3803         	subs	r0, #0x3
-; int main() {
-      7c: 0000         	movs	r0, r0
-      7e: 0100         	lsls	r0, r0, #0x4
-      80: 0857         	lsrs	r7, r2, #0x1
-      82: 0b02         	lsrs	r2, r0, #0xc
-      84: 00ba         	lsls	r2, r7, #0x2
-      86: 0000         	movs	r0, r0
-;     unsigned result = factorial(10);
-      88: 0208         	lsls	r0, r1, #0x8
-      8a: 007d         	lsls	r5, r7, #0x1
-      8c: 020f         	lsls	r7, r1, #0x8
-;     if (result == 3628800) {
-      8e: b60c         	<unknown>
-      90: 0000         	movs	r0, r0
-      92: 0000         	movs	r0, r0
-      94: 040a         	lsls	r2, r1, #0x10
-      96: 0010         	movs	r0, r2
-      98: 0000         	movs	r0, r0
-;         svc_exit(0);
-      9a: 5701         	ldrsb	r1, [r0, r4]
-      9c: 010a         	lsls	r2, r1, #0x4
-;     } else {
-      9e: 070b         	lsls	r3, r1, #0x1c
-      a0: 7d02         	ldrb	r2, [r0, #0x14]
-;         svc_exit(1);
-      a2: 1004         	asrs	r4, r0, #0x20
-      a4: 0b01         	lsrs	r1, r0, #0xc
-      a6: 00b6         	lsls	r6, r6, #0x2
-; }
-      a8: 0000         	movs	r0, r0
-      aa: 0208         	lsls	r0, r1, #0x8
-      ac: 007d         	lsls	r5, r7, #0x1
-      ae: 0111         	lsls	r1, r2, #0x4
-      b0: b60c         	<unknown>
-      b2: 0000         	movs	r0, r0
-; static inline void svc_exit(unsigned code) {
-      b4: 0000         	movs	r0, r0
-      b6: 0704         	lsls	r4, r0, #0x1c
-;     register unsigned r0 __asm__("r0") = code;
-      b8: 0407         	lsls	r7, r0, #0x10
-      ba: 0904         	lsrs	r4, r0, #0x4
-;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
-      bc: 0405         	lsls	r5, r0, #0x10
-      be: ba0b         	rev	r3, r1
-; };
+      78: 050a         	lsls	r2, r1, #0x14
+      7a: 0b01         	lsrs	r1, r0, #0xc
+      7c: 060b         	lsls	r3, r1, #0x18
+      7e: 0b01         	lsrs	r1, r0, #0xc
+      80: 008d         	lsls	r5, r1, #0x2
+      82: 0000         	movs	r0, r0
+      84: 080c         	lsrs	r4, r1, #0x20
+      86: 0c01         	lsrs	r1, r0, #0x10
+      88: 008d         	lsls	r5, r1, #0x2
+      8a: 0000         	movs	r0, r0
+      8c: 0400         	lsls	r0, r0, #0x10
+      8e: 0707         	lsls	r7, r0, #0x1c
+      90: 0d04         	lsrs	r4, r0, #0x14
+      92: 2403         	movs	r4, #0x3
+      94: 0000         	movs	r0, r0
+      96: 0100         	lsls	r0, r0, #0x4
+      98: 0b57         	lsrs	r7, r2, #0xd
+      9a: 0b02         	lsrs	r2, r0, #0xc
+      9c: 00de         	lsls	r6, r3, #0x3
+      9e: 0000         	movs	r0, r0
+      a0: 0208         	lsls	r0, r1, #0x8
+      a2: 0211         	lsls	r1, r2, #0x8
+      a4: 8d0c         	ldrh	r4, [r1, #0x28]
+      a6: 0000         	movs	r0, r0
+      a8: 0e00         	lsrs	r0, r0, #0x18
+      aa: 0078         	lsls	r0, r7, #0x1
+      ac: 0000         	movs	r0, r0
+      ae: 0404         	lsls	r4, r0, #0x10
+      b0: 0000         	movs	r0, r0
+      b2: 0200         	lsls	r0, r0, #0x8
+      b4: 090f         	lsrs	r7, r1, #0x4
+      b6: 000f         	movs	r7, r1
+      b8: 007c         	lsls	r4, r7, #0x1
+      ba: 0000         	movs	r0, r0
+      bc: 0010         	movs	r0, r2
+      be: 0084         	lsls	r4, r0, #0x2
       c0: 0000         	movs	r0, r0
-      c2: 0c00         	lsrs	r0, r0, #0x10
-      c4: 1203         	asrs	r3, r0, #0x8
-      c6: 00           	<unknown>
+      c2: 0e00         	lsrs	r0, r0, #0x18
+      c4: 0078         	lsls	r0, r7, #0x1
+      c6: 0000         	movs	r0, r0
+      c8: 0405         	lsls	r5, r0, #0x10
+      ca: 0000         	movs	r0, r0
+      cc: 0200         	lsls	r0, r0, #0x8
+      ce: 0911         	lsrs	r1, r2, #0x4
+      d0: 010f         	lsls	r7, r1, #0x4
+      d2: 007c         	lsls	r4, r7, #0x1
+      d4: 0000         	movs	r0, r0
+      d6: 0110         	lsls	r0, r2, #0x4
+      d8: 0084         	lsls	r4, r0, #0x2
+      da: 0000         	movs	r0, r0
+      dc: 0000         	movs	r0, r0
+      de: 0c04         	lsrs	r4, r0, #0x10
+      e0: 0405         	lsls	r5, r0, #0x10
+      e2: de11         	udf	#0x11
+      e4: 0000         	movs	r0, r0
+      e6: 0e00         	lsrs	r0, r0, #0x18
+      e8: 1203         	asrs	r3, r0, #0x8
+      ea: 00           	<unknown>
 
 Disassembly of section .debug_abbrev:
 
 00000000 <.debug_abbrev>:
 ; extern void* sbrk(ptrdiff_t increment) {
        0: 1101         	asrs	r1, r0, #0x4
-       2: 2501         	movs	r5, #0x1
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 2501         	movs	r5, #0x1
        4: 1325         	asrs	r5, r4, #0xc
+;     if (increment > 0) {
        6: 0305         	lsls	r5, r0, #0xc
        8: 7225         	strb	r5, [r4, #0x8]
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
        a: 1017         	asrs	r7, r2, #0x20
        c: 1b17         	subs	r7, r2, r4
        e: 1125         	asrs	r5, r4, #0x4
       10: 121b         	asrs	r3, r3, #0x8
-;         if (heap_ptr + increment > &__heap_end) {
       12: 7306         	strb	r6, [r0, #0xc]
-      14: 0017         	movs	r7, r2
-      16: 0200         	lsls	r0, r0, #0x8
-      18: 0034         	movs	r4, r6
-      1a: 2503         	movs	r5, #0x3
-      1c: 1349         	asrs	r1, r1, #0xd
-      1e: 0b3a         	lsrs	r2, r7, #0xc
-      20: 0b3b         	lsrs	r3, r7, #0xc
-      22: 1802         	adds	r2, r0, r0
-      24: 0000         	movs	r0, r0
-;             return (void*)-1;  // Return error if the heap is full
-      26: 0f03         	lsrs	r3, r0, #0x1c
-      28: 4900         	ldr	r1, [pc, #0x0]          @ 0x2c <sbrk+0x2c>
+      14: 8c17         	ldrh	r7, [r2, #0x20]
+; }
+      16: 1701         	asrs	r1, r0, #0x1c
 ;         heap_ptr += increment;
-      2a: 0013         	movs	r3, r2
-      2c: 0400         	lsls	r0, r0, #0x10
-      2e: 0024         	movs	r4, r4
-      30: 2503         	movs	r5, #0x3
-      32: 0b3e         	lsrs	r6, r7, #0xc
-;     }
-      34: 0b0b         	lsrs	r3, r1, #0xc
-;     return (void*)prev_heap_ptr;
-      36: 0000         	movs	r0, r0
-      38: 0f05         	lsrs	r5, r0, #0x1c
-      3a: 0000         	movs	r0, r0
+      18: 0000         	movs	r0, r0
 ; }
-      3c: 0600         	lsls	r0, r0, #0x18
-      3e: 012e         	lsls	r6, r5, #0x4
-      40: 1b11         	subs	r1, r2, r4
-      42: 0612         	lsls	r2, r2, #0x18
-      44: 1840         	adds	r0, r0, r1
-      46: 2503         	movs	r5, #0x3
-      48: 0b3a         	lsrs	r2, r7, #0xc
-      4a: 0b3b         	lsrs	r3, r7, #0xc
+      1a: 3402         	adds	r4, #0x2
+      1c: 0300         	lsls	r0, r0, #0xc
+      1e: 4925         	ldr	r1, [pc, #0x94]         @ 0xb4 <.debug_abbrev+0xb4>
+      20: 3a13         	subs	r2, #0x13
+      22: 3b0b         	subs	r3, #0xb
 ; unsigned factorial(unsigned n) {
-      4c: 1927         	adds	r7, r4, r4
-      4e: 1349         	asrs	r1, r1, #0xd
-      50: 193f         	adds	r7, r7, r4
-      52: 0000         	movs	r0, r0
+      24: 020b         	lsls	r3, r1, #0x8
+      26: 0018         	movs	r0, r3
 ;     if (n <= 1) {
-      54: 0507         	lsls	r7, r0, #0x14
-      56: 0200         	lsls	r0, r0, #0x8
-      58: 0318         	lsls	r0, r3, #0xc
-      5a: 3a25         	subs	r2, #0x25
-      5c: 3b0b         	subs	r3, #0xb
-;         return 1;
-      5e: 490b         	ldr	r1, [pc, #0x2c]         @ 0x8c <main+0x10>
-      60: 0013         	movs	r3, r2
+      28: 0300         	lsls	r0, r0, #0xc
+      2a: 000f         	movs	r7, r1
 ;         return n * factorial(n - 1);
-      62: 0800         	lsrs	r0, r0, #0x20
-      64: 0034         	movs	r4, r6
-      66: 1802         	adds	r2, r0, r0
-      68: 2503         	movs	r5, #0x3
-      6a: 0b3a         	lsrs	r2, r7, #0xc
-      6c: 0b3b         	lsrs	r3, r7, #0xc
-      6e: 1349         	asrs	r1, r1, #0xd
-      70: 0000         	movs	r0, r0
-      72: 2e09         	cmp	r6, #0x9
+      2c: 1349         	asrs	r1, r1, #0xd
+      2e: 0000         	movs	r0, r0
+;     if (n <= 1) {
+      30: 2404         	movs	r4, #0x4
+      32: 0300         	lsls	r0, r0, #0xc
 ; }
-      74: 1101         	asrs	r1, r0, #0x4
-      76: 121b         	asrs	r3, r3, #0x8
-      78: 4006         	ands	r6, r0
-      7a: 0318         	lsls	r0, r3, #0xc
+      34: 3e25         	subs	r6, #0x25
+      36: 0b0b         	lsrs	r3, r1, #0xc
 ; int main() {
-      7c: 3a25         	subs	r2, #0x25
-      7e: 3b0b         	subs	r3, #0xb
-      80: 490b         	ldr	r1, [pc, #0x2c]         @ 0xb0 <main+0x34>
-      82: 3f13         	subs	r7, #0x13
-      84: 0019         	movs	r1, r3
-      86: 0a00         	lsrs	r0, r0, #0x8
+      38: 000b         	movs	r3, r1
+      3a: 0500         	lsls	r0, r0, #0x14
+      3c: 000f         	movs	r7, r1
 ;     unsigned result = factorial(10);
-      88: 012e         	lsls	r6, r5, #0x4
-      8a: 1b11         	subs	r1, r2, r4
-      8c: 0612         	lsls	r2, r2, #0x18
+      3e: 0000         	movs	r0, r0
+      40: 2e06         	cmp	r6, #0x6
+      42: 1101         	asrs	r1, r0, #0x4
 ;     if (result == 3628800) {
-      8e: 1840         	adds	r0, r0, r1
-      90: 2503         	movs	r5, #0x3
-      92: 0b3a         	lsrs	r2, r7, #0xc
-      94: 0b3b         	lsrs	r3, r7, #0xc
-      96: 1927         	adds	r7, r4, r4
-      98: 0000         	movs	r0, r0
-;         svc_exit(0);
-      9a: 160b         	asrs	r3, r1, #0x18
-      9c: 4900         	ldr	r1, [pc, #0x0]          @ 0xa0 <main+0x24>
-;     } else {
-      9e: 0313         	lsls	r3, r2, #0xc
-      a0: 3a25         	subs	r2, #0x25
-;         svc_exit(1);
-      a2: 3b0b         	subs	r3, #0xb
-      a4: 000b         	movs	r3, r1
-      a6: 0000         	movs	r0, r0
+      44: 121b         	asrs	r3, r3, #0x8
+      46: 4006         	ands	r6, r0
+      48: 7a18         	ldrb	r0, [r3, #0x8]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      4a: 0319         	lsls	r1, r3, #0xc
+      4c: 3a25         	subs	r2, #0x25
+; }
+      4e: 3b0b         	subs	r3, #0xb
+      50: 270b         	movs	r7, #0xb
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      52: 4919         	ldr	r1, [pc, #0x64]         @ 0xb8 <.debug_abbrev+0xb8>
+      54: 3f13         	subs	r7, #0x13
+; }
+      56: 0019         	movs	r1, r3
+      58: 0700         	lsls	r0, r0, #0x1c
+      5a: 0005         	movs	r5, r0
+      5c: 2202         	movs	r2, #0x2
+      5e: 2503         	movs	r5, #0x3
+      60: 0b3a         	lsrs	r2, r7, #0xc
+      62: 0b3b         	lsrs	r3, r7, #0xc
+      64: 1349         	asrs	r1, r1, #0xd
+      66: 0000         	movs	r0, r0
+      68: 3408         	adds	r4, #0x8
+      6a: 0200         	lsls	r0, r0, #0x8
+      6c: 0322         	lsls	r2, r4, #0xc
+      6e: 3a25         	subs	r2, #0x25
+      70: 3b0b         	subs	r3, #0xb
+      72: 490b         	ldr	r1, [pc, #0x2c]         @ 0xa0 <.debug_abbrev+0xa0>
+      74: 0013         	movs	r3, r2
+      76: 0900         	lsrs	r0, r0, #0x4
+      78: 0005         	movs	r5, r0
+      7a: 1802         	adds	r2, r0, r0
+      7c: 2503         	movs	r5, #0x3
+      7e: 0b3a         	lsrs	r2, r7, #0xc
+      80: 0b3b         	lsrs	r3, r7, #0xc
+      82: 1349         	asrs	r1, r1, #0xd
+      84: 0000         	movs	r0, r0
+      86: 2e0a         	cmp	r6, #0xa
+      88: 0301         	lsls	r1, r0, #0xc
+      8a: 3a25         	subs	r2, #0x25
+      8c: 3b0b         	subs	r3, #0xb
+      8e: 270b         	movs	r7, #0xb
+      90: 2019         	movs	r0, #0x19
+      92: 0121         	lsls	r1, r4, #0x4
+      94: 0000         	movs	r0, r0
+      96: 050b         	lsls	r3, r1, #0x14
+      98: 0300         	lsls	r0, r0, #0xc
+      9a: 3a25         	subs	r2, #0x25
+      9c: 3b0b         	subs	r3, #0xb
+      9e: 490b         	ldr	r1, [pc, #0x2c]         @ 0xcc <.debug_abbrev+0xcc>
+      a0: 0013         	movs	r3, r2
+      a2: 0c00         	lsrs	r0, r0, #0x10
+      a4: 0034         	movs	r4, r6
+      a6: 2503         	movs	r5, #0x3
+      a8: 0b3a         	lsrs	r2, r7, #0xc
+      aa: 0b3b         	lsrs	r3, r7, #0xc
+      ac: 1349         	asrs	r1, r1, #0xd
+      ae: 0000         	movs	r0, r0
+      b0: 2e0d         	cmp	r6, #0xd
+      b2: 1101         	asrs	r1, r0, #0x4
+      b4: 121b         	asrs	r3, r3, #0x8
+      b6: 4006         	ands	r6, r0
+      b8: 7a18         	ldrb	r0, [r3, #0x8]
+      ba: 0319         	lsls	r1, r3, #0xc
+      bc: 3a25         	subs	r2, #0x25
+      be: 3b0b         	subs	r3, #0xb
+      c0: 490b         	ldr	r1, [pc, #0x2c]         @ 0xf0 <.debug_abbrev+0xf0>
+      c2: 3f13         	subs	r7, #0x13
+      c4: 0019         	movs	r1, r3
+      c6: 0e00         	lsrs	r0, r0, #0x18
+      c8: 011d         	lsls	r5, r3, #0x4
+      ca: 1331         	asrs	r1, r6, #0xc
+      cc: 1b11         	subs	r1, r2, r4
+      ce: 0612         	lsls	r2, r2, #0x18
+      d0: 0b58         	lsrs	r0, r3, #0xd
+      d2: 0b59         	lsrs	r1, r3, #0xd
+      d4: 0b57         	lsrs	r7, r2, #0xd
+      d6: 0000         	movs	r0, r0
+      d8: 050f         	lsls	r7, r1, #0x14
+      da: 1c00         	adds	r0, r0, #0x0
+      dc: 310f         	adds	r1, #0xf
+      de: 0013         	movs	r3, r2
+      e0: 1000         	asrs	r0, r0, #0x20
+      e2: 0034         	movs	r4, r6
+      e4: 0f1c         	lsrs	r4, r3, #0x1c
+      e6: 1331         	asrs	r1, r6, #0xc
+      e8: 0000         	movs	r0, r0
+      ea: 1611         	asrs	r1, r2, #0x18
+      ec: 4900         	ldr	r1, [pc, #0x0]          @ 0xf0 <.debug_abbrev+0xf0>
+      ee: 0313         	lsls	r3, r2, #0xc
+      f0: 3a25         	subs	r2, #0x25
+      f2: 3b0b         	subs	r3, #0xb
+      f4: 000b         	movs	r3, r1
+      f6: 0000         	movs	r0, r0
 
 Disassembly of section .debug_line:
 
 00000000 <.debug_line>:
 ; extern void* sbrk(ptrdiff_t increment) {
-       0: 014d         	lsls	r5, r1, #0x5
-       2: 0000         	movs	r0, r0
+       0: 010e         	lsls	r6, r1, #0x4
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
        4: 0005         	movs	r5, r0
+;     if (increment > 0) {
        6: 0004         	movs	r4, r0
        8: 0082         	lsls	r2, r0, #0x2
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
        a: 0000         	movs	r0, r0
        c: 0101         	lsls	r1, r0, #0x4
        e: fb01 0d0e    	<unknown>
-;         if (heap_ptr + increment > &__heap_end) {
       12: 0100         	lsls	r0, r0, #0x4
       14: 0101         	lsls	r1, r0, #0x4
+; }
       16: 0001         	movs	r1, r0
+;         heap_ptr += increment;
       18: 0000         	movs	r0, r0
+; }
       1a: 0001         	movs	r1, r0
       1c: 0100         	lsls	r0, r0, #0x4
       1e: 0101         	lsls	r1, r0, #0x4
       20: 041f         	lsls	r7, r3, #0x10
       22: 0076         	lsls	r6, r6, #0x1
+; unsigned factorial(unsigned n) {
       24: 0000         	movs	r0, r0
-;             return (void*)-1;  // Return error if the heap is full
       26: 0000         	movs	r0, r0
+;     if (n <= 1) {
       28: 0000         	movs	r0, r0
-;         heap_ptr += increment;
       2a: 0065         	lsls	r5, r4, #0x1
+;         return n * factorial(n - 1);
       2c: 0000         	movs	r0, r0
       2e: 00a0         	lsls	r0, r4, #0x2
+;     if (n <= 1) {
       30: 0000         	movs	r0, r0
       32: 0103         	lsls	r3, r0, #0x4
-;     }
+; }
       34: 021f         	lsls	r7, r3, #0x8
-;     return (void*)prev_heap_ptr;
       36: 050f         	lsls	r7, r1, #0x14
+; int main() {
       38: 041e         	lsls	r6, r3, #0x10
       3a: 0054         	lsls	r4, r2, #0x1
-; }
       3c: 0000         	movs	r0, r0
+;     unsigned result = factorial(10);
       3e: 0100         	lsls	r0, r0, #0x4
       40: 6043         	str	r3, [r0, #0x4]
       42: 0b65         	lsrs	r5, r4, #0xd
+;     if (result == 3628800) {
       44: 6a3c         	ldr	r4, [r7, #0x20]
       46: 1d7e         	adds	r6, r7, #0x5
       48: d032         	beq	0xb0 <.debug_line+0xb0> @ imm = #0x64
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       4a: 96a2         	str	r6, [sp, #0x288]
-; unsigned factorial(unsigned n) {
       4c: 8741         	strh	r1, [r0, #0x3a]
+; }
       4e: af4c         	add	r7, sp, #0x130
       50: 0000         	movs	r0, r0
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       52: 0100         	lsls	r0, r0, #0x4
-;     if (n <= 1) {
       54: b4f9         	push	{r0, r3, r4, r5, r6, r7}
+; }
       56: 5110         	str	r0, [r2, r4]
       58: 81db         	strh	r3, [r3, #0xe]
       5a: 6976         	ldr	r6, [r6, #0x14]
       5c: a991         	add	r1, sp, #0x244
-;         return 1;
       5e: 3f64         	subs	r7, #0x64
       60: d53e         	bpl	0xe0 <.debug_line+0xe0> @ imm = #0x7c
-;         return n * factorial(n - 1);
       62: 01a9         	lsls	r1, r5, #0x6
       64: 0070         	lsls	r0, r6, #0x1
       66: 0000         	movs	r0, r0
@@ -489,322 +492,256 @@ Disassembly of section .debug_line:
       6e: 6a3c         	ldr	r4, [r7, #0x20]
       70: 1d7e         	adds	r6, r7, #0x5
       72: d032         	beq	0xda <.debug_line+0xda> @ imm = #0x64
-; }
       74: 96a2         	str	r6, [sp, #0x288]
       76: 8741         	strh	r1, [r0, #0x3a]
       78: 174c         	asrs	r4, r1, #0x1d
       7a: 0000         	movs	r0, r0
-; int main() {
       7c: 0300         	lsls	r0, r0, #0xc
       7e: d32e         	blo	0xde <.debug_line+0xde> @ imm = #0x5c
       80: 8947         	ldrh	r7, [r0, #0xa]
       82: 3e38         	subs	r6, #0x38
       84: e3a7         	b	0x7d6 <.debug_line+0x7d6> @ imm = #0x74e
       86: d5a1         	bpl	0xffffffcc <.stack+0xffffffffdff7ffc4> @ imm = #-0xbe
-;     unsigned result = factorial(10);
       88: 0f88         	lsrs	r0, r1, #0x1e
       8a: c60f         	stm	r6!, {r0, r1, r2, r3}
       8c: 7197         	strb	r7, [r2, #0x6]
-;     if (result == 3628800) {
       8e: 0500         	lsls	r0, r0, #0x14
       90: 0002         	movs	r2, r0
       92: 0000         	movs	r0, r0
       94: 0300         	lsls	r0, r0, #0xc
       96: 0119         	lsls	r1, r3, #0x4
       98: 1b05         	subs	r5, r0, r4
-;         svc_exit(0);
-      9a: 4b0a         	ldr	r3, [pc, #0x28]         @ 0xc4 <.debug_line+0xc4>
-      9c: 0b05         	lsrs	r5, r0, #0xc
-;     } else {
-      9e: 4a06         	ldr	r2, [pc, #0x18]         @ 0xb8 <.debug_line+0xb8>
-      a0: 0905         	lsrs	r5, r0, #0x4
-;         svc_exit(1);
-      a2: 3106         	adds	r1, #0x6
+      9a: 2f0a         	cmp	r7, #0xa
+      9c: 0905         	lsrs	r5, r0, #0x4
+      9e: 054d         	lsls	r5, r1, #0x15
+      a0: 4c16         	ldr	r4, [pc, #0x58]         @ 0xfc <.debug_line+0xfc>
+      a2: 2205         	movs	r2, #0x5
       a4: 2e06         	cmp	r6, #0x6
       a6: 0d05         	lsrs	r5, r0, #0x14
-; }
-      a8: 6806         	ldr	r6, [r0]
-      aa: 1805         	adds	r5, r0, r0
-      ac: 4a06         	ldr	r2, [pc, #0x18]         @ 0xc8 <.debug_line+0xc8>
-      ae: 1605         	asrs	r5, r0, #0x18
-      b0: 052e         	lsls	r6, r5, #0x14
-      b2: 2e22         	cmp	r6, #0x22
-; static inline void svc_exit(unsigned code) {
-      b4: 0d05         	lsrs	r5, r0, #0x14
-      b6: 032e         	lsls	r6, r5, #0xc
-;     register unsigned r0 __asm__("r0") = code;
-      b8: 6660         	str	r0, [r4, #0x64]
-      ba: 0306         	lsls	r6, r0, #0xc
-;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
-      bc: 4a21         	ldr	r2, [pc, #0x84]         @ 0x144 <.debug_line+0x144>
-      be: 1505         	asrs	r5, r0, #0x14
-; };
-      c0: 054e         	lsls	r6, r1, #0x15
-      c2: 0612         	lsls	r2, r2, #0x18
-      c4: 052e         	lsls	r6, r5, #0x14
-      c6: 0605         	lsls	r5, r0, #0x18
-      c8: 0583         	lsls	r3, r0, #0x16
-      ca: 3113         	adds	r1, #0x13
-      cc: 0505         	lsls	r5, r0, #0x14
-      ce: 2e06         	cmp	r6, #0x6
-      d0: 0105         	lsls	r5, r0, #0x4
-      d2: 4b06         	ldr	r3, [pc, #0x18]         @ 0xec <.debug_line+0xec>
-      d4: 0b06         	lsrs	r6, r0, #0xc
-      d6: 032e         	lsls	r6, r5, #0xc
-      d8: 6656         	str	r6, [r2, #0x64]
-      da: 0204         	lsls	r4, r0, #0x8
-      dc: 0005         	movs	r5, r0
-      de: 8506         	strh	r6, [r0, #0x28]
-      e0: 0905         	lsrs	r5, r0, #0x4
-      e2: 830a         	strh	r2, [r1, #0x18]
-      e4: 2e06         	cmp	r6, #0x6
-      e6: 0662         	lsls	r2, r4, #0x19
-      e8: 0533         	lsls	r3, r6, #0x14
-      ea: 4c10         	ldr	r4, [pc, #0x40]         @ 0x12c <.debug_line+0x12c>
-      ec: 2005         	movs	r0, #0x5
-      ee: 2e06         	cmp	r6, #0x6
-      f0: 1405         	asrs	r5, r0, #0x10
-      f2: 054a         	lsls	r2, r1, #0x15
-      f4: 6612         	str	r2, [r2, #0x60]
-      f6: 0905         	lsrs	r5, r0, #0x4
-      f8: 052e         	lsls	r6, r5, #0x14
-      fa: 0601         	lsls	r1, r0, #0x18
-      fc: 064c         	lsls	r4, r1, #0x19
-      fe: 2e0b         	cmp	r6, #0xb
-     100: 0005         	movs	r5, r0
-     102: 6806         	ldr	r6, [r0]
-     104: 1705         	asrs	r5, r0, #0x1c
-     106: bb0a         	<unknown>
-     108: 0e05         	lsrs	r5, r0, #0x18
-     10a: 4a06         	ldr	r2, [pc, #0x18]         @ 0x124 <.debug_line+0x124>
-     10c: 0905         	lsrs	r5, r0, #0x4
-     10e: 3006         	adds	r0, #0x6
-     110: 4a06         	ldr	r2, [pc, #0x18]         @ 0x12c <.debug_line+0x12c>
-     112: 7203         	strb	r3, [r0, #0x8]
-     114: 0666         	lsls	r6, r4, #0x19
-     116: 0f03         	lsrs	r3, r0, #0x1c
-     118: 052e         	lsls	r6, r5, #0x14
-     11a: 4b05         	ldr	r3, [pc, #0x14]         @ 0x130 <.debug_line+0x130>
-     11c: 0306         	lsls	r6, r0, #0xc
-     11e: 2e70         	cmp	r6, #0x70
-     120: 0905         	lsrs	r5, r0, #0x4
-     122: 0306         	lsls	r6, r0, #0xc
-     124: 2e11         	cmp	r6, #0x11
-     126: 0105         	lsls	r5, r0, #0x4
-     128: 0668         	lsls	r0, r5, #0x19
-     12a: 2e0b         	cmp	r6, #0xb
-     12c: 6d03         	ldr	r3, [r0, #0x50]
-     12e: 0466         	lsls	r6, r4, #0x11
-     130: 0501         	lsls	r1, r0, #0x14
-     132: 0600         	lsls	r0, r0, #0x18
-     134: 0b03         	lsrs	r3, r0, #0xc
-     136: 054a         	lsls	r2, r1, #0x15
-     138: 0a2a         	lsrs	r2, r5, #0x8
-     13a: 054b         	lsls	r3, r1, #0x15
-     13c: 0617         	lsls	r7, r2, #0x18
-     13e: 052e         	lsls	r6, r5, #0x14
-     140: 0626         	lsls	r6, r4, #0x18
-     142: 052f         	lsls	r7, r5, #0x14
-     144: 0605         	lsls	r5, r0, #0x18
-     146: 052e         	lsls	r6, r5, #0x14
-     148: 0601         	lsls	r1, r0, #0x18
-     14a: 2f0b         	cmp	r7, #0xb
-     14c: 0402         	lsls	r2, r0, #0x10
-     14e: 0100         	lsls	r0, r0, #0x4
-     150: 01           	<unknown>
+      a8: 032e         	lsls	r6, r5, #0xc
+      aa: 4a60         	ldr	r2, [pc, #0x180]        @ 0x22c <.debug_line+0x22c>
+      ac: 0105         	lsls	r5, r0, #0x4
+      ae: 0306         	lsls	r6, r0, #0xc
+      b0: 4a2a         	ldr	r2, [pc, #0xa8]         @ 0x15c <.debug_line+0x15c>
+      b2: 1205         	asrs	r5, r0, #0x8
+      b4: 0529         	lsls	r1, r5, #0x14
+      b6: 3301         	adds	r3, #0x1
+      b8: 0306         	lsls	r6, r0, #0xc
+      ba: 2e56         	cmp	r6, #0x56
+      bc: 0204         	lsls	r4, r0, #0x8
+      be: 0005         	movs	r5, r0
+      c0: 8506         	strh	r6, [r0, #0x28]
+      c2: 0905         	lsrs	r5, r0, #0x4
+      c4: 4b0a         	ldr	r3, [pc, #0x28]         @ 0xf0 <.debug_line+0xf0>
+      c6: 1205         	asrs	r5, r0, #0x8
+      c8: 054d         	lsls	r5, r1, #0x15
+      ca: 0620         	lsls	r0, r4, #0x18
+      cc: 052e         	lsls	r6, r5, #0x14
+      ce: 0609         	lsls	r1, r1, #0x18
+      d0: 052b         	lsls	r3, r5, #0x14
+      d2: 4f01         	ldr	r7, [pc, #0x4]          @ 0xd8 <.debug_line+0xd8>
+      d4: 0005         	movs	r5, r0
+      d6: 054c         	lsls	r4, r1, #0x15
+      d8: 0a17         	lsrs	r7, r2, #0x8
+      da: 0667         	lsls	r7, r4, #0x19
+      dc: 7403         	strb	r3, [r0, #0x10]
+      de: 054a         	lsls	r2, r1, #0x15
+      e0: 0609         	lsls	r1, r1, #0x18
+      e2: 0e03         	lsrs	r3, r0, #0x18
+      e4: 062e         	lsls	r6, r5, #0x18
+      e6: 7203         	strb	r3, [r0, #0x8]
+      e8: 044a         	lsls	r2, r1, #0x11
+      ea: 0501         	lsls	r1, r0, #0x14
+      ec: 0605         	lsls	r5, r0, #0x18
+      ee: 0d03         	lsrs	r3, r0, #0x14
+      f0: 042e         	lsls	r6, r5, #0x10
+      f2: 0502         	lsls	r2, r0, #0x14
+      f4: 0b01         	lsrs	r1, r0, #0xc
+      f6: 0650         	lsls	r0, r2, #0x19
+      f8: 6d03         	ldr	r3, [r0, #0x50]
+      fa: 042e         	lsls	r6, r5, #0x10
+      fc: 0501         	lsls	r1, r0, #0x14
+      fe: 0605         	lsls	r5, r0, #0x18
+     100: 0d03         	lsrs	r3, r0, #0x14
+     102: 042e         	lsls	r6, r5, #0x10
+     104: 0502         	lsls	r2, r0, #0x14
+     106: 0b01         	lsrs	r1, r0, #0xc
+     108: 0650         	lsls	r0, r2, #0x19
+     10a: 6d03         	ldr	r3, [r0, #0x50]
+     10c: 022e         	lsls	r6, r5, #0x8
+     10e: 0004         	movs	r4, r0
+     110: 0101         	lsls	r1, r0, #0x4
 
 Disassembly of section .debug_frame:
 
 00000000 <.debug_frame>:
 ; extern void* sbrk(ptrdiff_t increment) {
        0: 0010         	movs	r0, r2
-       2: 0000         	movs	r0, r0
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
        4: ffff ffff    	<unknown>
-       8: 0004         	movs	r4, r0
 ;     if (increment > 0) {
+       8: 0004         	movs	r4, r0
+;         if (heap_ptr + increment > &__heap_end) {
        a: 0004         	movs	r4, r0
        c: 7c01         	ldrb	r1, [r0, #0x10]
        e: 0c0e         	lsrs	r6, r1, #0x10
       10: 000d         	movs	r5, r1
-;         if (heap_ptr + increment > &__heap_end) {
       12: 0000         	movs	r0, r0
-      14: 0010         	movs	r0, r2
+      14: 000c         	movs	r4, r1
 		...
       1e: 0000         	movs	r0, r0
-      20: 004c         	lsls	r4, r1, #0x1
+      20: 0024         	movs	r4, r4
       22: 0000         	movs	r0, r0
-      24: 0e42         	lsrs	r2, r0, #0x19
-;             return (void*)-1;  // Return error if the heap is full
-      26: 000c         	movs	r4, r1
-      28: 0018         	movs	r0, r3
-;         heap_ptr += increment;
-      2a: 0000         	movs	r0, r0
-      2c: 0000         	movs	r0, r0
-      2e: 0000         	movs	r0, r0
-      30: 004c         	lsls	r4, r1, #0x1
-      32: 0000         	movs	r0, r0
-;     }
-      34: 002e         	movs	r6, r5
-;     return (void*)prev_heap_ptr;
-      36: 0000         	movs	r0, r0
-      38: 0e42         	lsrs	r2, r0, #0x19
-      3a: 8e08         	ldrh	r0, [r1, #0x30]
-; }
-      3c: 8701         	strh	r1, [r0, #0x38]
-      3e: 4202         	tst	r2, r0
-      40: 070d         	lsls	r5, r1, #0x1c
-      42: 0000         	movs	r0, r0
-      44: 0018         	movs	r0, r3
-      46: 0000         	movs	r0, r0
-      48: 0000         	movs	r0, r0
-      4a: 0000         	movs	r0, r0
 ; unsigned factorial(unsigned n) {
-      4c: 007c         	lsls	r4, r7, #0x1
-      4e: 0000         	movs	r0, r0
-      50: 0038         	movs	r0, r7
-      52: 0000         	movs	r0, r0
+      24: 000c         	movs	r4, r1
+      26: 0000         	movs	r0, r0
 ;     if (n <= 1) {
-      54: 0e42         	lsrs	r2, r0, #0x19
-      56: 8e08         	ldrh	r0, [r1, #0x30]
-      58: 8701         	strh	r1, [r0, #0x38]
-      5a: 4202         	tst	r2, r0
-      5c: 070d         	lsls	r5, r1, #0x1c
-;         return 1;
-      5e: 0000         	movs	r0, r0
-      60: 0010         	movs	r0, r2
+      28: 0000         	movs	r0, r0
+      2a: 0000         	movs	r0, r0
 ;         return n * factorial(n - 1);
-      62: 0000         	movs	r0, r0
-      64: 0000         	movs	r0, r0
-      66: 0000         	movs	r0, r0
-      68: 00b4         	lsls	r4, r6, #0x2
-      6a: 0000         	movs	r0, r0
-      6c: 0010         	movs	r0, r2
-      6e: 0000         	movs	r0, r0
-      70: 0e42         	lsrs	r2, r0, #0x19
-      72: 0008         	movs	r0, r1
+      2c: 0024         	movs	r4, r4
+      2e: 0000         	movs	r0, r0
+;     if (n <= 1) {
+      30: 0012         	movs	r2, r2
+      32: 0000         	movs	r0, r0
+; }
+      34: 0018         	movs	r0, r3
+      36: 0000         	movs	r0, r0
+; int main() {
+      38: 0000         	movs	r0, r0
+      3a: 0000         	movs	r0, r0
+      3c: 0038         	movs	r0, r7
+;     unsigned result = factorial(10);
+      3e: 0000         	movs	r0, r0
+      40: 0024         	movs	r4, r4
+      42: 0000         	movs	r0, r0
+;     if (result == 3628800) {
+      44: 0e42         	lsrs	r2, r0, #0x19
+      46: 8e08         	ldrh	r0, [r1, #0x30]
+      48: 8701         	strh	r1, [r0, #0x38]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      4a: 4202         	tst	r2, r0
+      4c: 070d         	lsls	r5, r1, #0x1c
+; }
+      4e: 0000         	movs	r0, r0
 
 Disassembly of section .debug_str:
 
 00000000 <.debug_str>:
 ; extern void* sbrk(ptrdiff_t increment) {
        0: 6e69         	ldr	r1, [r5, #0x64]
-       2: 7263         	strb	r3, [r4, #0x9]
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 7263         	strb	r3, [r4, #0x9]
        4: 6d65         	ldr	r5, [r4, #0x54]
+;     if (increment > 0) {
        6: 6e65         	ldr	r5, [r4, #0x64]
        8: 0074         	lsls	r4, r6, #0x1
-;     if (increment > 0) {
-       a: 6572         	str	r2, [r6, #0x54]
-       c: 7573         	strb	r3, [r6, #0x15]
-       e: 746c         	strb	r4, [r5, #0x11]
-      10: 6300         	str	r0, [r0, #0x30]
 ;         if (heap_ptr + increment > &__heap_end) {
-      12: 646f         	str	r7, [r5, #0x44]
-      14: 0065         	lsls	r5, r4, #0x1
+       a: 6f63         	ldr	r3, [r4, #0x74]
+       c: 6564         	str	r4, [r4, #0x54]
+       e: 7200         	strb	r0, [r0, #0x8]
+      10: 7365         	strb	r5, [r4, #0xd]
+      12: 6c75         	ldr	r5, [r6, #0x44]
+      14: 0074         	lsls	r4, r6, #0x1
+; }
       16: 7470         	strb	r0, [r6, #0x11]
+;         heap_ptr += increment;
       18: 6472         	str	r2, [r6, #0x44]
+; }
       1a: 6669         	str	r1, [r5, #0x64]
       1c: 5f66         	ldrsh	r6, [r4, r5]
       1e: 0074         	lsls	r4, r6, #0x1
       20: 006e         	lsls	r6, r5, #0x1
       22: 6562         	str	r2, [r4, #0x54]
+; unsigned factorial(unsigned n) {
       24: 636e         	str	r6, [r5, #0x34]
-;             return (void*)-1;  // Return error if the heap is full
       26: 6d68         	ldr	r0, [r5, #0x54]
+;     if (n <= 1) {
       28: 7261         	strb	r1, [r4, #0x9]
-;         heap_ptr += increment;
       2a: 736b         	strb	r3, [r5, #0xd]
+;         return n * factorial(n - 1);
       2c: 665c         	str	r4, [r3, #0x64]
       2e: 6361         	str	r1, [r4, #0x34]
+;     if (n <= 1) {
       30: 632e         	str	r6, [r5, #0x30]
       32: 6300         	str	r0, [r0, #0x30]
-;     }
+; }
       34: 616c         	str	r4, [r5, #0x14]
-;     return (void*)prev_heap_ptr;
       36: 676e         	str	r6, [r5, #0x74]
+; int main() {
       38: 7620         	strb	r0, [r4, #0x18]
       3a: 7265         	strb	r5, [r4, #0x9]
-; }
       3c: 6973         	ldr	r3, [r6, #0x14]
+;     unsigned result = factorial(10);
       3e: 6e6f         	ldr	r7, [r5, #0x64]
       40: 3120         	adds	r1, #0x20
       42: 2e39         	cmp	r6, #0x39
+;     if (result == 3628800) {
       44: 2e31         	cmp	r6, #0x31
       46: 0035         	movs	r5, r6
       48: 7270         	strb	r0, [r6, #0x9]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       4a: 7665         	strb	r5, [r4, #0x19]
-; unsigned factorial(unsigned n) {
       4c: 685f         	ldr	r7, [r3, #0x4]
+; }
       4e: 6165         	str	r5, [r4, #0x14]
       50: 5f70         	ldrsh	r0, [r6, r5]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       52: 7470         	strb	r0, [r6, #0x11]
-;     if (n <= 1) {
       54: 0072         	lsls	r2, r6, #0x1
+; }
       56: 3072         	adds	r0, #0x72
       58: 6800         	ldr	r0, [r0]
       5a: 6165         	str	r5, [r4, #0x14]
       5c: 5f70         	ldrsh	r0, [r6, r5]
-;         return 1;
       5e: 7470         	strb	r0, [r6, #0x11]
       60: 0072         	lsls	r2, r6, #0x1
-;         return n * factorial(n - 1);
-      62: 616d         	str	r5, [r5, #0x14]
-      64: 6e69         	ldr	r1, [r5, #0x64]
-      66: 7300         	strb	r0, [r0, #0xc]
-      68: 6376         	str	r6, [r6, #0x34]
-      6a: 655f         	str	r7, [r3, #0x54]
-      6c: 6978         	ldr	r0, [r7, #0x14]
-      6e: 0074         	lsls	r4, r6, #0x1
+      62: 7673         	strb	r3, [r6, #0x19]
+      64: 5f63         	ldrsh	r3, [r4, r5]
+      66: 7865         	ldrb	r5, [r4, #0x1]
+      68: 7469         	strb	r1, [r5, #0x11]
+      6a: 6d00         	ldr	r0, [r0, #0x50]
+      6c: 6961         	ldr	r1, [r4, #0x14]
+      6e: 006e         	lsls	r6, r5, #0x1
       70: 6863         	ldr	r3, [r4, #0x4]
       72: 7261         	strb	r1, [r4, #0x9]
-; }
       74: 6900         	ldr	r0, [r0, #0x10]
       76: 746e         	strb	r6, [r5, #0x11]
       78: 7500         	strb	r0, [r0, #0x14]
       7a: 736e         	strb	r6, [r5, #0xd]
-; int main() {
       7c: 6769         	str	r1, [r5, #0x74]
       7e: 656e         	str	r6, [r5, #0x54]
       80: 2064         	movs	r0, #0x64
       82: 6e69         	ldr	r1, [r5, #0x64]
       84: 0074         	lsls	r4, r6, #0x1
       86: 6273         	str	r3, [r6, #0x24]
-;     unsigned result = factorial(10);
       88: 6b72         	ldr	r2, [r6, #0x34]
       8a: 6600         	str	r0, [r0, #0x60]
       8c: 6361         	str	r1, [r4, #0x34]
-;     if (result == 3628800) {
       8e: 6f74         	ldr	r4, [r6, #0x74]
       90: 6972         	ldr	r2, [r6, #0x14]
       92: 6c61         	ldr	r1, [r4, #0x44]
       94: 4300         	orrs	r0, r0
       96: 5c3a         	ldrb	r2, [r7, r0]
       98: 7355         	strb	r5, [r2, #0xd]
-;         svc_exit(0);
       9a: 7265         	strb	r5, [r4, #0x9]
       9c: 5c73         	ldrb	r3, [r6, r1]
-;     } else {
       9e: 696b         	ldr	r3, [r5, #0x14]
       a0: 6172         	str	r2, [r6, #0x14]
-;         svc_exit(1);
       a2: 5c6e         	ldrb	r6, [r5, r1]
       a4: 6f44         	ldr	r4, [r0, #0x74]
       a6: 7563         	strb	r3, [r4, #0x15]
-; }
       a8: 656d         	str	r5, [r5, #0x54]
       aa: 746e         	strb	r6, [r5, #0x11]
       ac: 5c73         	ldrb	r3, [r6, r1]
       ae: 6544         	str	r4, [r0, #0x54]
       b0: 5c76         	ldrb	r6, [r6, r1]
       b2: 4341         	muls	r1, r0, r1
-; static inline void svc_exit(unsigned code) {
       b4: 5c41         	ldrb	r1, [r0, r1]
       b6: 7270         	strb	r0, [r6, #0x9]
-;     register unsigned r0 __asm__("r0") = code;
       b8: 676f         	str	r7, [r5, #0x74]
       ba: 6172         	str	r2, [r6, #0x14]
-;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       bc: 736d         	strb	r5, [r5, #0xd]
       be: 00           	<unknown>
 
@@ -812,89 +749,100 @@ Disassembly of section .debug_addr:
 
 00000000 <.debug_addr>:
 ; extern void* sbrk(ptrdiff_t increment) {
-       0: 0018         	movs	r0, r3
-       2: 0000         	movs	r0, r0
+       0: 001c         	movs	r4, r3
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
        4: 0005         	movs	r5, r0
+;     if (increment > 0) {
        6: 0004         	movs	r4, r0
        8: 0000         	movs	r0, r0
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
        a: 2000         	movs	r0, #0x0
        c: 0000         	movs	r0, r0
        e: 0000         	movs	r0, r0
-      10: 004c         	lsls	r4, r1, #0x1
-;         if (heap_ptr + increment > &__heap_end) {
+      10: 0024         	movs	r4, r4
       12: 0000         	movs	r0, r0
-      14: 007c         	lsls	r4, r7, #0x1
+      14: 0038         	movs	r0, r7
+; }
       16: 0000         	movs	r0, r0
-      18: 00b4         	lsls	r4, r6, #0x2
+;         heap_ptr += increment;
+      18: 004a         	lsls	r2, r1, #0x1
+; }
       1a: 0000         	movs	r0, r0
+      1c: 0052         	lsls	r2, r2, #0x1
+      1e: 0000         	movs	r0, r0
 
 Disassembly of section .debug_line_str:
 
 00000000 <.debug_line_str>:
 ; extern void* sbrk(ptrdiff_t increment) {
        0: 6562         	str	r2, [r4, #0x54]
-       2: 636e         	str	r6, [r5, #0x34]
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 636e         	str	r6, [r5, #0x34]
        4: 6d68         	ldr	r0, [r5, #0x54]
+;     if (increment > 0) {
        6: 7261         	strb	r1, [r4, #0x9]
        8: 736b         	strb	r3, [r5, #0xd]
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
        a: 2e5c         	cmp	r6, #0x5c
        c: 2f2e         	cmp	r7, #0x2e
        e: 7973         	ldrb	r3, [r6, #0x5]
       10: 6373         	str	r3, [r6, #0x34]
-;         if (heap_ptr + increment > &__heap_end) {
       12: 6c61         	ldr	r1, [r4, #0x44]
       14: 736c         	strb	r4, [r5, #0xd]
+; }
       16: 4c00         	ldr	r4, [pc, #0x0]          @ 0x18 <.debug_line+0x18>
+;         heap_ptr += increment;
       18: 564c         	ldrsb	r4, [r1, r1]
+; }
       1a: 2d4d         	cmp	r5, #0x4d
       1c: 5445         	strb	r5, [r0, r1]
       1e: 412d         	asrs	r5, r5
       20: 6d72         	ldr	r2, [r6, #0x54]
       22: 312d         	adds	r1, #0x2d
+; unsigned factorial(unsigned n) {
       24: 2e39         	cmp	r6, #0x39
-;             return (void*)-1;  // Return error if the heap is full
       26: 2e31         	cmp	r6, #0x31
+;     if (n <= 1) {
       28: 5c35         	ldrb	r5, [r6, r0]
-;         heap_ptr += increment;
       2a: 696c         	ldr	r4, [r5, #0x14]
+;         return n * factorial(n - 1);
       2c: 5c62         	ldrb	r2, [r4, r1]
       2e: 6c63         	ldr	r3, [r4, #0x44]
+;     if (n <= 1) {
       30: 6e61         	ldr	r1, [r4, #0x64]
       32: 5c67         	ldrb	r7, [r4, r1]
-;     }
+; }
       34: 3931         	subs	r1, #0x31
-;     return (void*)prev_heap_ptr;
       36: 695c         	ldr	r4, [r3, #0x14]
+; int main() {
       38: 636e         	str	r6, [r5, #0x34]
       3a: 756c         	strb	r4, [r5, #0x15]
-; }
       3c: 6564         	str	r4, [r4, #0x54]
+;     unsigned result = factorial(10);
       3e: 5f5c         	ldrsh	r4, [r3, r5]
       40: 735f         	strb	r7, [r3, #0xd]
       42: 6474         	str	r4, [r6, #0x44]
+;     if (result == 3628800) {
       44: 6564         	str	r4, [r4, #0x54]
       46: 5f66         	ldrsh	r6, [r4, r5]
       48: 7470         	strb	r0, [r6, #0x11]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       4a: 6472         	str	r2, [r6, #0x44]
-; unsigned factorial(unsigned n) {
       4c: 6669         	str	r1, [r5, #0x64]
+; }
       4e: 5f66         	ldrsh	r6, [r4, r5]
       50: 2e74         	cmp	r6, #0x74
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       52: 0068         	lsls	r0, r5, #0x1
-;     if (n <= 1) {
       54: 6562         	str	r2, [r4, #0x54]
+; }
       56: 636e         	str	r6, [r5, #0x34]
       58: 6d68         	ldr	r0, [r5, #0x54]
       5a: 7261         	strb	r1, [r4, #0x9]
       5c: 736b         	strb	r3, [r5, #0xd]
-;         return 1;
       5e: 665c         	str	r4, [r3, #0x64]
       60: 6361         	str	r1, [r4, #0x34]
-;         return n * factorial(n - 1);
       62: 632e         	str	r6, [r5, #0x30]
       64: 6200         	str	r0, [r0, #0x20]
       66: 6e65         	ldr	r5, [r4, #0x64]
@@ -904,104 +852,147 @@ Disassembly of section .debug_line_str:
       6e: 0073         	lsls	r3, r6, #0x1
       70: 6166         	str	r6, [r4, #0x14]
       72: 2e63         	cmp	r6, #0x63
-; }
       74: 0063         	lsls	r3, r4, #0x1
       76: 3a43         	subs	r2, #0x43
       78: 555c         	strb	r4, [r3, r5]
       7a: 6573         	str	r3, [r6, #0x54]
-; int main() {
       7c: 7372         	strb	r2, [r6, #0xd]
       7e: 6b5c         	ldr	r4, [r3, #0x34]
       80: 7269         	strb	r1, [r5, #0x9]
       82: 6e61         	ldr	r1, [r4, #0x64]
       84: 445c         	add	r4, r11
       86: 636f         	str	r7, [r5, #0x34]
-;     unsigned result = factorial(10);
       88: 6d75         	ldr	r5, [r6, #0x54]
       8a: 6e65         	ldr	r5, [r4, #0x64]
       8c: 7374         	strb	r4, [r6, #0xd]
-;     if (result == 3628800) {
       8e: 445c         	add	r4, r11
       90: 7665         	strb	r5, [r4, #0x19]
       92: 415c         	adcs	r4, r3
       94: 4143         	adcs	r3, r0
       96: 705c         	strb	r4, [r3, #0x1]
       98: 6f72         	ldr	r2, [r6, #0x74]
-;         svc_exit(0);
       9a: 7267         	strb	r7, [r4, #0x9]
       9c: 6d61         	ldr	r1, [r4, #0x54]
-;     } else {
       9e: 0073         	lsls	r3, r6, #0x1
       a0: 3a43         	subs	r2, #0x43
-;         svc_exit(1);
       a2: 555c         	strb	r4, [r3, r5]
       a4: 6573         	str	r3, [r6, #0x54]
       a6: 7372         	strb	r2, [r6, #0xd]
-; }
       a8: 6b5c         	ldr	r4, [r3, #0x34]
       aa: 7269         	strb	r1, [r5, #0x9]
       ac: 6e61         	ldr	r1, [r4, #0x64]
       ae: 7300         	strb	r0, [r0, #0xc]
       b0: 7379         	strb	r1, [r7, #0xd]
       b2: 6163         	str	r3, [r4, #0x14]
-; static inline void svc_exit(unsigned code) {
       b4: 6c6c         	ldr	r4, [r5, #0x44]
       b6: 2e73         	cmp	r6, #0x73
-;     register unsigned r0 __asm__("r0") = code;
       b8: 0068         	lsls	r0, r5, #0x1
+
+Disassembly of section .debug_loclists:
+
+00000000 <.debug_loclists>:
+; extern void* sbrk(ptrdiff_t increment) {
+       0: 0035         	movs	r5, r6
+;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
+       4: 0005         	movs	r5, r0
+;     if (increment > 0) {
+       6: 0004         	movs	r4, r0
+       8: 0003         	movs	r3, r0
+;         if (heap_ptr + increment > &__heap_end) {
+       a: 0000         	movs	r0, r0
+       c: 000c         	movs	r4, r1
+       e: 0000         	movs	r0, r0
+      10: 0017         	movs	r7, r2
+      12: 0000         	movs	r0, r0
+      14: 0022         	movs	r2, r4
+; }
+      16: 0000         	movs	r0, r0
+;         heap_ptr += increment;
+      18: 0004         	movs	r4, r0
+; }
+      1a: 0102         	lsls	r2, r0, #0x4
+      1c: 0450         	lsls	r0, r2, #0x11
+      1e: 0c02         	lsrs	r2, r0, #0x10
+      20: 5101         	str	r1, [r0, r4]
+      22: 0400         	lsls	r0, r0, #0x10
+; unsigned factorial(unsigned n) {
+      24: 1406         	asrs	r6, r0, #0x10
+      26: 5001         	str	r1, [r0, r0]
+;     if (n <= 1) {
+      28: 1804         	adds	r4, r0, r0
+      2a: 011c         	lsls	r4, r3, #0x4
+;         return n * factorial(n - 1);
+      2c: 0050         	lsls	r0, r2, #0x1
+      2e: 4204         	tst	r4, r0
+;     if (n <= 1) {
+      30: 014a         	lsls	r2, r1, #0x5
+      32: 0450         	lsls	r0, r2, #0x11
+; }
+      34: 5250         	strh	r0, [r2, r1]
+      36: 5001         	str	r1, [r0, r0]
+; int main() {
+      38: 00           	<unknown>
 
 Disassembly of section .debug_str_offsets:
 
 00000000 <.debug_str_offsets>:
 ; extern void* sbrk(ptrdiff_t increment) {
        0: 004c         	lsls	r4, r1, #0x1
-       2: 0000         	movs	r0, r0
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
        4: 0005         	movs	r5, r0
+;     if (increment > 0) {
        6: 0000         	movs	r0, r0
        8: 0033         	movs	r3, r6
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
        a: 0000         	movs	r0, r0
        c: 0022         	movs	r2, r4
        e: 0000         	movs	r0, r0
       10: 0095         	lsls	r5, r2, #0x2
-;         if (heap_ptr + increment > &__heap_end) {
       12: 0000         	movs	r0, r0
       14: 0059         	lsls	r1, r3, #0x1
-      16: 0000         	movs	r0, r0
-      18: 0070         	lsls	r0, r6, #0x1
-      1a: 0000         	movs	r0, r0
-      1c: 0086         	lsls	r6, r0, #0x2
-      1e: 0000         	movs	r0, r0
-      20: 008b         	lsls	r3, r1, #0x2
-      22: 0000         	movs	r0, r0
-      24: 0079         	lsls	r1, r7, #0x1
-;             return (void*)-1;  // Return error if the heap is full
-      26: 0000         	movs	r0, r0
-      28: 0062         	lsls	r2, r4, #0x1
-;         heap_ptr += increment;
-      2a: 0000         	movs	r0, r0
-      2c: 0075         	lsls	r5, r6, #0x1
-      2e: 0000         	movs	r0, r0
-      30: 0067         	lsls	r7, r4, #0x1
-      32: 0000         	movs	r0, r0
-;     }
-      34: 0000         	movs	r0, r0
-;     return (void*)prev_heap_ptr;
-      36: 0000         	movs	r0, r0
-      38: 0016         	movs	r6, r2
-      3a: 0000         	movs	r0, r0
 ; }
-      3c: 0048         	lsls	r0, r1, #0x1
-      3e: 0000         	movs	r0, r0
-      40: 0020         	movs	r0, r4
-      42: 0000         	movs	r0, r0
-      44: 000a         	movs	r2, r1
-      46: 0000         	movs	r0, r0
-      48: 0011         	movs	r1, r2
-      4a: 0000         	movs	r0, r0
+      16: 0000         	movs	r0, r0
+;         heap_ptr += increment;
+      18: 0070         	lsls	r0, r6, #0x1
+; }
+      1a: 0000         	movs	r0, r0
+      1c: 0062         	lsls	r2, r4, #0x1
+      1e: 0000         	movs	r0, r0
+      20: 000a         	movs	r2, r1
+      22: 0000         	movs	r0, r0
 ; unsigned factorial(unsigned n) {
-      4c: 0056         	lsls	r6, r2, #0x1
+      24: 0079         	lsls	r1, r7, #0x1
+      26: 0000         	movs	r0, r0
+;     if (n <= 1) {
+      28: 0056         	lsls	r6, r2, #0x1
+      2a: 0000         	movs	r0, r0
+;         return n * factorial(n - 1);
+      2c: 0086         	lsls	r6, r0, #0x2
+      2e: 0000         	movs	r0, r0
+;     if (n <= 1) {
+      30: 008b         	lsls	r3, r1, #0x2
+      32: 0000         	movs	r0, r0
+; }
+      34: 006b         	lsls	r3, r5, #0x1
+      36: 0000         	movs	r0, r0
+; int main() {
+      38: 0075         	lsls	r5, r6, #0x1
+      3a: 0000         	movs	r0, r0
+      3c: 0000         	movs	r0, r0
+;     unsigned result = factorial(10);
+      3e: 0000         	movs	r0, r0
+      40: 0016         	movs	r6, r2
+      42: 0000         	movs	r0, r0
+;     if (result == 3628800) {
+      44: 0048         	lsls	r0, r1, #0x1
+      46: 0000         	movs	r0, r0
+      48: 0020         	movs	r0, r4
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      4a: 0000         	movs	r0, r0
+      4c: 000f         	movs	r7, r1
+; }
       4e: 0000         	movs	r0, r0
 
 Disassembly of section .ARM.attributes:
@@ -1009,44 +1000,49 @@ Disassembly of section .ARM.attributes:
 00000000 <.ARM.attributes>:
 ; extern void* sbrk(ptrdiff_t increment) {
        0: 4041         	eors	r1, r0
-       2: 0000         	movs	r0, r0
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 0000         	movs	r0, r0
        4: 6100         	str	r0, [r0, #0x10]
+;     if (increment > 0) {
        6: 6165         	str	r5, [r4, #0x14]
        8: 6962         	ldr	r2, [r4, #0x14]
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
        a: 0100         	lsls	r0, r0, #0x4
        c: 0036         	movs	r6, r6
        e: 0000         	movs	r0, r0
       10: 3243         	adds	r2, #0x43
-;         if (heap_ptr + increment > &__heap_end) {
       12: 302e         	adds	r0, #0x2e
       14: 0039         	movs	r1, r7
+; }
       16: 6305         	str	r5, [r0, #0x30]
+;         heap_ptr += increment;
       18: 726f         	strb	r7, [r5, #0x9]
+; }
       1a: 6574         	str	r4, [r6, #0x54]
       1c: 2d78         	cmp	r5, #0x78
       1e: 306d         	adds	r0, #0x6d
       20: 0600         	lsls	r0, r0, #0x18
       22: 070c         	lsls	r4, r1, #0x1c
+; unsigned factorial(unsigned n) {
       24: 084d         	lsrs	r5, r1, #0x1
-;             return (void*)-1;  // Return error if the heap is full
       26: 0900         	lsrs	r0, r0, #0x4
+;     if (n <= 1) {
       28: 0e01         	lsrs	r1, r0, #0x18
-;         heap_ptr += increment;
       2a: 1100         	asrs	r0, r0, #0x4
+;         return n * factorial(n - 1);
       2c: 1201         	asrs	r1, r0, #0x8
       2e: 1404         	asrs	r4, r0, #0x10
+;     if (n <= 1) {
       30: 1501         	asrs	r1, r0, #0x14
       32: 1700         	asrs	r0, r0, #0x1c
-;     }
+; }
       34: 1803         	adds	r3, r0, r0
-;     return (void*)prev_heap_ptr;
       36: 1901         	adds	r1, r0, r4
+; int main() {
       38: 1a01         	subs	r1, r0, r0
       3a: 1e02         	subs	r2, r0, #0x0
-; }
-      3c: 2206         	movs	r2, #0x6
+      3c: 2201         	movs	r2, #0x1
+;     unsigned result = factorial(10);
       3e: 2600         	movs	r6, #0x0
       40: 01           	<unknown>
 
@@ -1054,315 +1050,298 @@ Disassembly of section .symtab:
 
 00000000 <.symtab>:
 		...
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
       10: 0001         	movs	r1, r0
 		...
-;         if (heap_ptr + increment > &__heap_end) {
+; }
       1a: 0000         	movs	r0, r0
       1c: 0004         	movs	r4, r0
       1e: fff1 0007    	<unknown>
 		...
-;         heap_ptr += increment;
+;         return n * factorial(n - 1);
       2e: 0001         	movs	r1, r0
+;     if (n <= 1) {
       30: 000a         	movs	r2, r1
       32: 0000         	movs	r0, r0
-;     }
-      34: 0044         	lsls	r4, r0, #0x1
-		...
 ; }
+      34: 001c         	movs	r4, r3
+		...
+;     unsigned result = factorial(10);
       3e: 0001         	movs	r1, r0
       40: 000d         	movs	r5, r1
       42: 0000         	movs	r0, r0
+;     if (result == 3628800) {
       44: 0000         	movs	r0, r0
       46: 2000         	movs	r0, #0x0
       48: 0004         	movs	r4, r0
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       4a: 0000         	movs	r0, r0
-; unsigned factorial(unsigned n) {
       4c: 0001         	movs	r1, r0
+; }
       4e: 0002         	movs	r2, r0
       50: 0016         	movs	r6, r2
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       52: 0000         	movs	r0, r0
-;     if (n <= 1) {
-      54: 004c         	lsls	r4, r1, #0x1
+      54: 0024         	movs	r4, r4
 		...
-;         return 1;
       5e: 0001         	movs	r1, r0
       60: 0019         	movs	r1, r3
-;         return n * factorial(n - 1);
       62: 0000         	movs	r0, r0
-      64: 00b5         	lsls	r5, r6, #0x2
-      66: 0000         	movs	r0, r0
-      68: 0010         	movs	r0, r2
-      6a: 0000         	movs	r0, r0
-      6c: 0002         	movs	r2, r0
+      64: 0058         	lsls	r0, r3, #0x1
+		...
       6e: 0001         	movs	r1, r0
-      70: 0022         	movs	r2, r4
-      72: 0000         	movs	r0, r0
-; }
-      74: 00b0         	lsls	r0, r6, #0x2
+      70: 0048         	lsls	r0, r1, #0x1
 		...
-; int main() {
+      7a: 0000         	movs	r0, r0
+      7c: 0200         	lsls	r0, r0, #0x8
       7e: 0001         	movs	r1, r0
-      80: 0025         	movs	r5, r4
+      80: 001c         	movs	r4, r3
       82: 0000         	movs	r0, r0
-      84: 00b4         	lsls	r4, r6, #0x2
-		...
-;     if (result == 3628800) {
+      84: 0001         	movs	r1, r0
+      86: 0000         	movs	r0, r0
+      88: 0024         	movs	r4, r4
+      8a: 0000         	movs	r0, r0
+      8c: 0012         	movs	r2, r2
       8e: 0001         	movs	r1, r0
-      90: 0054         	lsls	r4, r2, #0x1
-		...
-;         svc_exit(0);
+      90: 0021         	movs	r1, r4
+      92: 0000         	movs	r0, r0
+      94: 0000         	movs	r0, r0
+      96: 21f8         	movs	r1, #0xf8
+      98: 0000         	movs	r0, r0
       9a: 0000         	movs	r0, r0
-      9c: 0200         	lsls	r0, r0, #0x8
-;     } else {
-      9e: 0001         	movs	r1, r0
-      a0: 0028         	movs	r0, r5
-;         svc_exit(1);
+      9c: 0010         	movs	r0, r2
+      9e: fff1 002c    	<unknown>
       a2: 0000         	movs	r0, r0
-      a4: 0001         	movs	r1, r0
+      a4: 0025         	movs	r5, r4
       a6: 0000         	movs	r0, r0
-; }
-      a8: 004c         	lsls	r4, r1, #0x1
+      a8: 0012         	movs	r2, r2
       aa: 0000         	movs	r0, r0
       ac: 0012         	movs	r2, r2
       ae: 0001         	movs	r1, r0
-      b0: 002d         	movs	r5, r5
+      b0: 0036         	movs	r6, r6
       b2: 0000         	movs	r0, r0
-; static inline void svc_exit(unsigned code) {
-      b4: 0000         	movs	r0, r0
-      b6: 21f8         	movs	r1, #0xf8
-;     register unsigned r0 __asm__("r0") = code;
-      b8: 0000         	movs	r0, r0
+      b4: 0039         	movs	r1, r7
+      b6: 0000         	movs	r0, r0
+      b8: 0024         	movs	r4, r4
       ba: 0000         	movs	r0, r0
-;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
-      bc: 0010         	movs	r0, r2
-      be: fff1 0038    	<unknown>
-; };
+      bc: 0012         	movs	r2, r2
+      be: 0001         	movs	r1, r0
+      c0: 003b         	movs	r3, r7
       c2: 0000         	movs	r0, r0
-      c4: 004d         	lsls	r5, r1, #0x1
-      c6: 0000         	movs	r0, r0
-      c8: 002e         	movs	r6, r5
+      c4: 0008         	movs	r0, r1
+      c6: 2000         	movs	r0, #0x0
+      c8: 0000         	movs	r0, r0
       ca: 0000         	movs	r0, r0
-      cc: 0012         	movs	r2, r2
-      ce: 0001         	movs	r1, r0
-      d0: 0042         	lsls	r2, r0, #0x1
-      d2: 0000         	movs	r0, r0
-      d4: 007d         	lsls	r5, r7, #0x1
-      d6: 0000         	movs	r0, r0
-      d8: 0038         	movs	r0, r7
+      cc: 0010         	movs	r0, r2
+      ce: 0005         	movs	r5, r0
+      d0: 0055         	lsls	r5, r2, #0x1
+		...
       da: 0000         	movs	r0, r0
-      dc: 0012         	movs	r2, r2
-      de: 0001         	movs	r1, r0
-      e0: 0047         	lsls	r7, r0, #0x1
+      dc: 0010         	movs	r0, r2
+      de: fff1 005d    	<unknown>
       e2: 0000         	movs	r0, r0
-      e4: 0008         	movs	r0, r1
-      e6: 2000         	movs	r0, #0x0
+      e4: 0000         	movs	r0, r0
+      e6: 0010         	movs	r0, r2
       e8: 0000         	movs	r0, r0
       ea: 0000         	movs	r0, r0
       ec: 0010         	movs	r0, r2
-      ee: 0005         	movs	r5, r0
-      f0: 0061         	lsls	r1, r4, #0x1
-		...
+      ee: fff1 006a    	<unknown>
+      f2: 0000         	movs	r0, r0
+      f4: 0000         	movs	r0, r0
+      f6: 2000         	movs	r0, #0x0
+      f8: 0000         	movs	r0, r0
       fa: 0000         	movs	r0, r0
       fc: 0010         	movs	r0, r2
-      fe: fff1 0069    	<unknown>
+      fe: fff1 0070    	<unknown>
      102: 0000         	movs	r0, r0
      104: 0000         	movs	r0, r0
-     106: 0010         	movs	r0, r2
+     106: 0200         	lsls	r0, r0, #0x8
      108: 0000         	movs	r0, r0
      10a: 0000         	movs	r0, r0
      10c: 0010         	movs	r0, r2
-     10e: fff1 0076    	<unknown>
+     10e: fff1 007b    	<unknown>
      112: 0000         	movs	r0, r0
-     114: 0000         	movs	r0, r0
-     116: 2000         	movs	r0, #0x0
+     114: 0001         	movs	r1, r0
+     116: 0000         	movs	r0, r0
      118: 0000         	movs	r0, r0
      11a: 0000         	movs	r0, r0
      11c: 0010         	movs	r0, r2
-     11e: fff1 007c    	<unknown>
+     11e: fff1 0087    	<unknown>
      122: 0000         	movs	r0, r0
-     124: 0000         	movs	r0, r0
-     126: 0200         	lsls	r0, r0, #0x8
+     124: 0008         	movs	r0, r1
+     126: 2000         	movs	r0, #0x0
      128: 0000         	movs	r0, r0
      12a: 0000         	movs	r0, r0
      12c: 0010         	movs	r0, r2
-     12e: fff1 0087    	<unknown>
+     12e: 0005         	movs	r5, r0
+     130: 0091         	lsls	r1, r2, #0x2
      132: 0000         	movs	r0, r0
-     134: 0001         	movs	r1, r0
-     136: 0000         	movs	r0, r0
+     134: 0000         	movs	r0, r0
+     136: 0008         	movs	r0, r1
      138: 0000         	movs	r0, r0
      13a: 0000         	movs	r0, r0
      13c: 0010         	movs	r0, r2
-     13e: fff1 0093    	<unknown>
+     13e: fff1 00a1    	<unknown>
      142: 0000         	movs	r0, r0
-     144: 0008         	movs	r0, r1
-     146: 2000         	movs	r0, #0x0
+     144: 0000         	movs	r0, r0
+     146: 0008         	movs	r0, r1
      148: 0000         	movs	r0, r0
      14a: 0000         	movs	r0, r0
      14c: 0010         	movs	r0, r2
-     14e: 0005         	movs	r5, r0
-     150: 009d         	lsls	r5, r3, #0x2
+     14e: fff1 00ae    	<unknown>
      152: 0000         	movs	r0, r0
-     154: 0000         	movs	r0, r0
-     156: 0008         	movs	r0, r1
+     154: 0008         	movs	r0, r1
+     156: 0000         	movs	r0, r0
      158: 0000         	movs	r0, r0
      15a: 0000         	movs	r0, r0
      15c: 0010         	movs	r0, r2
-     15e: fff1 00ad    	<unknown>
+     15e: fff1 00ba    	<unknown>
      162: 0000         	movs	r0, r0
-     164: 0000         	movs	r0, r0
-     166: 0008         	movs	r0, r1
+     164: 0008         	movs	r0, r1
+     166: 0000         	movs	r0, r0
      168: 0000         	movs	r0, r0
      16a: 0000         	movs	r0, r0
      16c: 0010         	movs	r0, r2
-     16e: fff1 00ba    	<unknown>
+     16e: fff1 00cd    	<unknown>
      172: 0000         	movs	r0, r0
-     174: 0008         	movs	r0, r1
-     176: 0000         	movs	r0, r0
+     174: 0000         	movs	r0, r0
+     176: 2200         	movs	r2, #0x0
      178: 0000         	movs	r0, r0
      17a: 0000         	movs	r0, r0
      17c: 0010         	movs	r0, r2
-     17e: fff1 00c6    	<unknown>
+     17e: fff1 00d5    	<unknown>
      182: 0000         	movs	r0, r0
      184: 0008         	movs	r0, r1
-     186: 0000         	movs	r0, r0
+     186: 2000         	movs	r0, #0x0
      188: 0000         	movs	r0, r0
      18a: 0000         	movs	r0, r0
      18c: 0010         	movs	r0, r2
-     18e: fff1 00d9    	<unknown>
+     18e: 0005         	movs	r5, r0
+     190: 00db         	lsls	r3, r3, #0x3
      192: 0000         	movs	r0, r0
-     194: 0000         	movs	r0, r0
-     196: 2200         	movs	r2, #0x0
+     194: 0068         	lsls	r0, r5, #0x1
+     196: 0000         	movs	r0, r0
      198: 0000         	movs	r0, r0
      19a: 0000         	movs	r0, r0
      19c: 0010         	movs	r0, r2
-     19e: fff1 00e1    	<unknown>
+     19e: fff1 00ed    	<unknown>
      1a2: 0000         	movs	r0, r0
-     1a4: 0008         	movs	r0, r1
-     1a6: 2000         	movs	r0, #0x0
+     1a4: 0060         	lsls	r0, r4, #0x1
+     1a6: 0000         	movs	r0, r0
      1a8: 0000         	movs	r0, r0
      1aa: 0000         	movs	r0, r0
      1ac: 0010         	movs	r0, r2
-     1ae: 0005         	movs	r5, r0
-     1b0: 00e7         	lsls	r7, r4, #0x3
+     1ae: fff1 00fb    	<unknown>
      1b2: 0000         	movs	r0, r0
-     1b4: 00d0         	lsls	r0, r2, #0x3
+     1b4: 0068         	lsls	r0, r5, #0x1
      1b6: 0000         	movs	r0, r0
      1b8: 0000         	movs	r0, r0
      1ba: 0000         	movs	r0, r0
      1bc: 0010         	movs	r0, r2
-     1be: fff1 00f9    	<unknown>
+     1be: fff1 010e    	<unknown>
      1c2: 0000         	movs	r0, r0
-     1c4: 00c8         	lsls	r0, r1, #0x3
-     1c6: 0000         	movs	r0, r0
+     1c4: 0008         	movs	r0, r1
+     1c6: 2000         	movs	r0, #0x0
      1c8: 0000         	movs	r0, r0
      1ca: 0000         	movs	r0, r0
      1cc: 0010         	movs	r0, r2
-     1ce: fff1 0107    	<unknown>
+     1ce: 0003         	movs	r3, r0
+     1d0: 0119         	lsls	r1, r3, #0x4
      1d2: 0000         	movs	r0, r0
-     1d4: 00d0         	lsls	r0, r2, #0x3
-     1d6: 0000         	movs	r0, r0
+     1d4: 0000         	movs	r0, r0
+     1d6: 2000         	movs	r0, #0x0
      1d8: 0000         	movs	r0, r0
      1da: 0000         	movs	r0, r0
      1dc: 0010         	movs	r0, r2
-     1de: fff1 011a    	<unknown>
+     1de: 0002         	movs	r2, r0
+     1e0: 0126         	lsls	r6, r4, #0x4
      1e2: 0000         	movs	r0, r0
-     1e4: 0008         	movs	r0, r1
-     1e6: 2000         	movs	r0, #0x0
+     1e4: 005c         	lsls	r4, r3, #0x1
+     1e6: 0000         	movs	r0, r0
      1e8: 0000         	movs	r0, r0
      1ea: 0000         	movs	r0, r0
      1ec: 0010         	movs	r0, r2
-     1ee: 0003         	movs	r3, r0
-     1f0: 0125         	lsls	r5, r4, #0x4
+     1ee: 0001         	movs	r1, r0
+     1f0: 0131         	lsls	r1, r6, #0x4
      1f2: 0000         	movs	r0, r0
-     1f4: 0000         	movs	r0, r0
+     1f4: 0008         	movs	r0, r1
      1f6: 2000         	movs	r0, #0x0
      1f8: 0000         	movs	r0, r0
      1fa: 0000         	movs	r0, r0
      1fc: 0010         	movs	r0, r2
-     1fe: 0002         	movs	r2, r0
-     200: 0132         	lsls	r2, r6, #0x4
-     202: 0000         	movs	r0, r0
-     204: 00c4         	lsls	r4, r0, #0x3
-     206: 0000         	movs	r0, r0
-     208: 0000         	movs	r0, r0
-     20a: 0000         	movs	r0, r0
-     20c: 0010         	movs	r0, r2
-     20e: 0001         	movs	r1, r0
-     210: 013d         	lsls	r5, r7, #0x4
-     212: 0000         	movs	r0, r0
-     214: 0008         	movs	r0, r1
-     216: 2000         	movs	r0, #0x0
-     218: 0000         	movs	r0, r0
-     21a: 0000         	movs	r0, r0
-     21c: 0010         	movs	r0, r2
-     21e: 0005         	movs	r5, r0
+     1fe: 0005         	movs	r5, r0
 
 Disassembly of section .shstrtab:
 
 00000000 <.shstrtab>:
 ; extern void* sbrk(ptrdiff_t increment) {
        0: 2e00         	cmp	r6, #0x0
-       2: 6574         	str	r4, [r6, #0x54]
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 6574         	str	r4, [r6, #0x54]
        4: 7478         	strb	r0, [r7, #0x11]
+;     if (increment > 0) {
        6: 2e00         	cmp	r6, #0x0
        8: 6164         	str	r4, [r4, #0x14]
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
        a: 6174         	str	r4, [r6, #0x14]
        c: 2e00         	cmp	r6, #0x0
        e: 6474         	str	r4, [r6, #0x44]
       10: 7461         	strb	r1, [r4, #0x11]
-;         if (heap_ptr + increment > &__heap_end) {
       12: 0061         	lsls	r1, r4, #0x1
       14: 742e         	strb	r6, [r5, #0x10]
+; }
       16: 7362         	strb	r2, [r4, #0xd]
+;         heap_ptr += increment;
       18: 0073         	lsls	r3, r6, #0x1
+; }
       1a: 622e         	str	r6, [r5, #0x20]
       1c: 7373         	strb	r3, [r6, #0xd]
       1e: 2e00         	cmp	r6, #0x0
       20: 6568         	str	r0, [r5, #0x54]
       22: 7061         	strb	r1, [r4, #0x1]
+; unsigned factorial(unsigned n) {
       24: 2e00         	cmp	r6, #0x0
-;             return (void*)-1;  // Return error if the heap is full
       26: 7473         	strb	r3, [r6, #0x11]
+;     if (n <= 1) {
       28: 6361         	str	r1, [r4, #0x34]
-;         heap_ptr += increment;
       2a: 006b         	lsls	r3, r5, #0x1
+;         return n * factorial(n - 1);
       2c: 632e         	str	r6, [r5, #0x30]
       2e: 6d6f         	ldr	r7, [r5, #0x54]
+;     if (n <= 1) {
       30: 656d         	str	r5, [r5, #0x54]
       32: 746e         	strb	r6, [r5, #0x11]
-;     }
+; }
       34: 2e00         	cmp	r6, #0x0
-;     return (void*)prev_heap_ptr;
       36: 6564         	str	r4, [r4, #0x54]
+; int main() {
       38: 7562         	strb	r2, [r4, #0x15]
       3a: 5f67         	ldrsh	r7, [r4, r5]
-; }
       3c: 6e69         	ldr	r1, [r5, #0x64]
+;     unsigned result = factorial(10);
       3e: 6f66         	ldr	r6, [r4, #0x74]
       40: 2e00         	cmp	r6, #0x0
       42: 6564         	str	r4, [r4, #0x54]
+;     if (result == 3628800) {
       44: 7562         	strb	r2, [r4, #0x15]
       46: 5f67         	ldrsh	r7, [r4, r5]
       48: 6261         	str	r1, [r4, #0x24]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       4a: 7262         	strb	r2, [r4, #0x9]
-; unsigned factorial(unsigned n) {
       4c: 7665         	strb	r5, [r4, #0x19]
+; }
       4e: 2e00         	cmp	r6, #0x0
       50: 6564         	str	r4, [r4, #0x54]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       52: 7562         	strb	r2, [r4, #0x15]
-;     if (n <= 1) {
       54: 5f67         	ldrsh	r7, [r4, r5]
+; }
       56: 696c         	ldr	r4, [r5, #0x14]
       58: 656e         	str	r6, [r5, #0x54]
       5a: 2e00         	cmp	r6, #0x0
       5c: 6564         	str	r4, [r4, #0x54]
-;         return 1;
       5e: 7562         	strb	r2, [r4, #0x15]
       60: 5f67         	ldrsh	r7, [r4, r5]
-;         return n * factorial(n - 1);
       62: 7266         	strb	r6, [r4, #0x9]
       64: 6d61         	ldr	r1, [r4, #0x54]
       66: 0065         	lsls	r5, r4, #0x1
@@ -1372,249 +1351,233 @@ Disassembly of section .shstrtab:
       6e: 735f         	strb	r7, [r3, #0xd]
       70: 7274         	strb	r4, [r6, #0x9]
       72: 2e00         	cmp	r6, #0x0
-; }
       74: 6564         	str	r4, [r4, #0x54]
       76: 7562         	strb	r2, [r4, #0x15]
       78: 5f67         	ldrsh	r7, [r4, r5]
       7a: 6461         	str	r1, [r4, #0x44]
-; int main() {
       7c: 7264         	strb	r4, [r4, #0x9]
       7e: 2e00         	cmp	r6, #0x0
       80: 6564         	str	r4, [r4, #0x54]
       82: 7562         	strb	r2, [r4, #0x15]
       84: 5f67         	ldrsh	r7, [r4, r5]
       86: 696c         	ldr	r4, [r5, #0x14]
-;     unsigned result = factorial(10);
       88: 656e         	str	r6, [r5, #0x54]
       8a: 735f         	strb	r7, [r3, #0xd]
       8c: 7274         	strb	r4, [r6, #0x9]
-;     if (result == 3628800) {
       8e: 2e00         	cmp	r6, #0x0
       90: 6564         	str	r4, [r4, #0x54]
       92: 7562         	strb	r2, [r4, #0x15]
       94: 5f67         	ldrsh	r7, [r4, r5]
-      96: 7473         	strb	r3, [r6, #0x11]
-      98: 5f72         	ldrsh	r2, [r6, r5]
-;         svc_exit(0);
-      9a: 666f         	str	r7, [r5, #0x64]
-      9c: 7366         	strb	r6, [r4, #0xd]
-;     } else {
-      9e: 7465         	strb	r5, [r4, #0x11]
-      a0: 0073         	lsls	r3, r6, #0x1
-;         svc_exit(1);
-      a2: 412e         	asrs	r6, r5
-      a4: 4d52         	ldr	r5, [pc, #0x148]        @ 0x1f0 <.symtab+0x1f0>
-      a6: 612e         	str	r6, [r5, #0x10]
-; }
-      a8: 7474         	strb	r4, [r6, #0x11]
-      aa: 6972         	ldr	r2, [r6, #0x14]
-      ac: 7562         	strb	r2, [r4, #0x15]
-      ae: 6574         	str	r4, [r6, #0x54]
+      96: 6f6c         	ldr	r4, [r5, #0x74]
+      98: 6c63         	ldr	r3, [r4, #0x44]
+      9a: 7369         	strb	r1, [r5, #0xd]
+      9c: 7374         	strb	r4, [r6, #0xd]
+      9e: 2e00         	cmp	r6, #0x0
+      a0: 6564         	str	r4, [r4, #0x54]
+      a2: 7562         	strb	r2, [r4, #0x15]
+      a4: 5f67         	ldrsh	r7, [r4, r5]
+      a6: 7473         	strb	r3, [r6, #0x11]
+      a8: 5f72         	ldrsh	r2, [r6, r5]
+      aa: 666f         	str	r7, [r5, #0x64]
+      ac: 7366         	strb	r6, [r4, #0xd]
+      ae: 7465         	strb	r5, [r4, #0x11]
       b0: 0073         	lsls	r3, r6, #0x1
-      b2: 732e         	strb	r6, [r5, #0xc]
-; static inline void svc_exit(unsigned code) {
-      b4: 6d79         	ldr	r1, [r7, #0x54]
-      b6: 6174         	str	r4, [r6, #0x14]
-;     register unsigned r0 __asm__("r0") = code;
-      b8: 0062         	lsls	r2, r4, #0x1
-      ba: 732e         	strb	r6, [r5, #0xc]
-;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
-      bc: 7368         	strb	r0, [r5, #0xd]
-      be: 7274         	strb	r4, [r6, #0x9]
-; };
-      c0: 6174         	str	r4, [r6, #0x14]
-      c2: 0062         	lsls	r2, r4, #0x1
-      c4: 732e         	strb	r6, [r5, #0xc]
-      c6: 7274         	strb	r4, [r6, #0x9]
-      c8: 6174         	str	r4, [r6, #0x14]
-      ca: 0062         	lsls	r2, r4, #0x1
+      b2: 412e         	asrs	r6, r5
+      b4: 4d52         	ldr	r5, [pc, #0x148]        @ 0x200 <.symtab+0x200>
+      b6: 612e         	str	r6, [r5, #0x10]
+      b8: 7474         	strb	r4, [r6, #0x11]
+      ba: 6972         	ldr	r2, [r6, #0x14]
+      bc: 7562         	strb	r2, [r4, #0x15]
+      be: 6574         	str	r4, [r6, #0x54]
+      c0: 0073         	lsls	r3, r6, #0x1
+      c2: 732e         	strb	r6, [r5, #0xc]
+      c4: 6d79         	ldr	r1, [r7, #0x54]
+      c6: 6174         	str	r4, [r6, #0x14]
+      c8: 0062         	lsls	r2, r4, #0x1
+      ca: 732e         	strb	r6, [r5, #0xc]
+      cc: 7368         	strb	r0, [r5, #0xd]
+      ce: 7274         	strb	r4, [r6, #0x9]
+      d0: 6174         	str	r4, [r6, #0x14]
+      d2: 0062         	lsls	r2, r4, #0x1
+      d4: 732e         	strb	r6, [r5, #0xc]
+      d6: 7274         	strb	r4, [r6, #0x9]
+      d8: 6174         	str	r4, [r6, #0x14]
+      da: 0062         	lsls	r2, r4, #0x1
 
 Disassembly of section .strtab:
 
 00000000 <.strtab>:
 ; extern void* sbrk(ptrdiff_t increment) {
        0: 6600         	str	r0, [r0, #0x60]
-       2: 6361         	str	r1, [r4, #0x34]
 ;     char* prev_heap_ptr = heap_ptr;
+       2: 6361         	str	r1, [r4, #0x34]
        4: 632e         	str	r6, [r5, #0x30]
+;     if (increment > 0) {
        6: 2400         	movs	r4, #0x0
        8: 0074         	lsls	r4, r6, #0x1
-;     if (increment > 0) {
+;         if (heap_ptr + increment > &__heap_end) {
        a: 6424         	str	r4, [r4, #0x40]
        c: 6800         	ldr	r0, [r0]
        e: 6165         	str	r5, [r4, #0x14]
       10: 5f70         	ldrsh	r0, [r6, r5]
-;         if (heap_ptr + increment > &__heap_end) {
       12: 7470         	strb	r0, [r6, #0x11]
       14: 0072         	lsls	r2, r6, #0x1
+; }
       16: 7424         	strb	r4, [r4, #0x10]
-      18: 7300         	strb	r0, [r0, #0xc]
-      1a: 6376         	str	r6, [r6, #0x34]
-      1c: 655f         	str	r7, [r3, #0x54]
-      1e: 6978         	ldr	r0, [r7, #0x14]
-      20: 0074         	lsls	r4, r6, #0x1
-      22: 6424         	str	r4, [r4, #0x40]
-      24: 2400         	movs	r4, #0x0
-;             return (void*)-1;  // Return error if the heap is full
-      26: 0074         	lsls	r4, r6, #0x1
-      28: 6273         	str	r3, [r6, #0x24]
 ;         heap_ptr += increment;
-      2a: 6b72         	ldr	r2, [r6, #0x34]
-      2c: 5f00         	ldrsh	r0, [r0, r4]
-      2e: 685f         	ldr	r7, [r3, #0x4]
-      30: 6165         	str	r5, [r4, #0x14]
-      32: 5f70         	ldrsh	r0, [r6, r5]
-;     }
-      34: 6e65         	ldr	r5, [r4, #0x64]
-;     return (void*)prev_heap_ptr;
-      36: 0064         	lsls	r4, r4, #0x1
-      38: 6166         	str	r6, [r4, #0x14]
-      3a: 7463         	strb	r3, [r4, #0x11]
+      18: 2400         	movs	r4, #0x0
 ; }
-      3c: 726f         	strb	r7, [r5, #0x9]
-      3e: 6169         	str	r1, [r5, #0x14]
-      40: 006c         	lsls	r4, r5, #0x1
-      42: 616d         	str	r5, [r5, #0x14]
-      44: 6e69         	ldr	r1, [r5, #0x64]
-      46: 5f00         	ldrsh	r0, [r0, r4]
-      48: 685f         	ldr	r7, [r3, #0x4]
-      4a: 6165         	str	r5, [r4, #0x14]
+      1a: 0064         	lsls	r4, r4, #0x1
+      1c: 6273         	str	r3, [r6, #0x24]
+      1e: 6b72         	ldr	r2, [r6, #0x34]
+      20: 5f00         	ldrsh	r0, [r0, r4]
+      22: 685f         	ldr	r7, [r3, #0x4]
 ; unsigned factorial(unsigned n) {
-      4c: 5f70         	ldrsh	r0, [r6, r5]
-      4e: 7473         	strb	r3, [r6, #0x11]
-      50: 7261         	strb	r1, [r4, #0x9]
-      52: 0074         	lsls	r4, r6, #0x1
+      24: 6165         	str	r5, [r4, #0x14]
+      26: 5f70         	ldrsh	r0, [r6, r5]
 ;     if (n <= 1) {
-      54: 5f5f         	ldrsh	r7, [r3, r5]
-      56: 7364         	strb	r4, [r4, #0xd]
-      58: 5f6f         	ldrsh	r7, [r5, r5]
-      5a: 6168         	str	r0, [r5, #0x14]
-      5c: 646e         	str	r6, [r5, #0x44]
-;         return 1;
-      5e: 656c         	str	r4, [r5, #0x54]
-      60: 5f00         	ldrsh	r0, [r0, r4]
+      28: 6e65         	ldr	r5, [r4, #0x64]
+      2a: 0064         	lsls	r4, r4, #0x1
 ;         return n * factorial(n - 1);
-      62: 665f         	str	r7, [r3, #0x64]
-      64: 616c         	str	r4, [r5, #0x14]
-      66: 6873         	ldr	r3, [r6, #0x4]
-      68: 5f00         	ldrsh	r0, [r0, r4]
-      6a: 665f         	str	r7, [r3, #0x64]
-      6c: 616c         	str	r4, [r5, #0x14]
-      6e: 6873         	ldr	r3, [r6, #0x4]
-      70: 735f         	strb	r7, [r3, #0xd]
-      72: 7a69         	ldrb	r1, [r5, #0x9]
+      2c: 6166         	str	r6, [r4, #0x14]
+      2e: 7463         	strb	r3, [r4, #0x11]
+;     if (n <= 1) {
+      30: 726f         	strb	r7, [r5, #0x9]
+      32: 6169         	str	r1, [r5, #0x14]
 ; }
-      74: 0065         	lsls	r5, r4, #0x1
-      76: 5f5f         	ldrsh	r7, [r3, r5]
-      78: 6172         	str	r2, [r6, #0x14]
-      7a: 006d         	lsls	r5, r5, #0x1
+      34: 006c         	lsls	r4, r5, #0x1
+      36: 616d         	str	r5, [r5, #0x14]
 ; int main() {
-      7c: 5f5f         	ldrsh	r7, [r3, r5]
-      7e: 6172         	str	r2, [r6, #0x14]
-      80: 5f6d         	ldrsh	r5, [r5, r5]
-      82: 6973         	ldr	r3, [r6, #0x14]
-      84: 657a         	str	r2, [r7, #0x54]
-      86: 5f00         	ldrsh	r0, [r0, r4]
+      38: 6e69         	ldr	r1, [r5, #0x64]
+      3a: 5f00         	ldrsh	r0, [r0, r4]
+      3c: 685f         	ldr	r7, [r3, #0x4]
 ;     unsigned result = factorial(10);
-      88: 745f         	strb	r7, [r3, #0x11]
-      8a: 736c         	strb	r4, [r5, #0xd]
-      8c: 615f         	str	r7, [r3, #0x14]
+      3e: 6165         	str	r5, [r4, #0x14]
+      40: 5f70         	ldrsh	r0, [r6, r5]
+      42: 7473         	strb	r3, [r6, #0x11]
 ;     if (result == 3628800) {
-      8e: 696c         	ldr	r4, [r5, #0x14]
-      90: 6e67         	ldr	r7, [r4, #0x64]
-      92: 5f00         	ldrsh	r0, [r0, r4]
-      94: 625f         	str	r7, [r3, #0x24]
-      96: 7373         	strb	r3, [r6, #0xd]
-      98: 655f         	str	r7, [r3, #0x54]
-;         svc_exit(0);
-      9a: 646e         	str	r6, [r5, #0x44]
-      9c: 5f00         	ldrsh	r0, [r0, r4]
-;     } else {
-      9e: 685f         	ldr	r7, [r3, #0x4]
-      a0: 6165         	str	r5, [r4, #0x14]
-;         svc_exit(1);
-      a2: 5f70         	ldrsh	r0, [r6, r5]
-      a4: 6973         	ldr	r3, [r6, #0x14]
-      a6: 657a         	str	r2, [r7, #0x54]
+      44: 7261         	strb	r1, [r4, #0x9]
+      46: 0074         	lsls	r4, r6, #0x1
+      48: 5f5f         	ldrsh	r7, [r3, r5]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      4a: 7364         	strb	r4, [r4, #0xd]
+      4c: 5f6f         	ldrsh	r7, [r5, r5]
 ; }
-      a8: 6d5f         	ldr	r7, [r3, #0x54]
-      aa: 6e69         	ldr	r1, [r5, #0x64]
-      ac: 5f00         	ldrsh	r0, [r0, r4]
-      ae: 735f         	strb	r7, [r3, #0xd]
-      b0: 6174         	str	r4, [r6, #0x14]
-      b2: 6b63         	ldr	r3, [r4, #0x34]
-; static inline void svc_exit(unsigned code) {
+      4e: 6168         	str	r0, [r5, #0x14]
+      50: 646e         	str	r6, [r5, #0x44]
+;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
+      52: 656c         	str	r4, [r5, #0x54]
+      54: 5f00         	ldrsh	r0, [r0, r4]
+; }
+      56: 665f         	str	r7, [r3, #0x64]
+      58: 616c         	str	r4, [r5, #0x14]
+      5a: 6873         	ldr	r3, [r6, #0x4]
+      5c: 5f00         	ldrsh	r0, [r0, r4]
+      5e: 665f         	str	r7, [r3, #0x64]
+      60: 616c         	str	r4, [r5, #0x14]
+      62: 6873         	ldr	r3, [r6, #0x4]
+      64: 735f         	strb	r7, [r3, #0xd]
+      66: 7a69         	ldrb	r1, [r5, #0x9]
+      68: 0065         	lsls	r5, r4, #0x1
+      6a: 5f5f         	ldrsh	r7, [r3, r5]
+      6c: 6172         	str	r2, [r6, #0x14]
+      6e: 006d         	lsls	r5, r5, #0x1
+      70: 5f5f         	ldrsh	r7, [r3, r5]
+      72: 6172         	str	r2, [r6, #0x14]
+      74: 5f6d         	ldrsh	r5, [r5, r5]
+      76: 6973         	ldr	r3, [r6, #0x14]
+      78: 657a         	str	r2, [r7, #0x54]
+      7a: 5f00         	ldrsh	r0, [r0, r4]
+      7c: 745f         	strb	r7, [r3, #0x11]
+      7e: 736c         	strb	r4, [r5, #0xd]
+      80: 615f         	str	r7, [r3, #0x14]
+      82: 696c         	ldr	r4, [r5, #0x14]
+      84: 6e67         	ldr	r7, [r4, #0x64]
+      86: 5f00         	ldrsh	r0, [r0, r4]
+      88: 625f         	str	r7, [r3, #0x24]
+      8a: 7373         	strb	r3, [r6, #0xd]
+      8c: 655f         	str	r7, [r3, #0x54]
+      8e: 646e         	str	r6, [r5, #0x44]
+      90: 5f00         	ldrsh	r0, [r0, r4]
+      92: 685f         	ldr	r7, [r3, #0x4]
+      94: 6165         	str	r5, [r4, #0x14]
+      96: 5f70         	ldrsh	r0, [r6, r5]
+      98: 6973         	ldr	r3, [r6, #0x14]
+      9a: 657a         	str	r2, [r7, #0x54]
+      9c: 6d5f         	ldr	r7, [r3, #0x54]
+      9e: 6e69         	ldr	r1, [r5, #0x64]
+      a0: 5f00         	ldrsh	r0, [r0, r4]
+      a2: 735f         	strb	r7, [r3, #0xd]
+      a4: 6174         	str	r4, [r6, #0x14]
+      a6: 6b63         	ldr	r3, [r4, #0x34]
+      a8: 735f         	strb	r7, [r3, #0xd]
+      aa: 7a69         	ldrb	r1, [r5, #0x9]
+      ac: 0065         	lsls	r5, r4, #0x1
+      ae: 5f5f         	ldrsh	r7, [r3, r5]
+      b0: 6164         	str	r4, [r4, #0x14]
+      b2: 6174         	str	r4, [r6, #0x14]
       b4: 735f         	strb	r7, [r3, #0xd]
       b6: 7a69         	ldrb	r1, [r5, #0x9]
-;     register unsigned r0 __asm__("r0") = code;
       b8: 0065         	lsls	r5, r4, #0x1
       ba: 5f5f         	ldrsh	r7, [r3, r5]
-;     __asm volatile ("svc 0" :  : "r"(r0) : "memory");
       bc: 6164         	str	r4, [r4, #0x14]
       be: 6174         	str	r4, [r6, #0x14]
-; };
       c0: 735f         	strb	r7, [r3, #0xd]
-      c2: 7a69         	ldrb	r1, [r5, #0x9]
-      c4: 0065         	lsls	r5, r4, #0x1
-      c6: 5f5f         	ldrsh	r7, [r3, r5]
-      c8: 6164         	str	r4, [r4, #0x14]
-      ca: 6174         	str	r4, [r6, #0x14]
-      cc: 735f         	strb	r7, [r3, #0xd]
-      ce: 756f         	strb	r7, [r5, #0x15]
-      d0: 6372         	str	r2, [r6, #0x34]
-      d2: 5f65         	ldrsh	r5, [r4, r5]
-      d4: 6973         	ldr	r3, [r6, #0x14]
-      d6: 657a         	str	r2, [r7, #0x54]
-      d8: 5f00         	ldrsh	r0, [r0, r4]
-      da: 735f         	strb	r7, [r3, #0xd]
-      dc: 6174         	str	r4, [r6, #0x14]
-      de: 6b63         	ldr	r3, [r4, #0x34]
-      e0: 5f00         	ldrsh	r0, [r0, r4]
-      e2: 655f         	str	r7, [r3, #0x54]
-      e4: 646e         	str	r6, [r5, #0x44]
-      e6: 5f00         	ldrsh	r0, [r0, r4]
-      e8: 645f         	str	r7, [r3, #0x44]
-      ea: 7461         	strb	r1, [r4, #0x11]
-      ec: 5f61         	ldrsh	r1, [r4, r5]
-      ee: 6f73         	ldr	r3, [r6, #0x74]
-      f0: 7275         	strb	r5, [r6, #0x9]
-      f2: 6563         	str	r3, [r4, #0x54]
-      f4: 655f         	str	r7, [r3, #0x54]
-      f6: 646e         	str	r6, [r5, #0x44]
-      f8: 5f00         	ldrsh	r0, [r0, r4]
-      fa: 645f         	str	r7, [r3, #0x44]
-      fc: 7461         	strb	r1, [r4, #0x11]
-      fe: 5f61         	ldrsh	r1, [r4, r5]
-     100: 6f73         	ldr	r3, [r6, #0x74]
-     102: 7275         	strb	r5, [r6, #0x9]
-     104: 6563         	str	r3, [r4, #0x54]
-     106: 5f00         	ldrsh	r0, [r0, r4]
-     108: 745f         	strb	r7, [r3, #0x11]
-     10a: 6164         	str	r4, [r4, #0x14]
-     10c: 6174         	str	r4, [r6, #0x14]
-     10e: 735f         	strb	r7, [r3, #0xd]
-     110: 756f         	strb	r7, [r5, #0x15]
-     112: 6372         	str	r2, [r6, #0x34]
-     114: 5f65         	ldrsh	r5, [r4, r5]
-     116: 6e65         	ldr	r5, [r4, #0x64]
-     118: 0064         	lsls	r4, r4, #0x1
-     11a: 5f5f         	ldrsh	r7, [r3, r5]
-     11c: 6164         	str	r4, [r4, #0x14]
-     11e: 6174         	str	r4, [r6, #0x14]
-     120: 655f         	str	r7, [r3, #0x54]
-     122: 646e         	str	r6, [r5, #0x44]
-     124: 5f00         	ldrsh	r0, [r0, r4]
-     126: 645f         	str	r7, [r3, #0x44]
-     128: 7461         	strb	r1, [r4, #0x11]
-     12a: 5f61         	ldrsh	r1, [r4, r5]
-     12c: 7473         	strb	r3, [r6, #0x11]
-     12e: 7261         	strb	r1, [r4, #0x9]
-     130: 0074         	lsls	r4, r6, #0x1
-     132: 5f5f         	ldrsh	r7, [r3, r5]
-     134: 6574         	str	r4, [r6, #0x54]
-     136: 7478         	strb	r0, [r7, #0x11]
-     138: 655f         	str	r7, [r3, #0x54]
-     13a: 646e         	str	r6, [r5, #0x44]
-     13c: 5f00         	ldrsh	r0, [r0, r4]
-     13e: 6e65         	ldr	r5, [r4, #0x64]
-     140: 0064         	lsls	r4, r4, #0x1
+      c2: 756f         	strb	r7, [r5, #0x15]
+      c4: 6372         	str	r2, [r6, #0x34]
+      c6: 5f65         	ldrsh	r5, [r4, r5]
+      c8: 6973         	ldr	r3, [r6, #0x14]
+      ca: 657a         	str	r2, [r7, #0x54]
+      cc: 5f00         	ldrsh	r0, [r0, r4]
+      ce: 735f         	strb	r7, [r3, #0xd]
+      d0: 6174         	str	r4, [r6, #0x14]
+      d2: 6b63         	ldr	r3, [r4, #0x34]
+      d4: 5f00         	ldrsh	r0, [r0, r4]
+      d6: 655f         	str	r7, [r3, #0x54]
+      d8: 646e         	str	r6, [r5, #0x44]
+      da: 5f00         	ldrsh	r0, [r0, r4]
+      dc: 645f         	str	r7, [r3, #0x44]
+      de: 7461         	strb	r1, [r4, #0x11]
+      e0: 5f61         	ldrsh	r1, [r4, r5]
+      e2: 6f73         	ldr	r3, [r6, #0x74]
+      e4: 7275         	strb	r5, [r6, #0x9]
+      e6: 6563         	str	r3, [r4, #0x54]
+      e8: 655f         	str	r7, [r3, #0x54]
+      ea: 646e         	str	r6, [r5, #0x44]
+      ec: 5f00         	ldrsh	r0, [r0, r4]
+      ee: 645f         	str	r7, [r3, #0x44]
+      f0: 7461         	strb	r1, [r4, #0x11]
+      f2: 5f61         	ldrsh	r1, [r4, r5]
+      f4: 6f73         	ldr	r3, [r6, #0x74]
+      f6: 7275         	strb	r5, [r6, #0x9]
+      f8: 6563         	str	r3, [r4, #0x54]
+      fa: 5f00         	ldrsh	r0, [r0, r4]
+      fc: 745f         	strb	r7, [r3, #0x11]
+      fe: 6164         	str	r4, [r4, #0x14]
+     100: 6174         	str	r4, [r6, #0x14]
+     102: 735f         	strb	r7, [r3, #0xd]
+     104: 756f         	strb	r7, [r5, #0x15]
+     106: 6372         	str	r2, [r6, #0x34]
+     108: 5f65         	ldrsh	r5, [r4, r5]
+     10a: 6e65         	ldr	r5, [r4, #0x64]
+     10c: 0064         	lsls	r4, r4, #0x1
+     10e: 5f5f         	ldrsh	r7, [r3, r5]
+     110: 6164         	str	r4, [r4, #0x14]
+     112: 6174         	str	r4, [r6, #0x14]
+     114: 655f         	str	r7, [r3, #0x54]
+     116: 646e         	str	r6, [r5, #0x44]
+     118: 5f00         	ldrsh	r0, [r0, r4]
+     11a: 645f         	str	r7, [r3, #0x44]
+     11c: 7461         	strb	r1, [r4, #0x11]
+     11e: 5f61         	ldrsh	r1, [r4, r5]
+     120: 7473         	strb	r3, [r6, #0x11]
+     122: 7261         	strb	r1, [r4, #0x9]
+     124: 0074         	lsls	r4, r6, #0x1
+     126: 5f5f         	ldrsh	r7, [r3, r5]
+     128: 6574         	str	r4, [r6, #0x54]
+     12a: 7478         	strb	r0, [r7, #0x11]
+     12c: 655f         	str	r7, [r3, #0x54]
+     12e: 646e         	str	r6, [r5, #0x44]
+     130: 5f00         	ldrsh	r0, [r0, r4]
+     132: 6e65         	ldr	r5, [r4, #0x64]
+     134: 0064         	lsls	r4, r4, #0x1

@@ -325,7 +325,7 @@ impl Memory {
         // Addr is eight byes
         // #aaaaaaaa: 01234567 01234567
         let width_for_mem = width - 11;
-        let words_per_line = width_for_mem / 9;
+        let words_per_line = 4;
 
         let start_addr = bottom - ((words_per_line * (height)) * 4) - (rows_scrolled_up * 4);
         let mut string = String::new();

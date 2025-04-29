@@ -1872,7 +1872,7 @@ Disassembly of section .debug_info:
       a4: 0000         	movs	r0, r0
       a6: 0800         	lsrs	r0, r0, #0x20
       a8: 1102         	asrs	r2, r0, #0x4
-      aa: 3702         	adds	r7, #0x2
+      aa: 3602         	adds	r6, #0x2
       ac: 00ed         	lsls	r5, r5, #0x3
       ae: 0000         	movs	r0, r0
       b0: 030e         	lsls	r6, r1, #0xc
@@ -1880,7 +1880,7 @@ Disassembly of section .debug_info:
       b4: 0000         	movs	r0, r0
       b6: 010d         	lsls	r5, r1, #0x4
       b8: 1255         	asrs	r5, r2, #0x9
-      ba: 3802         	subs	r0, #0x2
+      ba: 3702         	adds	r7, #0x2
       bc: 00ed         	lsls	r5, r5, #0x3
       be: 0000         	movs	r0, r0
       c0: 030e         	lsls	r6, r1, #0xc
@@ -1888,7 +1888,7 @@ Disassembly of section .debug_info:
       c4: 0000         	movs	r0, r0
       c6: 0308         	lsls	r0, r1, #0xc
       c8: 0213         	lsls	r3, r2, #0x8
-      ca: ed39 0000    	<unknown>
+      ca: ed38 0000    	<unknown>
       ce: 0000         	movs	r0, r0
       d0: 0000         	movs	r0, r0
       d2: 5e0f         	ldrsh	r7, [r1, r0]
@@ -1896,7 +1896,7 @@ Disassembly of section .debug_info:
       d6: 0400         	lsls	r0, r0, #0x10
       d8: 0002         	movs	r2, r0
       da: 0000         	movs	r0, r0
-      dc: 3f02         	subs	r7, #0x2
+      dc: 3e02         	subs	r6, #0x2
       de: 1005         	asrs	r5, r0, #0x20
       e0: 6200         	str	r0, [r0, #0x20]
       e2: 0000         	movs	r0, r0
@@ -2356,15 +2356,14 @@ Disassembly of section .debug_line:
       38: 041e         	lsls	r6, r3, #0x10
       3a: 005c         	lsls	r4, r3, #0x1
       3c: 0000         	movs	r0, r0
-      3e: b300         	<unknown>
-      40: 40d5         	lsrs	r5, r2
-      42: 23b6         	movs	r3, #0xb6
-      44: 81c1         	strh	r1, [r0, #0xe]
-      46: 463c         	mov	r4, r7
-      48: 1904         	adds	r4, r0, r4
-      4a: 3103         	adds	r1, #0x3
-      4c: 053d         	lsls	r5, r7, #0x14
-      4e: 8e02         	ldrh	r2, [r0, #0x30]
+      3e: 8d00         	ldrh	r0, [r0, #0x28]
+      40: 7ef4         	ldrb	r4, [r6, #0x1b]
+      42: f70d d3a2    	bl	0xff30d78a <.stack+0xffffffffdf28d782> @ imm = #-0xcf28bc
+      46: 2d9d         	cmp	r5, #0x9d
+      48: b6bf         	<unknown>
+      4a: b50b         	push	{r0, r1, r3, lr}
+      4c: d092         	beq	0xffffff74 <.stack+0xffffffffdff7ff6c> @ imm = #-0xdc
+      4e: 8ec1         	ldrh	r1, [r0, #0x36]
       50: 0002         	movs	r2, r0
       52: 0100         	lsls	r0, r0, #0x4
       54: b4f9         	push	{r0, r3, r4, r5, r6, r7}
@@ -2379,17 +2378,16 @@ Disassembly of section .debug_line:
       62: 01a9         	lsls	r1, r5, #0x6
       64: 009c         	lsls	r4, r3, #0x2
       66: 0000         	movs	r0, r0
-      68: b302         	<unknown>
-      6a: 40d5         	lsrs	r5, r2
+      68: 8d02         	ldrh	r2, [r0, #0x28]
+      6a: 7ef4         	ldrb	r4, [r6, #0x1b]
 ;         for (int j = 0; j < SIZE; j++) {
-      6c: 23b6         	movs	r3, #0xb6
-      6e: 81c1         	strh	r1, [r0, #0xe]
-      70: 463c         	mov	r4, r7
-      72: 1904         	adds	r4, r0, r4
+      6c: f70d d3a2    	bl	0xff30d7b4 <.stack+0xffffffffdf28d7ac> @ imm = #-0xcf28bc
+      70: 2d9d         	cmp	r5, #0x9d
+      72: b6bf         	<unknown>
 ;     for (int i = 0; i < SIZE; i++) {
-      74: 3103         	adds	r1, #0x3
-      76: 053d         	lsls	r5, r7, #0x14
-      78: 1f02         	subs	r2, r0, #0x4
+      74: b50b         	push	{r0, r1, r3, lr}
+      76: d092         	beq	0xffffff9e <.stack+0xffffffffdff7ff96> @ imm = #-0xdc
+      78: 1fc1         	subs	r1, r0, #0x7
       7a: 0000         	movs	r0, r0
 ;     for (int i = 0; i < SIZE; i++) {
       7c: 0300         	lsls	r0, r0, #0xc
@@ -2436,7 +2434,7 @@ Disassembly of section .debug_line:
       ca: 4a4c         	ldr	r2, [pc, #0x130]        @ 0x1fc <.rodata+0x144>
       cc: 2105         	movs	r1, #0x5
       ce: 0306         	lsls	r6, r0, #0xc
-      d0: 083a         	lsrs	r2, r7, #0x20
+      d0: 0839         	lsrs	r1, r7, #0x20
       d2: 05e4         	lsls	r4, r4, #0x17
       d4: 0631         	lsls	r1, r6, #0x18
       d6: 052e         	lsls	r6, r5, #0x14
@@ -2447,10 +2445,10 @@ Disassembly of section .debug_line:
       e0: 0565         	lsls	r5, r4, #0x15
       e2: 060d         	lsls	r5, r1, #0x18
       e4: 034a         	lsls	r2, r1, #0xd
-      e6: 4a47         	ldr	r2, [pc, #0x11c]        @ 0x204 <.rodata+0x14c>
+      e6: 4a48         	ldr	r2, [pc, #0x120]        @ 0x208 <.rodata+0x150>
       e8: 0905         	lsrs	r5, r0, #0x4
       ea: 0306         	lsls	r6, r0, #0xc
-      ec: 2e38         	cmp	r6, #0x38
+      ec: 2e37         	cmp	r6, #0x37
       ee: 2405         	movs	r4, #0x5
       f0: 2e06         	cmp	r6, #0x6
       f2: 0905         	lsrs	r5, r0, #0x4
@@ -2459,20 +2457,20 @@ Disassembly of section .debug_line:
       f8: 0549         	lsls	r1, r1, #0x15
       fa: 0620         	lsls	r0, r4, #0x18
       fc: 034a         	lsls	r2, r1, #0xd
-      fe: 2e49         	cmp	r6, #0x49
+      fe: 2e4a         	cmp	r6, #0x4a
      100: 0505         	lsls	r5, r0, #0x14
-     102: 3703         	adds	r7, #0x3
+     102: 3603         	adds	r6, #0x3
      104: 032e         	lsls	r6, r5, #0xc
-     106: 4a49         	ldr	r2, [pc, #0x124]        @ 0x22c <.rodata+0x174>
+     106: 4a4a         	ldr	r2, [pc, #0x128]        @ 0x230 <.rodata+0x178>
      108: 0104         	lsls	r4, r0, #0x4
      10a: 0306         	lsls	r6, r0, #0xc
      10c: 2e0d         	cmp	r6, #0xd
      10e: 0204         	lsls	r4, r0, #0x8
      110: 0105         	lsls	r5, r0, #0x4
      112: 030b         	lsls	r3, r1, #0xc
-     114: 2e33         	cmp	r6, #0x33
+     114: 2e32         	cmp	r6, #0x32
      116: 0306         	lsls	r6, r0, #0xc
-     118: 8240         	strh	r0, [r0, #0x12]
+     118: 8241         	strh	r1, [r0, #0x12]
      11a: 0c02         	lsrs	r2, r0, #0x10
      11c: 0100         	lsls	r0, r0, #0x4
      11e: 8801         	ldrh	r1, [r0]

@@ -50,7 +50,6 @@ int main() {
     };
 
     volatile int result[SIZE][SIZE] = {0};
-
     // Matrix multiplication
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
