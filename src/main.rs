@@ -4,9 +4,7 @@ mod binary;
 mod components;
 mod cpu;
 mod decode;
-mod log;
 mod model;
-mod system;
 #[cfg(test)]
 mod test;
 
@@ -55,7 +53,6 @@ fn main() -> io::Result<()> {
     let mut state = ProcessorState {
         regs: registers,
         mem: memory,
-        halting: None,
     };
 
     state.regs.pc = state.mem.entrypoint as u32;
@@ -72,7 +69,6 @@ fn main() -> io::Result<()> {
 
     let mut cpu = OoOSpeculative::new(
         state.clone(),
-        "traces/trace.csv",
         |i: String| {
             if FAST {
             } else {

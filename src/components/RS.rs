@@ -30,12 +30,10 @@ pub struct RS {
     pub k: RSData,
     pub l: RSData,
 
-    /// The ROB entry to write to after execution
-    pub rob_dest: usize,
-
     pub i: I,
 
-    setsflags: bool,
+    /// The ROB entry to write to after execution
+    pub rob_dest: usize,
 }
 
 impl RS {
@@ -45,21 +43,8 @@ impl RS {
             j: RSData::None,
             k: RSData::None,
             l: RSData::None,
-            setsflags: false,
             rob_dest: 0,
             i: I::undefined(),
-        }
-    }
-
-    pub fn is_ready(&self) -> bool {
-        if !self.busy {
-            false
-        } else {
-            // if either is waiting for ROB then not ready
-            match (&self.j, &self.k) {
-                (RSData::ROB(_, _), _) | (_, RSData::ROB(_, _)) => false,
-                _ => true,
-            }
         }
     }
 
@@ -172,7 +157,7 @@ impl<'a> RSSet {
             }
 
             if no_loads {
-                match entry.i.it {
+                match rob.get(entry.rob_dest).i.it {
                     LDRReg | LDRImm | LDRHReg | LDRHImm | LDRBReg | LDRBImm => continue,
                     _ => {}
                 }
@@ -200,6 +185,7 @@ impl<'a> RSSet {
     }
 
     /// Get a ready to execute RS
+    #[allow(unused)]
     pub fn get_all_ready(&self, rob: &ROB) -> Vec<&RS> {
         let mut set = Vec::new();
         for entry in &self.vec {
@@ -433,7 +419,6 @@ impl<'a> RSSet {
             l,
             rob_dest: dest,
             i: i.clone(),
-            setsflags: i.setsflags,
         };
         Some(alloc)
     }

@@ -22,7 +22,7 @@ impl<'a> OoOSpeculative<'a> {
                 */
 
                 if let Some((control_instruction, control_offset)) =
-                    Self::pre_decode(self.spec_pc, fetched)
+                    Self::pre_decode(fetched)
                 {
                     self.fb[i] = Some((self.spec_pc + pc_increment, fetched));
                     i += 1;
@@ -53,7 +53,7 @@ impl<'a> OoOSpeculative<'a> {
         }
     }
 
-    fn pre_decode(pc: u32, i: u32) -> Option<(IT, u32)> {
+    fn pre_decode(i: u32) -> Option<(IT, u32)> {
         // If its BL
         if (i & 0b1111_1000_0000_0000_1101_0000_0000_0000)
             == 0b1111_0000_0000_0000_1101_0000_0000_0000

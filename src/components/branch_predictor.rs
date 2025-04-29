@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 pub struct BranchPredictor {
     speculative_pc: u32,
 }

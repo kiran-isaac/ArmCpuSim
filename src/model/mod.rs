@@ -8,5 +8,4 @@ pub use registers::{ASPRUpdate, Registers};
 pub struct ProcessorState {
     pub regs: Registers,
     pub mem: Memory,
-    pub halting: Option<u8>,
 }

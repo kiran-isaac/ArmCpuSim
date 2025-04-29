@@ -16,7 +16,6 @@ pub struct Memory {
     flash_start: u32,
     flash_size: u32,
     ram_start: u32,
-    ram_size: u32,
     functions: HashMap<u64, String>,
 }
 
@@ -120,7 +119,6 @@ impl Memory {
             flash_start,
             flash_size,
             ram_start,
-            ram_size,
             functions,
         }
     }

@@ -13,7 +13,6 @@ use crate::components::ROB::{ROBEntryDest, ROBStatus};
 use crate::components::RS::*;
 use crate::decode::IT;
 use crate::decode::{decode, decode2, get_issue_type, IssueType, I};
-use crate::log::Tracer;
 use crate::model::{ASPRUpdate, ProcessorState};
 use crate::model::Registers;
 pub use parameters::*;
@@ -29,6 +28,7 @@ use ratatui::{
 use std::collections::{HashMap, VecDeque};
 
 #[derive(PartialEq, Eq)]
+#[allow(unused)]
 pub enum PredictionAlgorithms {
     AlwaysTaken,
     AlwaysUntaken,
@@ -55,7 +55,6 @@ pub struct LoadQueueEntry {
 enum StallReason {
     FullRob,
     IssueRSFull,
-    ExecuteLSQFull,
     IStall,
 }
 
@@ -67,8 +66,6 @@ struct InstructionQueueEntry {
 pub struct OoOSpeculative<'a> {
     state: ProcessorState,
     log_fn: Box<dyn FnMut(String) + 'a>,
-
-    tracer: Tracer,
 
     // Only single fetch buffer space needed, as decode buffer will always produce
     // same or more num of mops, so fetch is never limiting factor
@@ -117,7 +114,7 @@ pub struct OoOSpeculative<'a> {
 }
 
 impl<'a> OoOSpeculative<'a> {
-    pub fn new<F>(state: ProcessorState, trace_file: &str, log_fn: F) -> Self
+    pub fn new<F>(state: ProcessorState, log_fn: F) -> Self
     where
         F: FnMut(String) + 'a,
     {
@@ -126,7 +123,6 @@ impl<'a> OoOSpeculative<'a> {
             output: String::new(),
             log_fn: Box::new(log_fn),
 
-            tracer: Tracer::new(trace_file, &state.regs),
             spec_pc: state.regs.pc,
             state: state.clone(),
             fb: [None; N_ISSUE],

@@ -92,21 +92,21 @@ impl<'a> OoOSpeculative<'a> {
 
         for _ in 0..N_ALUSHIFTERS {
             if let Some(rs_index) = self.rs_alu_shift.get_oldest_ready(&self.rob, false) {
-                self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone(), &mut 0);
+                self.execute_alu_shift(&self.rs_alu_shift.vec[rs_index].clone());
                 self.rs_alu_shift.vec[rs_index].busy = false;
             }
         }
 
         for _ in 0..N_MULS {
             if let Some(rs_index) = self.rs_mul.get_oldest_ready(&self.rob, false) {
-                self.execute_mul(&self.rs_mul.vec[rs_index].clone(), &mut 0);
+                self.execute_mul(&self.rs_mul.vec[rs_index].clone());
                 self.rs_mul.vec[rs_index].busy = false;
             }
         }
 
         for _ in 0..N_CONTROL {
             if let Some(rs_index) = self.rs_control.get_oldest_ready(&self.rob, false) {
-                self.execute_control(&self.rs_control.vec[rs_index].clone(), &mut 0);
+                self.execute_control(&self.rs_control.vec[rs_index].clone());
                 self.rs_control.vec[rs_index].busy = false;
             }
         }
@@ -115,13 +115,13 @@ impl<'a> OoOSpeculative<'a> {
             // No loads if the queue is full
             let no_loads = self.load_queue.len() >= LQ_SIZE;
             if let Some(rs_index) = self.rs_ls.get_oldest_ready(&self.rob, no_loads) {
-                self.execute_load_store(&self.rs_ls.vec[rs_index].clone(), &mut 0);
+                self.execute_load_store(&self.rs_ls.vec[rs_index].clone());
                 self.rs_ls.vec[rs_index].busy = false;
             }
         }
     }
 
-    fn execute_control(&mut self, rs: &RS, num_broadcast: &mut usize) {
+    fn execute_control(&mut self, rs: &RS) {
         if rs.i.it == SVC {
             let svc_num = Self::get_data(rs.j).unwrap();
             let r0 = Self::get_data(rs.k).unwrap();
@@ -138,7 +138,6 @@ impl<'a> OoOSpeculative<'a> {
                             halt: true,
                         },
                     ));
-                    *num_broadcast += 1;
                     return;
                 }
                 1 => {
@@ -258,10 +257,9 @@ impl<'a> OoOSpeculative<'a> {
                 halt: false,
             },
         ));
-        *num_broadcast += 1;
     }
 
-    fn execute_load_store(&mut self, rs: &RS, num_broadcast: &mut usize) {
+    fn execute_load_store(&mut self, rs: &RS) {
         // Address calc
         let j = Self::get_data(rs.j).unwrap();
         let k = Self::get_data(rs.k).unwrap();
@@ -296,7 +294,7 @@ impl<'a> OoOSpeculative<'a> {
         }
     }
 
-    fn execute_mul(&mut self, rs: &RS, num_broadcast: &mut usize) {
+    fn execute_mul(&mut self, rs: &RS) {
         let j = unsigned_to_signed_bitcast(Self::get_data(rs.j).unwrap());
         let k = unsigned_to_signed_bitcast(Self::get_data(rs.k).unwrap());
 
@@ -323,10 +321,9 @@ impl<'a> OoOSpeculative<'a> {
                 halt: false,
             },
         ));
-        *num_broadcast += 1;
     }
 
-    fn execute_alu_shift(&mut self, rs: &RS, num_broadcast: &mut usize) {
+    fn execute_alu_shift(&mut self, rs: &RS) {
         let j = Self::get_data(rs.j);
         let k = Self::get_data(rs.k);
         let l = Self::get_data(rs.l);
@@ -472,7 +469,6 @@ impl<'a> OoOSpeculative<'a> {
                 halt: false,
             },
         ));
-        *num_broadcast += 1;
     }
 
     fn get_data(x: RSData) -> Option<u32> {

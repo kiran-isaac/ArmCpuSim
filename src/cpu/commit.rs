@@ -119,7 +119,7 @@ impl<'a> OoOSpeculative<'a> {
         if head.i.setsflags {
             self.state.regs.apply_aspr_update(&head.asprupdate);
             self.rob
-                .wipe_aspr_rob_dependencies_at_head(&head.asprupdate);
+                .wipe_aspr_rob_dependencies_at_head();
         }
 
         //

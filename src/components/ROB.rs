@@ -86,7 +86,7 @@ impl ROBEntry {
 impl ROB {
     // Only wipe aspr if the thing currently committing is the thing that is currently responsible for
     // the register_status entry
-    pub fn wipe_aspr_rob_dependencies_at_head(&mut self, asprupdate: &ASPRUpdate) {
+    pub fn wipe_aspr_rob_dependencies_at_head(&mut self) {
         match self.register_status[16] {
             Some(n) => {
                 if n == self.head {
