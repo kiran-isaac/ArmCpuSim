@@ -7,13 +7,8 @@ use std::fmt::Formatter;
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum ROBStatus {
     EMPTY,
-    Pending,
     Execute,
-    Commit,
     Write,
-
-    /// Instruction had an exception
-    Exception(u8),
 }
 
 impl std::fmt::Display for ROBStatus {
@@ -21,10 +16,7 @@ impl std::fmt::Display for ROBStatus {
         match self {
             ROBStatus::EMPTY => write!(f, "__"),
             ROBStatus::Execute => write!(f, "EX"),
-            ROBStatus::Pending => write!(f, "PN"),
-            ROBStatus::Commit => write!(f, "CO"),
             ROBStatus::Write => write!(f, "WB"),
-            ROBStatus::Exception(v) => write!(f, "V{}", v),
         }
     }
 }

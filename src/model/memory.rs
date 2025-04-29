@@ -3,7 +3,6 @@ use elf::abi::PT_LOAD;
 use elf::endian::{AnyEndian, EndianParse};
 use elf::ElfBytes;
 use std::collections::HashMap;
-use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
 
