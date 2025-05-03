@@ -1,5 +1,5 @@
 use crate::components::ROB::ROBStatus::EMPTY;
-use crate::cpu::{LoadQueueEntry, ROB_ENTRIES};
+use crate::cpu::{InstructionQueueEntry, LoadQueueEntry, ROB_ENTRIES};
 use crate::decode::{I, IT::*};
 use crate::model::{ASPRUpdate, Registers};
 use std::fmt::Formatter;
@@ -53,6 +53,7 @@ pub struct ROBEntry {
     pub asprupdate: ASPRUpdate,
     pub ready: bool,
     pub dest: ROBEntryDest,
+    pub predicted_taken: Option<u32>
 }
 
 impl ROBEntry {
@@ -64,6 +65,7 @@ impl ROBEntry {
             halt: false,
             status: ROBStatus::EMPTY,
             dest: ROBEntryDest::None,
+            predicted_taken: None,
             i: I::undefined(),
             asprupdate: ASPRUpdate::no_update(),
             ready: false,
@@ -124,7 +126,11 @@ impl ROB {
         }
     }
 
-    pub fn issue_receive(&mut self, i: &I, pc: u32) -> usize {
+    pub fn issue_receive(&mut self, iqe: &InstructionQueueEntry) -> usize {
+        let i = iqe.i;
+        let pc = iqe.pc;
+        let predicted_taken = iqe.predicted_taken;
+        
         // Should be checked by caller
         if self.is_full() {
             panic!("ROB is full, cannot issue. Should be handled by caller to ROB::issue_recieve");
@@ -220,6 +226,7 @@ impl ROB {
             i: i.clone(),
             halt: false,
             dest: rob_dest,
+            predicted_taken,
             ready: false,
             asprupdate: ASPRUpdate::no_update(),
         };

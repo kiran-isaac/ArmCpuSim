@@ -3,6 +3,7 @@ use crate::decode::{IssueType, I, IT::*};
 use crate::model::Registers;
 use std::cmp::Ordering;
 use std::fmt::Display;
+use crate::cpu::InstructionQueueEntry;
 
 #[derive(Clone, Copy, Debug)]
 pub enum RSData {
@@ -400,9 +401,8 @@ impl<'a> RSSet {
 
     pub fn issue_receive(
         &mut self,
-        i: &I,
+        iqe: &InstructionQueueEntry,
         dest: usize,
-        pc: u32,
         arf: &Registers,
         register_status: &[Option<usize>; 20],
         rob: &'a ROB,
@@ -410,7 +410,7 @@ impl<'a> RSSet {
         // will return none if it cannot allocate
         let alloc = self.get_alloc()?;
 
-        let (j, k, l) = self.get_dependencies(i, pc, arf, register_status, rob);
+        let (j, k, l) = self.get_dependencies(&iqe.i, iqe.pc, arf, register_status, rob);
 
         self.vec[alloc] = RS {
             busy: true,
@@ -418,7 +418,7 @@ impl<'a> RSSet {
             k,
             l,
             rob_dest: dest,
-            i: i.clone(),
+            i: iqe.i,
         };
         Some(alloc)
     }

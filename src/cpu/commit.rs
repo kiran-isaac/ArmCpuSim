@@ -14,10 +14,7 @@ impl<'a> OoOSpeculative<'a> {
             self.halt = Some(unsigned_to_signed_bitcast(self.state.regs.gp[0]))
         }
 
-        let predicted_taken = match PREDICT {
-            PredictionAlgorithms::AlwaysUntaken => false,
-            PredictionAlgorithms::AlwaysTaken => true,
-        };
+        let predicted_taken = head.predicted_taken.is_some();
 
         let mut string_info = String::new();
 

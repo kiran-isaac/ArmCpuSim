@@ -26,12 +26,15 @@ use ratatui::{
     Frame,
 };
 use std::collections::{HashMap, VecDeque};
+use crate::components::branch_predict::BTB;
 
 #[derive(PartialEq, Eq)]
 #[allow(unused)]
 pub enum PredictionAlgorithms {
     AlwaysTaken,
     AlwaysUntaken,
+    OneBit,
+    TwoBit,
 }
 
 #[derive(Clone, Copy)]
@@ -58,20 +61,31 @@ enum StallReason {
     IStall,
 }
 
-struct InstructionQueueEntry {
+pub struct InstructionQueueEntry {
     pub i: I,
     /// the pc value fetched from
     pub pc: u32,
+    pub predicted_taken: Option<u32>,
 }
+
+#[derive(Copy, Clone)]
+pub struct FetchQueueEntry {
+    pub pc: u32,
+    pub i: u32,
+    pub predicted_taken: Option<u32>,
+}
+
 pub struct OoOSpeculative<'a> {
     state: ProcessorState,
     log_fn: Box<dyn FnMut(String) + 'a>,
 
     // Only single fetch buffer space needed, as decode buffer will always produce
     // same or more num of mops, so fetch is never limiting factor
-    fb: [Option<(u32, u32)>; N_ISSUE],
+    fb: [Option<FetchQueueEntry>; N_ISSUE],
     iq: VecDeque<InstructionQueueEntry>,
     rob: ROB,
+    
+    btb: BTB,
 
     load_queue: VecDeque<LoadQueueEntry>,
 
@@ -127,6 +141,8 @@ impl<'a> OoOSpeculative<'a> {
             state: state.clone(),
             fb: [None; N_ISSUE],
             iq: VecDeque::new(),
+            
+            btb: BTB::new(),
 
             rs_alu_shift: RSSet::new(IssueType::ALUSHIFT, N_ALUSHIFT_RS),
             rs_mul: RSSet::new(IssueType::MUL, N_MUL_RS),
@@ -315,7 +331,7 @@ impl<'a> OoOSpeculative<'a> {
                 (0..N_ISSUE)
                     .map(|j| {
                         match &self.fb[j] {
-                            Some((pc, i)) => format!("{:08X}   Spec PC: {:08X?}", i, pc),
+                            Some(fqe) => format!("{:08X}   Spec PC: {:08X?}", fqe.i, fqe.pc),
                             None => "-".to_string(),
                         }
                     })

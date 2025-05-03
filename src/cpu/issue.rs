@@ -12,38 +12,34 @@ impl<'a> OoOSpeculative<'a> {
 
         let iqe = self.iq.get(0).unwrap();
 
-        let dest = self.rob.issue_receive(&iqe.i, iqe.pc);
+        let dest = self.rob.issue_receive(&iqe);
         let issue_dest = get_issue_type(iqe.i.it.clone());
 
         let rs_insert = match issue_dest {
             IssueType::ALUSHIFT => self.rs_alu_shift.issue_receive(
-                &iqe.i,
+                &iqe,
                 dest,
-                iqe.pc,
                 &self.state.regs,
                 &self.rob.register_status,
                 &self.rob,
             ),
             IssueType::MUL => self.rs_mul.issue_receive(
-                &iqe.i,
+                &iqe,
                 dest,
-                iqe.pc,
                 &self.state.regs,
                 &self.rob.register_status,
                 &self.rob,
             ),
             IssueType::LoadStore => self.rs_ls.issue_receive(
-                &iqe.i,
+                &iqe,
                 dest,
-                iqe.pc,
                 &self.state.regs,
                 &self.rob.register_status,
                 &self.rob,
             ),
             IssueType::Control => self.rs_control.issue_receive(
-                &iqe.i,
+                &iqe,
                 dest,
-                iqe.pc,
                 &self.state.regs,
                 &self.rob.register_status,
                 &self.rob,

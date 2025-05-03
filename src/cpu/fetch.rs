@@ -21,33 +21,52 @@ impl<'a> OoOSpeculative<'a> {
                        The register specifier is implicit in the ARMv6-M encodings of these instructions.
                 */
 
+
                 if let Some((control_instruction, control_offset)) =
                     Self::pre_decode(fetched)
                 {
-                    self.fb[i] = Some((self.spec_pc + pc_increment, fetched));
-                    i += 1;
+                    match PREDICT {
+                        PredictionAlgorithms::AlwaysTaken |
+                        PredictionAlgorithms::AlwaysUntaken => {
+                            i += 1;
 
-                    if control_instruction.is_serializing() {
-                        self.fetch_stall = true;
-                        self.spec_pc += pc_increment;
-                        continue;
-                    }
+                            if control_instruction.is_serializing() {
+                                self.fetch_stall = true;
+                                self.spec_pc += pc_increment;
+                                continue;
+                            }
 
-                    if control_instruction != IT::B && control_instruction != IT::BL {
-                        panic!()
-                    }
+                            if control_instruction != IT::B && control_instruction != IT::BL {
+                                panic!()
+                            }
 
-                    // BL or B
-                    if PREDICT == PredictionAlgorithms::AlwaysTaken {
-                        self.spec_pc = self.spec_pc.wrapping_add(control_offset).wrapping_add(4);
-                    } else {
-                        self.spec_pc += 4;
+                            // BL or B
+                            let predicted_taken = if PREDICT == PredictionAlgorithms::AlwaysTaken {
+                                self.spec_pc = self.spec_pc.wrapping_add(control_offset).wrapping_add(4);
+                                Some(self.spec_pc)
+                            } else {
+                                self.spec_pc += 4;
+                                None
+                            };
+                            self.fb[i] = Some(FetchQueueEntry { pc: self.spec_pc + pc_increment, i: fetched, predicted_taken });
+
+                            continue;
+                        }
+
+                        PredictionAlgorithms::OneBit |
+                        PredictionAlgorithms::TwoBit => {
+                            let pred = self.btb.make_prediction(self.spec_pc);
+
+                            if let Some(pred) = pred {
+                                
+                            }
+                        }
                     }
-                    continue;
                 } else {
-                    self.fb[i] = Some((self.spec_pc + pc_increment, fetched));
+                    self.fb[i] = Some(FetchQueueEntry {pc: self.spec_pc + pc_increment, i: fetched, predicted_taken: None });
                     i += 1;
                 }
+
                 self.spec_pc += pc_increment;
             }
         }
@@ -86,7 +105,7 @@ impl<'a> OoOSpeculative<'a> {
             return Some((IT::BX, 0));
         }
 
-        // BX
+        // BLX
         if (i & 0b1111_1111_1000_0000) == 0b0100_0111_1000_0000 {
             return Some((IT::BLX, 0));
         }
