@@ -1,5 +1,6 @@
 use crate::binary::{bit_as_bool, briz};
-use crate::cpu::STALL_ON_BRANCH;
+use crate::cpu::PREDICT;
+use crate::cpu::PredictionAlgorithms::{AlwaysTaken, AlwaysUntaken, Stall};
 use crate::decode::IT::{B, BL, BLX, BX, SVC};
 
 #[allow(dead_code)]
@@ -1220,8 +1221,9 @@ pub fn decode_b2(i: u32) -> I {
 impl IT {
     pub fn is_serializing(&self) -> bool {
         match self {
-            SVC | BLX | BX => true,
-            B | BL => STALL_ON_BRANCH,
+            SVC => true,
+            BX | BLX => PREDICT == AlwaysTaken || PREDICT == AlwaysUntaken,
+            B | BL => PREDICT == Stall,
             _ => false,
         }
     }

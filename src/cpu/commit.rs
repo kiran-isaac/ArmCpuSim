@@ -24,7 +24,7 @@ impl<'a> OoOSpeculative<'a> {
                 let taken = (head.target_address & 1) == 1;
 
                 if taken {
-                    if !predicted_taken || STALL_ON_BRANCH {
+                    if !predicted_taken || PREDICT == PredictionAlgorithms::Stall {
                         string_info += "MT ";
                         self.spec_pc = head.target_address - 1;
                         self.mispredicts += 1;
@@ -35,7 +35,7 @@ impl<'a> OoOSpeculative<'a> {
                 }
 
                 if !taken {
-                    if predicted_taken || STALL_ON_BRANCH {
+                    if predicted_taken || PREDICT == PredictionAlgorithms::Stall {
                         string_info += "MU ";
                         self.spec_pc = head.pc;
                         self.mispredicts += 1;
@@ -56,7 +56,7 @@ impl<'a> OoOSpeculative<'a> {
 
             // Always Taken, so branch is mispredicted in "not taken"
             BL => {
-                if !predicted_taken || STALL_ON_BRANCH {
+                if !predicted_taken || PREDICT == PredictionAlgorithms::Stall  {
                     self.spec_pc = head.target_address;
                     self.mispredicts += 1;
                     self.flush_on_mispredict();

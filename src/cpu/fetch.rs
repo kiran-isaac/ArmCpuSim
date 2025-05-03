@@ -1,6 +1,6 @@
 use super::*;
 use crate::binary::briz;
-use crate::decode::{decode_b1, decode_b2, decode_bl};
+use crate::decode::{decode_b1, decode_b2, decode_bl, IT::*};
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn fetch(&mut self) {
@@ -25,21 +25,24 @@ impl<'a> OoOSpeculative<'a> {
                 if let Some((control_instruction, control_offset)) =
                     Self::pre_decode(fetched)
                 {
+                    i += 1;
+                    
+                    if control_instruction.is_serializing() {
+                        self.fb[i - 1] = Some(FetchQueueEntry { pc: self.spec_pc + pc_increment, i: fetched, predicted_taken: None});
+                        self.fetch_stall = true;
+                        self.spec_pc += pc_increment;
+                        continue;
+                    }
+                    
                     match PREDICT {
+                        PredictionAlgorithms::Stall => unreachable!(),
                         PredictionAlgorithms::AlwaysTaken |
                         PredictionAlgorithms::AlwaysUntaken => {
-                            i += 1;
-
-                            if control_instruction.is_serializing() {
-                                self.fetch_stall = true;
-                                self.spec_pc += pc_increment;
-                                continue;
-                            }
-
                             if control_instruction != IT::B && control_instruction != IT::BL {
                                 panic!()
                             }
 
+                            let pc_if_untaken = self.spec_pc + pc_increment;
                             // BL or B
                             let predicted_taken = if PREDICT == PredictionAlgorithms::AlwaysTaken {
                                 self.spec_pc = self.spec_pc.wrapping_add(control_offset).wrapping_add(4);
@@ -48,26 +51,36 @@ impl<'a> OoOSpeculative<'a> {
                                 self.spec_pc += 4;
                                 None
                             };
-                            self.fb[i] = Some(FetchQueueEntry { pc: self.spec_pc + pc_increment, i: fetched, predicted_taken });
+                            self.fb[i - 1] = Some(FetchQueueEntry { pc: pc_if_untaken, i: fetched, predicted_taken });
 
                             continue;
                         }
 
                         PredictionAlgorithms::OneBit |
                         PredictionAlgorithms::TwoBit => {
+                            assert_ne!(control_instruction, SVC);
+                            
+                            
                             let pred = self.btb.make_prediction(self.spec_pc);
+                            self.fb[i - 1] = Some(FetchQueueEntry { pc: self.spec_pc + pc_increment, i: fetched, predicted_taken: pred });
 
-                            if let Some(pred) = pred {
-                                
+                            // Taken
+                            if let Some(pred_addr) = pred {
+                                self.spec_pc = pred_addr;
+                            } 
+                            // Untaken
+                            else {
+                                self.spec_pc += pc_increment;
                             }
                         }
                     }
                 } else {
                     self.fb[i] = Some(FetchQueueEntry {pc: self.spec_pc + pc_increment, i: fetched, predicted_taken: None });
                     i += 1;
+                    
+                    self.spec_pc += pc_increment;
                 }
 
-                self.spec_pc += pc_increment;
             }
         }
     }

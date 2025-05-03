@@ -31,6 +31,7 @@ use crate::components::branch_predict::BTB;
 #[derive(PartialEq, Eq)]
 #[allow(unused)]
 pub enum PredictionAlgorithms {
+    Stall,
     AlwaysTaken,
     AlwaysUntaken,
     OneBit,

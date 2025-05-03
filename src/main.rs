@@ -57,15 +57,7 @@ fn main() -> io::Result<()> {
 
     state.regs.pc = state.mem.entrypoint as u32;
 
-    let mut log_file = File::create(
-        String::from(if STALL_ON_BRANCH {
-            "traces/log_stall.txt"
-        } else if PREDICT == PredictionAlgorithms::AlwaysTaken {
-            "traces/log_taken.txt"
-        } else {
-            "traces/log_un.txt"
-        }) + &format!("{}", N_ISSUE),
-    )?;
+    let mut log_file = File::create("traces/log.txt")?;
 
     let mut cpu = OoOSpeculative::new(
         state.clone(),
