@@ -14,7 +14,7 @@ impl<'a> OoOSpeculative<'a> {
             self.halt = Some(unsigned_to_signed_bitcast(self.state.regs.gp[0]))
         }
 
-        let predicted_taken = head.predicted_taken.is_some();
+        let predicted_taken = head.predicted_taken;
 
         let mut string_info = String::new();
 
@@ -22,6 +22,13 @@ impl<'a> OoOSpeculative<'a> {
             // Maybe taken
             B => {
                 let taken = (head.target_address & 1) == 1;
+                
+                match PREDICT {
+                    PredictionAlgorithms::Bits(_) => {
+                        self.btb.update(head.pc, taken);
+                    }
+                    _ => {}
+                }
 
                 if taken {
                     if !predicted_taken || PREDICT == PredictionAlgorithms::Stall {

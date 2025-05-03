@@ -2,13 +2,13 @@ use crate::cpu::PredictionAlgorithms;
 
 pub const N_ISSUE: usize = 1;
 pub const FETCH_WIDTH: usize = N_ISSUE * 2;
-pub const CDB_WIDTH: usize = N_ISSUE * 2;
+pub const CDB_WIDTH: usize = 1;
 pub const LQ_SIZE: usize = 32;
 pub const N_LS_EXECS: usize = N_ISSUE;
 pub const N_ALUSHIFTERS: usize = N_ISSUE;
 pub const N_MULS: usize = N_ISSUE;
 pub const N_CONTROL: usize = N_ISSUE;
-pub const PREDICT: PredictionAlgorithms = PredictionAlgorithms::OneBit;
+pub const PREDICT: PredictionAlgorithms = PredictionAlgorithms::Bits(10);
 pub const ROB_ENTRIES: usize = 64;
 pub const FLUSH_DELAY: u32 = 2;
 pub const N_ALUSHIFT_RS: usize = 12;

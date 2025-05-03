@@ -34,8 +34,7 @@ pub enum PredictionAlgorithms {
     Stall,
     AlwaysTaken,
     AlwaysUntaken,
-    OneBit,
-    TwoBit,
+    Bits(u8)
 }
 
 #[derive(Clone, Copy)]
@@ -66,14 +65,14 @@ pub struct InstructionQueueEntry {
     pub i: I,
     /// the pc value fetched from
     pub pc: u32,
-    pub predicted_taken: Option<u32>,
+    pub predicted_taken: bool,
 }
 
 #[derive(Copy, Clone)]
 pub struct FetchQueueEntry {
     pub pc: u32,
     pub i: u32,
-    pub predicted_taken: Option<u32>,
+    pub predicted_taken: bool,
 }
 
 pub struct OoOSpeculative<'a> {

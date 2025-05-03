@@ -53,7 +53,7 @@ pub struct ROBEntry {
     pub asprupdate: ASPRUpdate,
     pub ready: bool,
     pub dest: ROBEntryDest,
-    pub predicted_taken: Option<u32>
+    pub predicted_taken: bool
 }
 
 impl ROBEntry {
@@ -65,7 +65,7 @@ impl ROBEntry {
             halt: false,
             status: ROBStatus::EMPTY,
             dest: ROBEntryDest::None,
-            predicted_taken: None,
+            predicted_taken: false,
             i: I::undefined(),
             asprupdate: ASPRUpdate::no_update(),
             ready: false,

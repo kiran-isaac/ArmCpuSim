@@ -1221,8 +1221,7 @@ pub fn decode_b2(i: u32) -> I {
 impl IT {
     pub fn is_serializing(&self) -> bool {
         match self {
-            SVC => true,
-            BX | BLX => PREDICT == AlwaysTaken || PREDICT == AlwaysUntaken,
+            SVC | BX | BLX => true,
             B | BL => PREDICT == Stall,
             _ => false,
         }

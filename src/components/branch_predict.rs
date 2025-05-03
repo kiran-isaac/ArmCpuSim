@@ -1,9 +1,10 @@
+use std::cmp::min;
 use std::collections::HashMap;
 use crate::cpu::{PREDICT, PredictionAlgorithms::*};
 
 pub struct BTB {
     // PC: (pred pc, direction)
-    hm: HashMap<u32, (u32, u32)>
+    hm: HashMap<u32, u32>
 }
 
 impl BTB {
@@ -13,37 +14,40 @@ impl BTB {
         }
     }
     
-    pub fn make_prediction(&self, pc: u32) -> Option<u32> {
-        if let Some((taken_pc, counter)) = self.hm.get(&pc) {
-            let taken_pc = *taken_pc;
+    pub fn make_prediction(&self, pc: u32) -> bool {
+        if let Some(counter) = self.hm.get(&pc) {
             let counter = *counter;
             
             match PREDICT {
-                OneBit => {
-                    assert!(counter < 2);
-                    if counter == 1 {
-                        Some(taken_pc)
-                    } else {
-                        None
-                    }
-                }
-                TwoBit => {
-                    assert!(counter < 4);
-                    if counter >= 2 {
-                        Some(taken_pc)
-                    } else {
-                        None
-                    }
+                Bits(n) => {
+                    let pow = 2_u32.pow(n as u32);
+                    assert!(counter < pow);
+                    counter >= pow / 2 
                 }
                 _ => panic!()
             }
         } else {
             match PREDICT {
-                OneBit | TwoBit => {
-                    None
-                }
+                Bits(_) => false,
                 _ => panic!()
             }
+        }
+    }
+    
+    pub fn update(&mut self, pc: u32, taken: bool) {
+        if let Some(counter) = self.hm.get_mut(&pc) {
+            *counter += taken as u32;
+            
+            match PREDICT {
+                Bits(n) => {
+                    {
+                        *counter = min(2_u32.pow(n as u32) - 1, *counter);
+                    }
+                }
+                _ => unreachable!()
+            }
+        } else {
+            self.hm.insert(pc, taken as u32);
         }
     }
 }
