@@ -140,51 +140,22 @@ impl<'a> OoOSpeculative<'a> {
                     ));
                     return;
                 }
-                1 => {
-                    let mut addr = r0;
-                    loop {
-                        let c = self.state.mem.get_byte_nolog(addr);
-                        if c == 0 {
-                            break;
-                        }
-                        self.output += &format!("{}", c as char);
-                        addr += 1;
-                    }
-                }
-                // 2 => {
-                //     // flush incase of output on same line
-                //     std::io::stdout().flush().unwrap();
-                //     let addr = self.state.regs.get(0) as u32;
-                //     let mut i = 0;
-                //     loop {
-                //         let c = std::io::stdin().bytes().next().unwrap().unwrap();
-                //         if c == 10 {
-                //             break;
-                //         }
-                //         state.mem.set_byte_nolog(addr + i, c);
-                //         i += 1;
-                //     }
-                //     // add null terminator
-                //     state.mem.set_byte_nolog(addr + i, 0);
-                // }
-                3 => {
-                    self.output += &format!("{}", r0);
+                1 | 3 => {
+                    self.to_broadcast.push((
+                        1,
+                        CDBRecord {
+                            is_branch_target: false,
+                            valid: false,
+                            result: r0,
+                            aspr_update: ASPRUpdate::no_update(),
+                            rob_number: rs.rob_dest,
+                            halt: false,
+                        },
+                    ));
+                    return;
                 }
                 _ => panic!("Invalid svc"),
             }
-
-            self.to_broadcast.push((
-                1,
-                CDBRecord {
-                    is_branch_target: false,
-                    valid: false,
-                    result: 0,
-                    aspr_update: ASPRUpdate::no_update(),
-                    rob_number: rs.rob_dest,
-                    halt: false,
-                },
-            ));
-            return;
         }
         // BX, BLX and SetPc require RM
         // SetPC, BX and BLX are absolute

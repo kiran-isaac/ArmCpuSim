@@ -79,6 +79,23 @@ impl<'a> OoOSpeculative<'a> {
             }
 
             SVC => {
+                match head.i.immu {
+                    1 => {
+                        let mut addr = head.value;
+                        loop {
+                            let c = self.state.mem.get_byte_nolog(addr);
+                            if c == 0 {
+                                break;
+                            }
+                            self.output += &format!("{}", c as char);
+                            addr += 1;
+                        }
+                    },
+                    3 => {
+                        self.output += &format!("{}", head.value);
+                    }
+                    _ => {},
+                }
                 self.fetch_stall = false;
             }
 

@@ -186,7 +186,7 @@ impl ROB {
             // Get what flags this updates
             let (n, z, c, v) = match i.it {
                 // Adds and Subtracts: Sets all 4. All the add instructions pretty much
-                ADC | ADDImm | ADDReg | CMN | CMPReg | CMPImm | SUBImm | SUBReg | RSB => {
+                ADC | ADDImm | ADDReg | CMN | CMPReg | CMPImm | SUBImm | SUBReg | SBC | RSB => {
                     (true, true, true, true)
                 }
 
