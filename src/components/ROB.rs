@@ -1,5 +1,5 @@
 use crate::components::ROB::ROBStatus::EMPTY;
-use crate::cpu::{InstructionQueueEntry, LoadQueueEntry, ROB_ENTRIES};
+use crate::cpu::{InstructionQueueEntry, LoadQueueEntry, ROB_ENTRIES, STORE_LOAD_FORWARDING};
 use crate::decode::{I, IT::*};
 use crate::model::{ASPRUpdate, Registers};
 use std::fmt::Formatter;
@@ -370,27 +370,42 @@ impl ROB {
         e1s < e2s
     }
 
-    pub fn load_can_go(&self, load: &LoadQueueEntry) -> bool {
+    pub fn load_can_go(&self, load: &LoadQueueEntry) -> (bool, Option<u32>) {
         let mut i = self.head;
+        let mut forwarded = None;
         while self.entry_is_before(i, load.rob_entry) {
             let thingy = self.queue[i];
             match thingy.status {
                 ROBStatus::EMPTY => break, // we must have exceded tail?
                 _ => match thingy.dest {
                     // If the address has not been calculated yet
-                    ROBEntryDest::AwaitingAddress => return false,
+                    ROBEntryDest::AwaitingAddress => return (false, None),
                     // If the address is within a word of this one
                     ROBEntryDest::Address(store_addr) => {
-                        if store_addr.abs_diff(load.address) <= 4 {
-                            return false;
+                        let load_width = match load.load_type {
+                            LDRReg | LDRImm => 4,
+                            LDRHReg | LDRHImm => 2,
+                            LDRBReg | LDRBImm => 1,
+                            _ => unreachable!(),
+                        };
+                        let store_width = match thingy.i.it {
+                            STRReg |  STRImm => 4,
+                            STRHReg | STRHImm => 2,
+                            STRBReg | STRBImm => 1,
+                            _ => unreachable!(),
+                        };
+                        if load_width == store_width && store_addr == load.address && STORE_LOAD_FORWARDING {
+                            forwarded = Some(thingy.value);
+                        } else if store_addr.abs_diff(load.address) <= 4 {
+                            return (false, None);
                         }
                     }
                     _ => {}
                 },
             }
             i = Self::increment_index(i);
-        }
-        true
+        }                        
+        (true, forwarded)
     }
 
     pub fn render(&self, focus: usize) -> String {

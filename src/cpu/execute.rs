@@ -8,16 +8,17 @@ use std::collections::HashSet;
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn execute(&mut self) {
-        let mut can_go = Vec::with_capacity(N_LS_EXECS);
+        let mut can_go: Vec<(usize, (LoadQueueEntry, Option<u32>))> = Vec::with_capacity(N_LS_EXECS);
         for (i, entry) in self.load_queue.iter().enumerate() {
-            if self.rob.load_can_go(entry) {
-                can_go.push((i, entry.clone()));
+            let (this_can_go, forwarded) = self.rob.load_can_go(entry);
+            if this_can_go {
+                can_go.push((i, (entry.clone(), forwarded)));
             }
         }
 
         // Sort by ROB entry
         can_go.sort_by(|a, b| {
-            if self.rob.entry_is_before(a.1.rob_entry, b.1.rob_entry) {
+            if self.rob.entry_is_before(a.1.0.rob_entry, b.1.0.rob_entry) {
                 Ordering::Less
             } else {
                 Ordering::Greater
@@ -27,10 +28,25 @@ impl<'a> OoOSpeculative<'a> {
         let mut went = HashSet::new();
         for (i, ready_entry) in can_go {
             went.insert(i);
-            let lqe_head = ready_entry.clone();
+            let (lqe_head, forwarded) = ready_entry.clone();
             let load_address = lqe_head.address;
             self.rob
                 .set_target_address(lqe_head.rob_entry, lqe_head.address);
+            
+            if let Some(forwarded) = forwarded {
+                // Load store has a delay of 1 cycles on top of the 1 cycle for addr calc
+                self.to_broadcast.push((
+                    1,
+                    CDBRecord {
+                        is_branch_target: false,
+                        valid: false,
+                        result: forwarded,
+                        aspr_update: ASPRUpdate::no_update(),
+                        rob_number: lqe_head.rob_entry,
+                        halt: false,
+                    },
+                ));
+            }
 
             let result = match lqe_head.load_type {
                 LDRBImm | LDRBReg => match self.state.mem.get_byte(load_address) {
@@ -70,7 +86,7 @@ impl<'a> OoOSpeculative<'a> {
 
             // Load store has a delay of 1 cycles on top of the 1 cycle for addr calc
             self.to_broadcast.push((
-                1,
+                2,
                 CDBRecord {
                     is_branch_target: false,
                     valid: false,

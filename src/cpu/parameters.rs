@@ -15,3 +15,4 @@ pub const N_ALUSHIFT_RS: usize = 12;
 pub const N_MUL_RS: usize = 12;
 pub const N_CNTRL_RS: usize = 12;
 pub const N_LS_RS: usize = 12;
+pub const STORE_LOAD_FORWARDING : bool = false;
