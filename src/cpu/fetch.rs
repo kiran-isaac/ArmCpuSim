@@ -4,13 +4,13 @@ use crate::decode::{decode_b1, decode_b2, decode_bl, IT::*};
 
 impl<'a> OoOSpeculative<'a> {
     pub(super) fn fetch(&mut self) {
-        let mut bytes_fetched: u32 = 0;
+        let mut hwords_fetched: u32 = 0;
         let mut i = 0;
-        while !self.fetch_stall && bytes_fetched <= (FETCH_WIDTH - 1) as u32 && i < N_ISSUE {
+        while !self.fetch_stall && hwords_fetched <= (FETCH_WIDTH - 1) as u32 && i < N_ISSUE {
             if self.fb[i].is_none() {
                 let fetched = self.state.mem.get_instruction(self.spec_pc);
                 let pc_increment = if is_32_bit(fetched) { 4 } else { 2 };
-                bytes_fetched += pc_increment / 2;
+                hwords_fetched += pc_increment / 2;
 
                 /* The use of 0b1111 as a register specifier is not normally permitted in Thumb instructions. When a value of 0b1111 is
                    permitted, a variety of meanings is possible. For register reads, these meanings are:
