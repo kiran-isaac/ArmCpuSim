@@ -190,8 +190,8 @@ Disassembly of section .text:
 ; }
      12c: b004         	add	sp, #0x10
      12e: bd80         	pop	{r7, pc}
-     130: ad 01 00 00  	.word	0x000001ad
-     134: 98 01 00 00  	.word	0x00000198
+     130: a5 01 00 00  	.word	0x000001a5
+     134: 90 01 00 00  	.word	0x00000190
 
 00000138 <svc_puts>:
 ; static inline void svc_puts(const char *s) {
@@ -223,87 +223,72 @@ Disassembly of section .text:
 
 00000158 <main>:
 ; int main() {
-     158: b5f0         	push	{r4, r5, r6, r7, lr}
-     15a: af03         	add	r7, sp, #0xc
-     15c: b08d         	sub	sp, #0x34
+     158: b5b0         	push	{r4, r5, r7, lr}
+     15a: af02         	add	r7, sp, #0x8
+     15c: b088         	sub	sp, #0x20
 ;     unsigned arr[] = {
-     15e: 4a0c         	ldr	r2, [pc, #0x30]         @ 0x190 <main+0x38>
+     15e: 4a0b         	ldr	r2, [pc, #0x2c]         @ 0x18c <main+0x34>
      160: a802         	add	r0, sp, #0x8
      162: 9000         	str	r0, [sp]
      164: 4601         	mov	r1, r0
      166: ca38         	ldm	r2!, {r3, r4, r5}
      168: c138         	stm	r1!, {r3, r4, r5}
-     16a: ca78         	ldm	r2!, {r3, r4, r5, r6}
-     16c: c178         	stm	r1!, {r3, r4, r5, r6}
-     16e: ca78         	ldm	r2!, {r3, r4, r5, r6}
-     170: c178         	stm	r1!, {r3, r4, r5, r6}
-     172: 210b         	movs	r1, #0xb
+     16a: ca38         	ldm	r2!, {r3, r4, r5}
+     16c: c138         	stm	r1!, {r3, r4, r5}
+     16e: 2106         	movs	r1, #0x6
 ;     unsigned len = sizeof(arr) / sizeof(unsigned);
-     174: 9101         	str	r1, [sp, #0x4]
+     170: 9101         	str	r1, [sp, #0x4]
 ;     bubble_sort(arr, len);
-     176: 9901         	ldr	r1, [sp, #0x4]
-     178: f7ff ff7f    	bl	0x7a <bubble_sort>      @ imm = #-0x102
-     17c: 9800         	ldr	r0, [sp]
+     172: 9901         	ldr	r1, [sp, #0x4]
+     174: f7ff ff81    	bl	0x7a <bubble_sort>      @ imm = #-0xfe
+     178: 9800         	ldr	r0, [sp]
 ;     assert_is_sorted(arr, len);
-     17e: 9901         	ldr	r1, [sp, #0x4]
-     180: f7ff ffae    	bl	0xe0 <assert_is_sorted> @ imm = #-0xa4
+     17a: 9901         	ldr	r1, [sp, #0x4]
+     17c: f7ff ffb0    	bl	0xe0 <assert_is_sorted> @ imm = #-0xa0
 ;     svc_exit(arr[0]);
-     184: 9802         	ldr	r0, [sp, #0x8]
-     186: f7ff ffdf    	bl	0x148 <svc_exit>        @ imm = #-0x42
-     18a: 2000         	movs	r0, #0x0
+     180: 9802         	ldr	r0, [sp, #0x8]
+     182: f7ff ffe1    	bl	0x148 <svc_exit>        @ imm = #-0x3e
+     186: 2000         	movs	r0, #0x0
 ; }
-     18c: b00d         	add	sp, #0x34
-     18e: bdf0         	pop	{r4, r5, r6, r7, pc}
-     190: c0 01 00 00  	.word	0x000001c0
-
-00000194 <__text_end>:
-     194: d4 d4 d4 d4  	.word	0xd4d4d4d4
+     188: b008         	add	sp, #0x20
+     18a: bdb0         	pop	{r4, r5, r7, pc}
+     18c: b8 01 00 00  	.word	0x000001b8
 
 Disassembly of section .rodata:
 
-00000198 <.rodata>:
-     198: 7241         	strb	r1, [r0, #0x9]
-     19a: 6172         	str	r2, [r6, #0x14]
-     19c: 2079         	movs	r0, #0x79
-     19e: 7369         	strb	r1, [r5, #0xd]
-     1a0: 6e20         	ldr	r0, [r4, #0x60]
-     1a2: 746f         	strb	r7, [r5, #0x11]
-     1a4: 7320         	strb	r0, [r4, #0xc]
-     1a6: 726f         	strb	r7, [r5, #0x9]
-     1a8: 6574         	str	r4, [r6, #0x54]
-     1aa: 0a64         	lsrs	r4, r4, #0x9
-     1ac: 4100         	asrs	r0, r0
-     1ae: 7272         	strb	r2, [r6, #0x9]
-     1b0: 7961         	ldrb	r1, [r4, #0x5]
-     1b2: 6920         	ldr	r0, [r4, #0x10]
-     1b4: 2073         	movs	r0, #0x73
-     1b6: 6f73         	ldr	r3, [r6, #0x74]
-     1b8: 7472         	strb	r2, [r6, #0x11]
-     1ba: 6465         	str	r5, [r4, #0x44]
-     1bc: 000a         	movs	r2, r1
+00000190 <.rodata>:
+     190: 7241         	strb	r1, [r0, #0x9]
+     192: 6172         	str	r2, [r6, #0x14]
+     194: 2079         	movs	r0, #0x79
+     196: 7369         	strb	r1, [r5, #0xd]
+     198: 6e20         	ldr	r0, [r4, #0x60]
+     19a: 746f         	strb	r7, [r5, #0x11]
+     19c: 7320         	strb	r0, [r4, #0xc]
+     19e: 726f         	strb	r7, [r5, #0x9]
+     1a0: 6574         	str	r4, [r6, #0x54]
+     1a2: 0a64         	lsrs	r4, r4, #0x9
+     1a4: 4100         	asrs	r0, r0
+     1a6: 7272         	strb	r2, [r6, #0x9]
+     1a8: 7961         	ldrb	r1, [r4, #0x5]
+     1aa: 6920         	ldr	r0, [r4, #0x10]
+     1ac: 2073         	movs	r0, #0x73
+     1ae: 6f73         	ldr	r3, [r6, #0x74]
+     1b0: 7472         	strb	r2, [r6, #0x11]
+     1b2: 6465         	str	r5, [r4, #0x44]
+     1b4: 000a         	movs	r2, r1
+     1b6: 0000         	movs	r0, r0
+     1b8: 0005         	movs	r5, r0
+     1ba: 0000         	movs	r0, r0
+     1bc: 0004         	movs	r4, r0
      1be: 0000         	movs	r0, r0
-     1c0: 000a         	movs	r2, r1
+     1c0: 0003         	movs	r3, r0
      1c2: 0000         	movs	r0, r0
-     1c4: 0009         	movs	r1, r1
+     1c4: 0002         	movs	r2, r0
      1c6: 0000         	movs	r0, r0
-     1c8: 0008         	movs	r0, r1
+     1c8: 0001         	movs	r1, r0
      1ca: 0000         	movs	r0, r0
-     1cc: 0007         	movs	r7, r0
+     1cc: 0000         	movs	r0, r0
      1ce: 0000         	movs	r0, r0
-     1d0: 0006         	movs	r6, r0
-     1d2: 0000         	movs	r0, r0
-     1d4: 0005         	movs	r5, r0
-     1d6: 0000         	movs	r0, r0
-     1d8: 0004         	movs	r4, r0
-     1da: 0000         	movs	r0, r0
-     1dc: 0003         	movs	r3, r0
-     1de: 0000         	movs	r0, r0
-     1e0: 0002         	movs	r2, r0
-     1e2: 0000         	movs	r0, r0
-     1e4: 0001         	movs	r1, r0
-     1e6: 0000         	movs	r0, r0
-     1e8: 0000         	movs	r0, r0
-     1ea: 0000         	movs	r0, r0
 
 Disassembly of section .data:
 
@@ -373,7 +358,7 @@ Disassembly of section .debug_info:
       14: 0000         	movs	r0, r0
       16: 0000         	movs	r0, r0
       18: 0200         	lsls	r0, r0, #0x8
-      1a: 9403         	str	r4, [sp, #0xc]
+      1a: 9003         	str	r0, [sp, #0xc]
       1c: 0001         	movs	r1, r0
       1e: 0800         	lsrs	r0, r0, #0x20
       20: 0000         	movs	r0, r0
@@ -584,25 +569,25 @@ Disassembly of section .debug_info:
      16a: 010b         	lsls	r3, r1, #0x4
      16c: 0b0b         	lsrs	r3, r1, #0xc
      16e: 7d02         	ldrb	r2, [r0, #0x14]
-     170: 1904         	adds	r4, r0, r4
-     172: 0b01         	lsrs	r1, r0, #0xc
 ;     unsigned len = sizeof(arr) / sizeof(unsigned);
-     174: 01bb         	lsls	r3, r7, #0x6
+     170: 1904         	adds	r4, r0, r4
 ;     bubble_sort(arr, len);
+     172: 0b01         	lsrs	r1, r0, #0xc
+     174: 01bb         	lsls	r3, r7, #0x6
      176: 0000         	movs	r0, r0
      178: 020c         	lsls	r4, r1, #0x8
+;     assert_is_sorted(arr, len);
      17a: 007d         	lsls	r5, r7, #0x1
      17c: 0118         	lsls	r0, r3, #0x4
-;     assert_is_sorted(arr, len);
      17e: bb0c         	<unknown>
+;     svc_exit(arr[0]);
      180: 0001         	movs	r1, r0
      182: 0000         	movs	r0, r0
-;     svc_exit(arr[0]);
      184: 0c10         	lsrs	r0, r2, #0x10
-     186: 003c         	movs	r4, r7
+     186: 0038         	movs	r0, r7
+; }
      188: 0000         	movs	r0, r0
      18a: 5701         	ldrsb	r1, [r0, r4]
-; }
      18c: 000c         	movs	r4, r1
      18e: aa1c         	add	r2, sp, #0x70
      190: 0001         	movs	r1, r0
@@ -615,7 +600,7 @@ Disassembly of section .debug_info:
      19e: 020c         	lsls	r4, r1, #0x8
      1a0: 047d         	lsls	r5, r7, #0x11
      1a2: 001a         	movs	r2, r3
-     1a4: bb21         	<unknown>
+     1a4: bb23         	<unknown>
      1a6: 0001         	movs	r1, r0
      1a8: 0000         	movs	r0, r0
      1aa: 0d05         	lsrs	r5, r0, #0x14
@@ -638,7 +623,7 @@ Disassembly of section .debug_info:
      1cc: 0000         	movs	r0, r0
      1ce: 3d04         	subs	r5, #0x4
      1d0: 0000         	movs	r0, r0
-     1d2: 0b00         	lsrs	r0, r0, #0xc
+     1d2: 0600         	lsls	r0, r0, #0x18
      1d4: 0000         	movs	r0, r0
 
 Disassembly of section .debug_abbrev:
@@ -833,22 +818,22 @@ Disassembly of section .debug_line:
 ;     return (void*)prev_heap_ptr;
       36: 003c         	movs	r4, r7
       38: 0000         	movs	r0, r0
-      3a: 7c00         	ldrb	r0, [r0, #0x10]
+      3a: f800 0a42    	<unknown>
 ; }
-      3c: 8a8c         	ldrh	r4, [r1, #0x14]
-      3e: b619         	<unknown>
-      40: 2dbd         	cmp	r5, #0xbd
-      42: 54db         	strb	r3, [r3, r3]
-      44: fbdd 504b    	<unknown>
-      48: a29a         	adr	r2, #616 <.debug_line+0xe6>
-      4a: 8d0b         	ldrh	r3, [r1, #0x28]
+      3e: 5a03         	ldrh	r3, [r0, r0]
+      40: 18f6         	adds	r6, r6, r3
+      42: 9f8b         	ldr	r7, [sp, #0x22c]
+      44: b1b6         	<unknown>
+      46: d93c         	bls	0xc2 <.debug_line+0xc2> @ imm = #0x78
+      48: a2ca         	adr	r2, #808 <.debug_line+0x116>
+      4a: 8db3         	ldrh	r3, [r6, #0x2c]
 ; void swap(unsigned *arr, int i, int j) {
       4c: 0000         	movs	r0, r0
       4e: 0100         	lsls	r0, r0, #0x4
       50: 9c5b         	ldr	r4, [sp, #0x16c]
       52: 2155         	movs	r1, #0x55
 ;     int temp = arr[i];
-      54: e3d5         	b	0x802 <.rodata+0x66a>   @ imm = #0x7aa
+      54: e3d5         	b	0x802 <.rodata+0x672>   @ imm = #0x7aa
       56: a127         	adr	r1, #156 <.debug_line+0x81>
       58: a52a         	adr	r5, #168 <.debug_line+0x86>
       5a: 8fab         	ldrh	r3, [r5, #0x3c]
@@ -1023,25 +1008,25 @@ Disassembly of section .debug_line:
      16a: 4c00         	ldr	r4, [pc, #0x0]          @ 0x16c <.debug_line+0x16c>
      16c: 0e05         	lsrs	r5, r0, #0x18
      16e: bb0a         	<unknown>
-     170: 0a05         	lsrs	r5, r0, #0x8
-     172: 2e06         	cmp	r6, #0x6
 ;     unsigned len = sizeof(arr) / sizeof(unsigned);
-     174: 1505         	asrs	r5, r0, #0x14
+     170: 0a05         	lsrs	r5, r0, #0x8
 ;     bubble_sort(arr, len);
+     172: 2e06         	cmp	r6, #0x6
+     174: 1505         	asrs	r5, r0, #0x14
      176: 052e         	lsls	r6, r5, #0x14
      178: 2e19         	cmp	r6, #0x19
+;     assert_is_sorted(arr, len);
      17a: 1b05         	subs	r5, r0, r4
      17c: 052e         	lsls	r6, r5, #0x14
-;     assert_is_sorted(arr, len);
      17e: 2e05         	cmp	r6, #0x5
+;     svc_exit(arr[0]);
      180: 0d05         	lsrs	r5, r0, #0x14
      182: 6706         	str	r6, [r0, #0x70]
-;     svc_exit(arr[0]);
      184: 1105         	asrs	r5, r0, #0x4
      186: 2e06         	cmp	r6, #0x6
+; }
      188: 0d05         	lsrs	r5, r0, #0x14
      18a: 052e         	lsls	r6, r5, #0x14
-; }
      18c: 6616         	str	r6, [r2, #0x60]
      18e: 0d05         	lsrs	r5, r0, #0x14
      190: 062e         	lsls	r6, r5, #0x18
@@ -1091,7 +1076,7 @@ Disassembly of section .debug_line:
      1e8: 054a         	lsls	r2, r1, #0x15
      1ea: 0a0e         	lsrs	r6, r1, #0x8
      1ec: 0867         	lsrs	r7, r4, #0x1
-     1ee: 055c         	lsls	r4, r3, #0x15
+     1ee: 0526         	lsls	r6, r4, #0x14
      1f0: 2f16         	cmp	r7, #0x16
      1f2: 0505         	lsls	r5, r0, #0x14
      1f4: 2e06         	cmp	r6, #0x6
@@ -1100,13 +1085,13 @@ Disassembly of section .debug_line:
      1fa: 0505         	lsls	r5, r0, #0x14
      1fc: 2e06         	cmp	r6, #0x6
      1fe: 0e05         	lsrs	r5, r0, #0x18
-     200: 4c06         	ldr	r4, [pc, #0x18]         @ 0x21c <.rodata+0x84>
+     200: 4c06         	ldr	r4, [pc, #0x18]         @ 0x21c <.rodata+0x8c>
      202: 0505         	lsls	r5, r0, #0x14
      204: 2e06         	cmp	r6, #0x6
      206: 0105         	lsls	r5, r0, #0x4
      208: 0b06         	lsrs	r6, r0, #0xc
      20a: 0667         	lsls	r7, r4, #0x19
-     20c: 5a03         	ldrh	r3, [r0, r0]
+     20c: 5803         	ldr	r3, [r0, r0]
      20e: 024a         	lsls	r2, r1, #0x9
      210: 0004         	movs	r4, r0
      212: 0101         	lsls	r1, r0, #0x4
@@ -1205,26 +1190,23 @@ Disassembly of section .debug_frame:
       96: 0000         	movs	r0, r0
       98: 0e42         	lsrs	r2, r0, #0x19
       9a: 0008         	movs	r0, r1
-      9c: 0020         	movs	r0, r4
+      9c: 001c         	movs	r4, r3
       9e: 0000         	movs	r0, r0
       a0: 0000         	movs	r0, r0
       a2: 0000         	movs	r0, r0
       a4: 0158         	lsls	r0, r3, #0x5
       a6: 0000         	movs	r0, r0
-      a8: 003c         	movs	r4, r7
+      a8: 0038         	movs	r0, r7
 ;             if (arr[j] > arr[j + 1])
       aa: 0000         	movs	r0, r0
       ac: 0e42         	lsrs	r2, r0, #0x19
-      ae: 8e14         	ldrh	r4, [r2, #0x30]
+      ae: 8e10         	ldrh	r0, [r2, #0x30]
       b0: 8701         	strh	r1, [r0, #0x38]
-      b2: 8602         	strh	r2, [r0, #0x30]
-      b4: 8503         	strh	r3, [r0, #0x28]
-      b6: 8404         	strh	r4, [r0, #0x20]
-      b8: 4205         	tst	r5, r0
-      ba: 070c         	lsls	r4, r1, #0x1c
-;               swap(arr, j, j + 1);
-      bc: 0008         	movs	r0, r1
-      be: 0000         	movs	r0, r0
+      b2: 8502         	strh	r2, [r0, #0x28]
+      b4: 8403         	strh	r3, [r0, #0x20]
+      b6: 4204         	tst	r4, r0
+      b8: 070c         	lsls	r4, r1, #0x1c
+      ba: 0008         	movs	r0, r1
 
 Disassembly of section .debug_str:
 
@@ -1386,10 +1368,10 @@ Disassembly of section .debug_addr:
 ;     char* prev_heap_ptr = heap_ptr;
        4: 0005         	movs	r5, r0
        6: 0004         	movs	r4, r0
-       8: 0198         	lsls	r0, r3, #0x6
+       8: 0190         	lsls	r0, r2, #0x6
 ;     if (increment > 0) {
        a: 0000         	movs	r0, r0
-       c: 01ad         	lsls	r5, r5, #0x6
+       c: 01a5         	lsls	r5, r4, #0x6
        e: 0000         	movs	r0, r0
       10: 0000         	movs	r0, r0
 ;         if (heap_ptr + increment > &__heap_end) {
@@ -1473,7 +1455,7 @@ Disassembly of section .debug_line_str:
       4c: 2e65         	cmp	r6, #0x65
       4e: 0063         	lsls	r3, r4, #0x1
       50: 4c4c         	ldr	r4, [pc, #0x130]        @ 0x184 <.debug_line+0x184>
-      52: 4d56         	ldr	r5, [pc, #0x158]        @ 0x1ac <.rodata+0x14>
+      52: 4d56         	ldr	r5, [pc, #0x158]        @ 0x1ac <.rodata+0x1c>
 ;     int temp = arr[i];
       54: 452d         	cmp	r5, r5
       56: 2d54         	cmp	r5, #0x54
@@ -1707,7 +1689,7 @@ Disassembly of section .symtab:
       9e: 0001         	movs	r1, r0
       a0: 0034         	movs	r4, r6
       a2: 0000         	movs	r0, r0
-      a4: 0190         	lsls	r0, r2, #0x6
+      a4: 018c         	lsls	r4, r1, #0x6
 		...
 ;             if (arr[j] > arr[j + 1])
       ae: 0001         	movs	r1, r0
@@ -1770,7 +1752,7 @@ Disassembly of section .symtab:
      114: 0159         	lsls	r1, r3, #0x5
 ;             svc_exit(1);
      116: 0000         	movs	r0, r0
-     118: 003c         	movs	r4, r7
+     118: 0038         	movs	r0, r7
 ;         }
      11a: 0000         	movs	r0, r0
 ;     }
@@ -1823,23 +1805,22 @@ Disassembly of section .symtab:
      16a: 0000         	movs	r0, r0
      16c: 0010         	movs	r0, r2
      16e: fff1 00ae    	<unknown>
-     172: 0000         	movs	r0, r0
-;     unsigned len = sizeof(arr) / sizeof(unsigned);
-     174: 0001         	movs	r1, r0
 ;     bubble_sort(arr, len);
+     172: 0000         	movs	r0, r0
+     174: 0001         	movs	r1, r0
      176: 0000         	movs	r0, r0
      178: 0000         	movs	r0, r0
+;     assert_is_sorted(arr, len);
      17a: 0000         	movs	r0, r0
      17c: 0010         	movs	r0, r2
-;     assert_is_sorted(arr, len);
      17e: fff1 00ba    	<unknown>
-     182: 0000         	movs	r0, r0
 ;     svc_exit(arr[0]);
+     182: 0000         	movs	r0, r0
      184: 0008         	movs	r0, r1
      186: 2000         	movs	r0, #0x0
+; }
      188: 0000         	movs	r0, r0
      18a: 0000         	movs	r0, r0
-; }
      18c: 0010         	movs	r0, r2
      18e: 0006         	movs	r6, r0
      190: 00c4         	lsls	r4, r0, #0x3
@@ -1887,21 +1868,21 @@ Disassembly of section .symtab:
      1ee: 0006         	movs	r6, r0
      1f0: 010e         	lsls	r6, r1, #0x4
      1f2: 0000         	movs	r0, r0
-     1f4: 01f4         	lsls	r4, r6, #0x7
+     1f4: 01d8         	lsls	r0, r3, #0x7
      1f6: 0000         	movs	r0, r0
      1f8: 0000         	movs	r0, r0
      1fa: 0000         	movs	r0, r0
      1fc: 0010         	movs	r0, r2
      1fe: fff1 0120    	<unknown>
      202: 0000         	movs	r0, r0
-     204: 01ec         	lsls	r4, r5, #0x7
+     204: 01d0         	lsls	r0, r2, #0x7
      206: 0000         	movs	r0, r0
      208: 0000         	movs	r0, r0
      20a: 0000         	movs	r0, r0
      20c: 0010         	movs	r0, r2
      20e: fff1 012e    	<unknown>
      212: 0000         	movs	r0, r0
-     214: 01f4         	lsls	r4, r6, #0x7
+     214: 01d8         	lsls	r0, r3, #0x7
      216: 0000         	movs	r0, r0
      218: 0000         	movs	r0, r0
      21a: 0000         	movs	r0, r0
@@ -1924,7 +1905,7 @@ Disassembly of section .symtab:
      23e: 0003         	movs	r3, r0
      240: 0159         	lsls	r1, r3, #0x5
      242: 0000         	movs	r0, r0
-     244: 0194         	lsls	r4, r2, #0x6
+     244: 0190         	lsls	r0, r2, #0x6
      246: 0000         	movs	r0, r0
      248: 0000         	movs	r0, r0
      24a: 0000         	movs	r0, r0
@@ -2046,7 +2027,7 @@ Disassembly of section .shstrtab:
       a8: 0073         	lsls	r3, r6, #0x1
 ;             if (arr[j] > arr[j + 1])
       aa: 412e         	asrs	r6, r5
-      ac: 4d52         	ldr	r5, [pc, #0x148]        @ 0x1f8 <.rodata+0x60>
+      ac: 4d52         	ldr	r5, [pc, #0x148]        @ 0x1f8 <.rodata+0x68>
       ae: 612e         	str	r6, [r5, #0x10]
       b0: 7474         	strb	r4, [r6, #0x11]
       b2: 6972         	ldr	r2, [r6, #0x14]

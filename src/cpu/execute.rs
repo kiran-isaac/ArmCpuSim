@@ -46,6 +46,7 @@ impl<'a> OoOSpeculative<'a> {
                         halt: false,
                     },
                 ));
+                continue;
             }
 
             let result = match lqe_head.load_type {

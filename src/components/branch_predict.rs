@@ -28,7 +28,7 @@ impl BTB {
             }
         } else {
             match PREDICT {
-                Bits(_) => false,
+                Bits(_) => true,
                 _ => panic!()
             }
         }

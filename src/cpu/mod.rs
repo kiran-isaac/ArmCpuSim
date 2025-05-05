@@ -25,7 +25,7 @@ use ratatui::{
     widgets::Block,
     Frame,
 };
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use crate::components::branch_predict::BTB;
 
 #[derive(PartialEq, Eq)]
@@ -221,7 +221,7 @@ impl<'a> OoOSpeculative<'a> {
 
         let vertical = Layout::vertical([Min(0)]);
         let [main_area] = vertical.areas(frame.area());
-        let horizontal = Layout::horizontal([Length(20), Length(40), Fill(20)]);
+        let horizontal = Layout::horizontal([Length(26), Length(40), Fill(20)]);
         let [left_area, rob_area, right_area] = horizontal.areas(main_area);
 
         let (rs_to_display, rs_to_display_n, rs_to_display_name) = match self.rs_current_display {
@@ -252,8 +252,8 @@ impl<'a> OoOSpeculative<'a> {
             Fill(1),
         ])
         .areas(right_area);
-        let [epoch_area, rst_area, stall_area, call_stack_area] =
-            Layout::vertical([Length(4), Length(22), Length(5), Fill(1)]).areas(left_area);
+        let [epoch_area, rst_area, stall_area] =
+            Layout::vertical([Length(4), Length(22), Fill(1)]).areas(left_area);
 
         let bottom_border = |name| {
             Block::bordered()
@@ -279,7 +279,7 @@ impl<'a> OoOSpeculative<'a> {
             .iter()
             .enumerate()
             .map(|(i, rob_entry)| match rob_entry {
-                Some(entry) => format!("{:03} : #{}", Registers::reg_id_to_str(i as u8), entry),
+                Some(entry) => format!("{:03} : {:08X} : #{}", Registers::reg_id_to_str(i as u8), self.state.regs.get(i as u8), entry),
                 None => format!(
                     "{:03} : {:08X}",
                     Registers::reg_id_to_str(i as u8),
@@ -354,29 +354,37 @@ impl<'a> OoOSpeculative<'a> {
             iq_area,
         );
 
-        let mut stall_count: HashMap<StallReason, usize> = HashMap::new();
+        let mut stall_count: HashMap<String, usize> = HashMap::new();
+        let mut stall_reasons: HashSet<String> = HashSet::new();
         for x in self.stalls.iter() {
-            *stall_count.entry(*x).or_default() += 1;
+            if *x == StallReason::IStall {
+                continue;
+            }
+            let reason_string = format!("{:?}", x);
+            *stall_count.entry(reason_string.clone()).or_default() += 1;
+            if !stall_reasons.contains(&reason_string) {
+                stall_reasons.insert(reason_string);
+            }
         }
 
         let mut stall_string = String::new();
-        for entry in stall_count {
-            stall_string += &format!("{:?}: {}\n", entry.0, entry.1);
+        for entry in stall_reasons.into_iter().sorted() {
+            stall_string += &format!("{}: {}\n", entry, stall_count[&entry]);
         }
 
         frame.render_widget(
-            Paragraph::new(stall_string).block(bottom_border("Stall Status")),
+            Paragraph::new(stall_string).block(bottom_border("Stall Status").borders(Borders::NONE)),
             stall_area,
         );
 
-        frame.render_widget(
-            Paragraph::new(
-                self.call_stack
-                    .iter()
-                    .fold(String::new(), |acc, x| acc + "\n" + &x.1),
-            ),
-            call_stack_area,
-        );
+        // frame.render_widget(
+        //     Paragraph::new(
+        //         self.call_stack
+        //             .iter()
+        //             .fold(String::new(), |acc, x| acc + "\n" + &x.1),
+        //     ),
+        //     call_stack_area,
+        // );
 
         let rs_title = format!("RS {}/4: {}", rs_to_display_n, rs_to_display_name);
 
