@@ -21,7 +21,7 @@ use ratatui::crossterm::terminal::{
 };
 use ratatui::Terminal;
 use std::fs::File;
-use std::io;
+use std::{fs, io};
 use std::io::{stdout, Write};
 use std::panic::{set_hook, take_hook};
 use std::process::exit;
@@ -56,7 +56,8 @@ fn main() -> io::Result<()> {
     };
 
     state.regs.pc = state.mem.entrypoint as u32;
-
+    
+    fs::create_dir_all("traces").expect("Failed to create trace directory");
     let mut log_file = File::create("traces/log.txt")?;
 
     let mut cpu = OoOSpeculative::new(
